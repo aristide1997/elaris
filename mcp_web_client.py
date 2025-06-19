@@ -7,7 +7,7 @@ Handles streaming responses and tool approval via WebSocket
 import asyncio
 import uuid
 import logging
-from typing import Dict, Optional
+from typing import Dict
 from fastapi import WebSocket
 
 from pydantic_ai import Agent
@@ -42,9 +42,6 @@ class MCPWebClient:
         
         # Track pending approvals
         self.pending_approvals: Dict[str, asyncio.Future] = {}
-        
-        # Track tool calls that have been approved/denied
-        self.tool_call_approvals: Dict[str, bool] = {}
     
     async def send_message(self, message_type: str, **data):
         """Send a message to the WebSocket client"""
@@ -71,7 +68,8 @@ class MCPWebClient:
         )
         
         # Create a future to wait for the response
-        approval_future = asyncio.Future()
+        loop = asyncio.get_running_loop()
+        approval_future = loop.create_future()
         self.pending_approvals[approval_id] = approval_future
         
         try:

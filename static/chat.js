@@ -116,7 +116,22 @@ class MCPChatClient {
                 
             case 'assistant_start':
                 console.log('Starting new assistant message');
-                this.currentMessage = this.addMessage('assistant', '');
+                // Create assistant message with separate tool and content sections
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message assistant-message';
+                // tool container (for executing, blocked, results)
+                const toolContainer = document.createElement('div');
+                toolContainer.className = 'tool-container';
+                msgDiv.appendChild(toolContainer);
+                // content container for LLM text
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                msgDiv.appendChild(contentDiv);
+                this.messages.appendChild(msgDiv);
+                this.scrollToBottom();
+                // set current contexts
+                this.currentToolContainer = toolContainer;
+                this.currentMessage = contentDiv;
                 break;
                 
             case 'text_delta':
@@ -141,22 +156,60 @@ class MCPChatClient {
                 
             case 'tool_executing':
                 console.log('Tool executing:', message.tool_name);
-                this.addToolMessage(`🔧 Executing tool: ${message.tool_name}`, 'executing');
+                if (this.currentToolContainer) {
+                    const div = document.createElement('div');
+                    div.className = 'tool-executing-inline';
+                    div.textContent = `🔧 Executing tool: ${message.tool_name}`;
+                    this.currentToolContainer.appendChild(div);
+                    this.scrollToBottom();
+                } else {
+                    this.addToolMessage(`🔧 Executing tool: ${message.tool_name}`, 'executing');
+                }
                 break;
                 
             case 'tool_blocked':
                 console.log('Tool blocked:', message.tool_name);
-                this.addToolMessage(`⛔ Tool blocked: ${message.tool_name}`, 'blocked');
+                if (this.currentToolContainer) {
+                    const div = document.createElement('div');
+                    div.className = 'tool-blocked-inline';
+                    div.textContent = `⛔ Tool blocked: ${message.tool_name}`;
+                    this.currentToolContainer.appendChild(div);
+                    this.scrollToBottom();
+                } else {
+                    this.addToolMessage(`⛔ Tool blocked: ${message.tool_name}`, 'blocked');
+                }
                 break;
                 
             case 'tool_result':
                 console.log('Tool result received:', message.content);
-                this.addToolMessage(`📋 Tool result:\n${message.content}`, 'result');
+                if (this.currentToolContainer) {
+                    const details = document.createElement('details');
+                    details.className = 'tool-result-details';
+                    const lines = message.content.split('\n');
+                    const summary = document.createElement('summary');
+                    summary.textContent = `Tool result: ${lines.length} line${lines.length > 1 ? 's' : ''}`;
+                    details.appendChild(summary);
+                    const pre = document.createElement('pre');
+                    pre.textContent = message.content;
+                    details.appendChild(pre);
+                    this.currentToolContainer.appendChild(details);
+                    this.scrollToBottom();
+                } else {
+                    this.addToolMessage(`📋 Tool result:\n${message.content}`, 'result');
+                }
                 break;
                 
             case 'tool_result_blocked':
                 console.log('Tool result blocked');
-                this.addToolMessage('⛔ Tool result blocked (tool was not approved)', 'blocked');
+                if (this.currentToolContainer) {
+                    const div = document.createElement('div');
+                    div.className = 'tool-blocked-inline';
+                    div.textContent = '⛔ Tool result blocked (tool was not approved)';
+                    this.currentToolContainer.appendChild(div);
+                    this.scrollToBottom();
+                } else {
+                    this.addToolMessage('⛔ Tool result blocked (tool was not approved)', 'blocked');
+                }
                 break;
                 
             case 'error':
@@ -258,12 +311,9 @@ class MCPChatClient {
         this.approvalModal.style.display = 'none';
         this.currentApprovalId = null;
         
-        // Add a visual indicator that approval was sent
-        if (approved) {
-            this.addSystemMessage('✅ Tool execution approved', 'success');
-        } else {
-            this.addSystemMessage('❌ Tool execution denied', 'warning');
-        }
+        // Re-enable input after approval is sent
+        this.messageInput.disabled = false;
+        this.sendButton.disabled = false;
     }
     
     scrollToBottom() {

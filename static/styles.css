@@ -346,3 +346,32 @@ body {
         margin: 1rem;
     }
 }
+
+/* Tool UI improvements */
+.tool-container {
+  margin-bottom: 0.5rem;
+}
+.tool-executing-inline,
+.tool-blocked-inline {
+  font-size: 0.9rem;
+  font-family: monospace;
+  margin-bottom: 0.25rem;
+  white-space: pre-wrap;
+}
+.tool-result-details {
+  font-family: monospace;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.tool-result-details summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+.tool-result-details pre {
+  background: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  overflow: auto;
+  max-height: 200px;
+  white-space: pre-wrap;
+}
