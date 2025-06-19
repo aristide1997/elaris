@@ -145,7 +145,9 @@ class MCPChatClient {
                 
             case 'assistant_complete':
                 console.log('Assistant message complete');
+                // Close current assistant bubble and clear tool context
                 this.currentMessage = null;
+                this.currentToolContainer = null;
                 this.scrollToBottom();
                 break;
                 

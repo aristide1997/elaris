@@ -12,7 +12,7 @@ import json
 import logging
 from pathlib import Path
 
-from mcp_web_client import MCPWebClient
+from chat_session import ChatSession
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,10 +35,8 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     logger.info("New WebSocket connection established")
     
-    # Create a new MCP client instance and prepare task tracking
-    mcp_client = MCPWebClient(websocket)
-    # Track active background chat tasks
-    mcp_client.tasks = []
+    # Create a new chat session instance
+    chat_session = ChatSession(websocket)
 
     # Callback to log exceptions from background tasks
     def _log_task_result(task: asyncio.Task):
@@ -51,14 +49,11 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         # Initialize MCP servers once for this connection
-        async with mcp_client.agent.run_mcp_servers():
+        async with chat_session.agent.run_mcp_servers():
             logger.info("MCP servers initialized for WebSocket connection")
             
             # Send ready signal to client
-            await websocket.send_json({
-                "type": "system_ready",
-                "message": "MCP servers ready! You can start chatting."
-            })
+            await chat_session.send_system_ready()
             
             # Main message handling loop
             while True:
@@ -72,16 +67,16 @@ async def websocket_endpoint(websocket: WebSocket):
                         if user_input:
                             logger.info(f"Received chat message: {user_input}")
                             # Schedule handling chat message in background to allow processing approval responses
-                            task = asyncio.create_task(mcp_client.handle_chat_message(user_input))
+                            task = asyncio.create_task(chat_session.handle_chat_message(user_input))
                             task.add_done_callback(_log_task_result)
-                            mcp_client.tasks.append(task)
+                            chat_session.tasks.append(task)
                     
                     elif data["type"] == "approval_response":
                         # Handle tool approval response
                         approval_id = data["approval_id"]
                         approved = data["approved"]
                         logger.info(f"Received approval response: {approval_id} = {approved}")
-                        await mcp_client.handle_approval_response(approval_id, approved)
+                        await chat_session.handle_approval_response(approval_id, approved)
                     
                     else:
                         logger.warning(f"Unknown message type: {data['type']}")
@@ -107,7 +102,7 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         logger.info("Cleaning up WebSocket connection")
         # Cancel any pending chat handling tasks
-        for t in getattr(mcp_client, 'tasks', []):
+        for t in getattr(chat_session, 'tasks', []):
             if not t.done():
                 t.cancel()
         logger.info("Cancelled background chat tasks")
