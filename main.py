@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""
+FastAPI WebSocket server for MCP Chat Client
+Provides a web interface for the MCP client with tool approval workflow
+"""
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+import asyncio
+import json
+import logging
+from pathlib import Path
+
+from mcp_web_client import MCPWebClient
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="MCP Chat Web Client", version="1.0.0")
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/")
+async def get_chat_page():
+    """Serve the main chat interface"""
+    return HTMLResponse(open("static/index.html").read())
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """Main WebSocket endpoint for chat communication"""
+    await websocket.accept()
+    logger.info("New WebSocket connection established")
+    
+    # Create a new MCP client instance for this connection
+    mcp_client = MCPWebClient(websocket)
+    
+    try:
+        # Initialize MCP servers once for this connection
+        async with mcp_client.agent.run_mcp_servers():
+            logger.info("MCP servers initialized for WebSocket connection")
+            
+            # Send ready signal to client
+            await websocket.send_json({
+                "type": "system_ready",
+                "message": "MCP servers ready! You can start chatting."
+            })
+            
+            # Main message handling loop
+            while True:
+                try:
+                    # Receive message from client
+                    data = await websocket.receive_json()
+                    
+                    if data["type"] == "chat_message":
+                        # Handle chat message
+                        user_input = data["content"].strip()
+                        if user_input:
+                            logger.info(f"Received chat message: {user_input}")
+                            # Schedule handling chat message in background to allow processing approval responses
+                            asyncio.create_task(mcp_client.handle_chat_message(user_input))
+                    
+                    elif data["type"] == "approval_response":
+                        # Handle tool approval response
+                        approval_id = data["approval_id"]
+                        approved = data["approved"]
+                        logger.info(f"Received approval response: {approval_id} = {approved}")
+                        await mcp_client.handle_approval_response(approval_id, approved)
+                    
+                    else:
+                        logger.warning(f"Unknown message type: {data['type']}")
+                        
+                except json.JSONDecodeError:
+                    logger.error("Invalid JSON received from client")
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Invalid JSON format"
+                    })
+                    
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        try:
+            await websocket.send_json({
+                "type": "error", 
+                "message": f"Server error: {str(e)}"
+            })
+        except:
+            pass  # Connection might be closed
+    finally:
+        logger.info("Cleaning up WebSocket connection")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
