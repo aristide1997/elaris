@@ -7,7 +7,8 @@ Handles streaming responses and tool approval via WebSocket
 import asyncio
 import uuid
 import logging
-from typing import Dict
+import os
+from typing import Dict, List
 from fastapi import WebSocket
 
 from pydantic_ai import Agent
@@ -24,21 +25,57 @@ from pydantic_ai.messages import (
 
 logger = logging.getLogger(__name__)
 
+# MCP Server Configuration
+MCP_SERVERS_CONFIG = {
+    "mcpServers": {
+        "desktop-commander": {
+            "command": "npx",
+            "args": ["-y", "@wonderwhy-er/desktop-commander", "stdio"]
+        },
+        "context7": {
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+        }
+    }
+}
+
+def load_mcp_servers() -> List[MCPServerStdio]:
+    """Load MCP servers from configuration"""
+    servers = []
+    
+    for server_name, config in MCP_SERVERS_CONFIG["mcpServers"].items():
+        try:
+            # Expand environment variables in args
+            expanded_args = []
+            for arg in config["args"]:
+                if isinstance(arg, str):
+                    expanded_args.append(os.path.expandvars(arg))
+                else:
+                    expanded_args.append(arg)
+            
+            # Create MCP server instance
+            server = MCPServerStdio(
+                config["command"],
+                args=expanded_args
+            )
+            servers.append(server)
+            logger.info(f"Loaded MCP server: {server_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to load MCP server '{server_name}': {e}")
+            # Continue loading other servers instead of failing completely
+            continue
+    
+    return servers
+
 class MCPWebClient:
     def __init__(self, websocket: WebSocket):
         """Initialize the MCP Web Client with WebSocket connection"""
         self.websocket = websocket
         
-        # Initialize MCP server - same as CLI version
-        self.server = MCPServerStdio(
-            'npx',
-            args=[
-                '-y',
-                '@wonderwhy-er/desktop-commander',
-                'stdio',
-            ]
-        )
-        self.agent = Agent('openai:gpt-4.1-mini', mcp_servers=[self.server])
+        # Load multiple MCP servers from configuration
+        self.servers = load_mcp_servers()
+        self.agent = Agent('openai:gpt-4.1-mini', mcp_servers=self.servers)
         
         # Track pending approvals
         self.pending_approvals: Dict[str, asyncio.Future] = {}
