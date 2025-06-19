@@ -31,6 +31,8 @@ class MessageStreamProcessor:
     
     async def process_agent_stream(self, run):
         """Process the AI agent's streaming response"""
+        # Reset completion flag for this stream run
+        self._sent_complete = False
         try:
             async for node in run:
                 logger.info(f"Processing node type: {type(node).__name__}")
@@ -53,7 +55,10 @@ class MessageStreamProcessor:
                 elif Agent.is_end_node(node):
                     # Final completion
                     logger.info("Processing end node - conversation complete")
-                    await self.messenger.send_assistant_complete()
+                    # Only send final complete if not already sent during model streaming
+                    if not getattr(self, '_sent_complete', False):
+                        await self.messenger.send_assistant_complete()
+                        self._sent_complete = True
                 else:
                     logger.warning(f"Unknown node type: {type(node).__name__}")
                     
@@ -80,6 +85,8 @@ class MessageStreamProcessor:
         # Close the bubble if we opened one
         if started:
             await self.messenger.send_assistant_complete()
+            # Mark that we've sent a completion for this run
+            self._sent_complete = True
     
     async def _process_tool_calls(self, node, run):
         """Process tool calls with approval workflow"""

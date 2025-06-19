@@ -9,6 +9,7 @@ import logging
 from typing import Dict
 
 from websocket_messenger import WebSocketMessenger
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ToolApprovalManager:
         
         try:
             # Wait for approval response with timeout
-            approved = await asyncio.wait_for(approval_future, timeout=60.0)  # 60 second timeout
+            approved = await asyncio.wait_for(approval_future, timeout=settings.approval_timeout)  # configurable timeout
             logger.info(f"Approval received for {approval_id}: {approved}")
             return approved
         except asyncio.TimeoutError:

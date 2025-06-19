@@ -14,8 +14,11 @@ from pathlib import Path
 
 from chat_session import ChatSession
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with timestamps and context
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MCP Chat Web Client", version="1.0.0")
@@ -66,6 +69,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         user_input = data["content"].strip()
                         if user_input:
                             logger.info(f"Received chat message: {user_input}")
+                            # Prune any completed tasks to avoid memory growth
+                            chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
                             # Schedule handling chat message in background to allow processing approval responses
                             task = asyncio.create_task(chat_session.handle_chat_message(user_input))
                             task.add_done_callback(_log_task_result)

@@ -29,20 +29,22 @@ class ChatSession:
         
         # Track active background chat tasks
         self.tasks = []
+        # Ensure messages are processed sequentially per session
+        self._message_lock = asyncio.Lock()
         
         # Get the configured agent
         self.agent = self.agent_manager.get_agent()
     
     async def handle_chat_message(self, user_input: str):
         """Handle a chat message from the user with streaming response"""
-        try:
-            # Begin streaming iteration with the AI agent
-            async with self.agent.iter(user_input) as run:
-                await self.message_processor.process_agent_stream(run)
-                
-        except Exception as e:
-            logger.error(f"Error handling chat message: {e}", exc_info=True)
-            await self.messenger.send_error(f"Error processing message: {str(e)}")
+        async with self._message_lock:
+            try:
+                # Begin streaming iteration with the AI agent
+                async with self.agent.iter(user_input) as run:
+                    await self.message_processor.process_agent_stream(run)
+            except Exception as e:
+                logger.error(f"Error handling chat message: {e}", exc_info=True)
+                await self.messenger.send_error(f"Error processing message: {str(e)}")
     
     async def handle_approval_response(self, approval_id: str, approved: bool):
         """Handle approval response from the client"""

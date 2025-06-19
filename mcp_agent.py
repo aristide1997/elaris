@@ -10,36 +10,25 @@ from typing import List, Any
 from pydantic_ai import Agent
 from pydantic_ai.mcp import MCPServerStdio, CallToolFunc
 from tool_approval import ToolApprovalManager
+from config import settings
 
 logger = logging.getLogger(__name__)
-
-# MCP Server Configuration
-MCP_SERVERS_CONFIG = {
-    "mcpServers": {
-        "desktop-commander": {
-            "command": "npx",
-            "args": ["-y", "@wonderwhy-er/desktop-commander", "stdio"]
-        },
-        "context7": {
-            "command": "npx",
-            "args": ["-y", "@upstash/context7-mcp"]
-        }
-    }
-}
 
 class MCPAgentManager:
     """Manages MCP servers and AI agent with human approval for tool execution"""
     
-    def __init__(self, approval_manager: ToolApprovalManager):
+    def __init__(self, approval_manager: ToolApprovalManager, servers: list[MCPServerStdio] | None = None):
         self.approval_manager = approval_manager
-        self.servers = self._load_mcp_servers()
-        self.agent = Agent('openai:gpt-4.1-mini', mcp_servers=self.servers)
+        # Use provided servers or load from central config
+        self.servers = servers if servers is not None else self._load_mcp_servers()
+        self.agent = Agent(settings.model_name, mcp_servers=self.servers)
     
     def _load_mcp_servers(self) -> List[MCPServerStdio]:
         """Load MCP servers from configuration"""
         servers = []
         
-        for server_name, config in MCP_SERVERS_CONFIG["mcpServers"].items():
+        # Load servers from settings
+        for server_name, config in settings.mcp_servers.items():
             try:
                 # Expand environment variables in args
                 expanded_args = []
@@ -83,7 +72,15 @@ class MCPAgentManager:
         # User approved: notify that the tool is executing
         await self.approval_manager.messenger.send_tool_executing(tool_name)
         # Execute the actual tool
-        result = await call_tool(tool_name, args)
+        try:
+            result = await call_tool(tool_name, args)
+        except Exception as e:
+            logger.error(f"Error executing tool {tool_name}: {e}", exc_info=True)
+            # Notify client of tool error without terminating the session
+            await self.approval_manager.messenger.send_error(
+                f"Error executing tool {tool_name}: {str(e)}"
+            )
+            return f"Tool execution error: {str(e)}"
         # Format and send the result to the front-end
         result_content = str(result).strip()
         if result_content:
