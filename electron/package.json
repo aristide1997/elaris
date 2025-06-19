@@ -1,0 +1,55 @@
+{
+  "name": "mcp-chatbot",
+  "version": "1.0.0",
+  "description": "MCP Chatbot Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "dev": "NODE_ENV=development electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "mcp",
+    "chatbot",
+    "ai",
+    "electron"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.yourname.mcp-chatbot",
+    "productName": "MCP Chatbot",
+    "directories": {
+      "output": "../dist"
+    },
+    "files": [
+      "**/*",
+      "../python-backend/**/*",
+      "../build/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../build",
+        "to": "build"
+      }
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    }
+  }
+}

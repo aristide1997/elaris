@@ -5,12 +5,10 @@ Provides a web interface for the MCP client with tool approval workflow
 """
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
 import asyncio
 import json
 import logging
-from pathlib import Path
+import os
 
 from chat_session import ChatSession
 
@@ -22,15 +20,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MCP Chat Web Client", version="1.0.0")
-
-# Serve static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/")
-async def get_chat_page():
-    """Serve the main chat interface"""
-    # Serve index.html directly to avoid leaking file handles
-    return FileResponse(Path(__file__).parent / "static" / "index.html")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -114,4 +103,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    logger.info(f"Starting server on port {port} (from PORT env var: {os.environ.get('PORT', 'not set')})")
+    uvicorn.run(app, host="0.0.0.0", port=port)

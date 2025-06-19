@@ -4,10 +4,11 @@ class MCPChatClient {
         this.isConnected = false;
         this.currentApprovalId = null;
         this.currentMessage = null;
+        this.serverPort = null;
         
         this.initializeElements();
         this.setupEventListeners();
-        this.connect();
+        this.setupElectronListeners();
     }
     
     initializeElements() {
@@ -56,10 +57,34 @@ class MCPChatClient {
         });
     }
     
+    setupElectronListeners() {
+        // Check if we're running in Electron
+        if (window.electronAPI) {
+            // Listen for server port from main process
+            window.electronAPI.onServerPort((event, port) => {
+                console.log('Received server port from Electron:', port);
+                this.serverPort = port;
+                this.connect();
+            });
+        } else {
+            // Not in Electron, use current location (fallback for development)
+            this.connect();
+        }
+    }
+    
     connect() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        let wsUrl;
         
+        if (this.serverPort) {
+            // Running in Electron - connect to localhost with dynamic port
+            wsUrl = `ws://localhost:${this.serverPort}/ws`;
+        } else {
+            // Running in browser - use current location
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${protocol}//${window.location.host}/ws`;
+        }
+        
+        console.log('Connecting to WebSocket:', wsUrl);
         this.ws = new WebSocket(wsUrl);
         
         this.ws.onopen = () => {

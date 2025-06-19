@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 .env
 .venv/
@@ -8,4 +9,16 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 
+# Pydantic AI
 pydantic-ai/
+
+# Python backend
+python-backend/__pycache__/
+python-backend/.env
+python-backend/.venv/
+python-backend/venv/
+
+# Electron
+dist/
+build/
+node_modules/
