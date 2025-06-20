@@ -13,6 +13,37 @@
   font-weight: 600;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.debug-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.debug-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.debug-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .connection-status {
   display: flex;
   align-items: center;
@@ -30,4 +61,4 @@
 
 .status-dot.connected {
   background-color: #51cf66;
-} 
+}

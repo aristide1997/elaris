@@ -3,6 +3,7 @@ import ChatHeader from './components/ChatHeader'
 import ChatMessages from './components/ChatMessages'
 import ChatInput from './components/ChatInput'
 import ApprovalModal from './components/ApprovalModal'
+import MessageHistoryModal from './components/MessageHistoryModal'
 import { useMCPWebSocket } from './hooks/useMCPWebSocket'
 import './App.css'
 
@@ -19,6 +20,7 @@ function App() {
   ])
   
   const [approvalRequest, setApprovalRequest] = useState(null)
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false)
   // Track current assistant message ID via ref for synchronous updates
   const currentAssistantIdRef = useRef(null)
   
@@ -205,7 +207,10 @@ function App() {
 
   return (
     <div className="app">
-      <ChatHeader isConnected={isConnected} />
+      <ChatHeader 
+        isConnected={isConnected} 
+        onDebugClick={() => setIsDebugModalOpen(true)}
+      />
       <ChatMessages messages={messages} />
       <ChatInput 
         onSendMessage={handleSendMessage}
@@ -218,6 +223,11 @@ function App() {
           onDeny={() => handleApproval(false)}
         />
       )}
+      <MessageHistoryModal
+        messages={messages}
+        isOpen={isDebugModalOpen}
+        onClose={() => setIsDebugModalOpen(false)}
+      />
     </div>
   )
 }
