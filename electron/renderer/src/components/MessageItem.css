@@ -28,12 +28,14 @@
   background: #667eea;
   color: white;
   border-bottom-right-radius: 0.25rem;
+  text-align: left;
 }
 
 .assistant-message .message-content {
   background: white;
   border: 1px solid #e0e0e0;
   border-bottom-left-radius: 0.25rem;
+  text-align: left;
 }
 
 .system-message .message-content {
@@ -54,4 +56,4 @@
   .message-content {
     max-width: 85%;
   }
-} 
+}
