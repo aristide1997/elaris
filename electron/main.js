@@ -55,12 +55,12 @@ function createWindow() {
         title: 'MCP Chatbot'
     });
 
-    // Load the renderer HTML file
-    mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-
-    // Open DevTools in development
+    // Load the renderer - use Vite dev server in development, built files in production
     if (process.env.NODE_ENV === 'development') {
+        mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
+    } else {
+        mainWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'index.html'));
     }
 
     mainWindow.on('closed', () => {

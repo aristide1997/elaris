@@ -1,70 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP Chat Client</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1>🚀 MCP Chat Client</h1>
-            <div class="connection-status" id="connectionStatus">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">Connecting...</span>
-            </div>
-        </header>
-
-        <div class="chat-container">
-            <div class="messages" id="messages">
-                <div class="system-message">
-                    <div class="message-content">
-                        <strong>Welcome to MCP Chat Client!</strong><br>
-                        This interface provides access to AI with MCP (Model Context Protocol) tools.<br>
-                        You'll be asked to approve any tool executions for security.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="input-container">
-            <div class="input-wrapper">
-                <textarea 
-                    id="messageInput" 
-                    placeholder="Type your message here..." 
-                    rows="1"
-                    disabled
-                ></textarea>
-                <button id="sendButton" disabled>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22,2 15,22 11,13 2,9"></polygon>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tool Approval Modal -->
-    <div class="modal-overlay" id="approvalModal" style="display: none;">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>🔧 Tool Execution Approval</h3>
-            </div>
-            <div class="modal-body">
-                <p><strong>Tool:</strong> <span id="toolName"></span></p>
-                <p><strong>Arguments:</strong></p>
-                <pre id="toolArgs"></pre>
-                <p class="warning">⚠️ Do you want to allow this tool to execute?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" id="denyButton">❌ Deny</button>
-                <button class="btn btn-success" id="approveButton">✅ Approve</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="chat.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
