@@ -104,11 +104,41 @@ class MessageStreamProcessor:
                     await self._handle_tool_result_event(event, tool_calls_pending)
     
     async def _handle_tool_call_event(self, event: FunctionToolCallEvent, tool_calls_pending: Dict):
-        """Handle a function tool call event (no-op: approval & messaging handled by MCP hook)"""
-        # Mark this tool call as pending so result events are consumed, UI notifications are in hook
+        """Handle a function tool call event - notify UI that tool is starting"""
         tool_call_id = event.part.tool_call_id
+        tool_name = event.part.tool_name
+        
+        # Mark this tool call as pending
         tool_calls_pending[tool_call_id] = True
+        
+        # Notify UI that tool is executing
+        await self.messenger.send_tool_executing(tool_name)
     
     async def _handle_tool_result_event(self, event: FunctionToolResultEvent, tool_calls_pending: Dict):
-        """Handle a function tool result event (no-op: messaging handled by MCP hook)"""
-        # All UI notifications for tool results are issued in the process_tool_call hook
+        """Handle a function tool result event - send result to UI based on content"""
+        result = event.result  # Fix: use .result not .part
+        
+        # Handle both ToolReturnPart and RetryPromptPart
+        if hasattr(result, 'content'):
+            if isinstance(result.content, str):
+                content = result.content.strip()
+            else:
+                # Handle validation errors (list of ErrorDetails)
+                content = f"Validation error: {result.content}"
+            tool_name = result.tool_name or "unknown_tool"
+        else:
+            content = str(result).strip()
+            tool_name = getattr(result, 'tool_name', 'unknown_tool')
+        
+        # Handle different result types based on content
+        if "Tool execution denied by user" in content:
+            await self.messenger.send_tool_blocked(tool_name)
+            await self.messenger.send_tool_result_blocked()
+        elif "Tool execution error:" in content:
+            await self.messenger.send_error(content)
+        else:
+            # Successful tool execution
+            if content:
+                await self.messenger.send_tool_result(content)
+            else:
+                await self.messenger.send_tool_result("Tool executed successfully (no output)")

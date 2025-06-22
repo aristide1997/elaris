@@ -61,30 +61,16 @@ class MCPAgentManager:
     async def _process_tool_call(
         self, ctx: Any, call_tool: CallToolFunc, tool_name: str, args: dict[str, Any]
     ) -> Any:
-        """Interceptor for tool calls to enforce human approval and send UI notifications"""
+        """Interceptor for tool calls to enforce human approval"""
         # Ask user for approval
         approved = await self.approval_manager.request_approval(tool_name, args)
         if not approved:
-            # User denied: notify front-end and skip result
-            await self.approval_manager.messenger.send_tool_blocked(tool_name)
-            await self.approval_manager.messenger.send_tool_result_blocked()
             return "Tool execution denied by user"
-        # User approved: notify that the tool is executing
-        await self.approval_manager.messenger.send_tool_executing(tool_name)
+        
         # Execute the actual tool
         try:
             result = await call_tool(tool_name, args)
+            return result
         except Exception as e:
             logger.error(f"Error executing tool {tool_name}: {e}", exc_info=True)
-            # Notify client of tool error without terminating the session
-            await self.approval_manager.messenger.send_error(
-                f"Error executing tool {tool_name}: {str(e)}"
-            )
             return f"Tool execution error: {str(e)}"
-        # Format and send the result to the front-end
-        result_content = str(result).strip()
-        if result_content:
-            await self.approval_manager.messenger.send_tool_result(result_content)
-        else:
-            await self.approval_manager.messenger.send_tool_result("Tool executed successfully (no output)")
-        return result
