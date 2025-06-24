@@ -1,20 +1,27 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
+import type { UIMessage } from '../types'
 import './MessageHistoryModal.css'
 
-function MessageHistoryModal({ messages, isOpen, onClose }) {
-  const [expandedMessage, setExpandedMessage] = useState(null)
+interface MessageHistoryModalProps {
+  messages: UIMessage[]
+  isOpen: boolean
+  onClose: () => void
+}
+
+function MessageHistoryModal({ messages, isOpen, onClose }: MessageHistoryModalProps) {
+  const [expandedMessage, setExpandedMessage] = useState<string | null>(null)
 
   if (!isOpen) return null
 
-  const toggleExpanded = (messageId) => {
+  const toggleExpanded = (messageId: string): void => {
     setExpandedMessage(expandedMessage === messageId ? null : messageId)
   }
 
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString()
+  const formatTimestamp = (timestamp: Date): string => {
+    return timestamp.toLocaleString()
   }
 
-  const formatMessageForDisplay = (message) => {
+  const formatMessageForDisplay = (message: UIMessage): string => {
     const { id, type, content, timestamp, tools, subtype, ...rest } = message
     const displayObj = {
       id,
@@ -30,7 +37,7 @@ function MessageHistoryModal({ messages, isOpen, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e: React.MouseEvent<HTMLDivElement>): void => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Message History Debug View</h2>
           <button className="close-button" onClick={onClose}>×</button>

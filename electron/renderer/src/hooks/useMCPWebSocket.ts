@@ -1,15 +1,25 @@
+import type { MCPServerMessage, MCPClientMessage, MCPApprovalRequest } from '../types'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-export function useMCPWebSocket({ onMessage, onApprovalRequest }) {
-  const [isConnected, setIsConnected] = useState(false)
-  const [serverPort, setServerPort] = useState(null)
-  const wsRef = useRef(null)
-  const reconnectTimeoutRef = useRef(null)
+interface UseMCPWebSocketParams {
+  onMessage: (message: MCPServerMessage) => void
+  onApprovalRequest?: (request: MCPApprovalRequest) => void
+}
+
+export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocketParams): {
+  isConnected: boolean
+  sendMessage: (message: MCPClientMessage) => void
+  serverPort: number | null
+} {
+  const [isConnected, setIsConnected] = useState<boolean>(false)
+  const [serverPort, setServerPort] = useState<number | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Setup Electron listeners
   useEffect(() => {
     if (window.electronAPI) {
-      const handleServerPort = (event, port) => {
+      const handleServerPort = (event: any, port: number): void => {
         console.log('Received server port from Electron:', port)
         setServerPort(port)
       }
@@ -112,7 +122,7 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }) {
   }, [serverPort, connect])
 
   // Send message function
-  const sendMessage = useCallback((message) => {
+  const sendMessage = useCallback((message: MCPClientMessage) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message))
     } else {

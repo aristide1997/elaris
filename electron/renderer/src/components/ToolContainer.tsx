@@ -1,7 +1,12 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
+import type { ToolInstance } from '../types'
 import './ToolContainer.css'
 
-function ToolContainer({ tools }) {
+interface ToolContainerProps {
+  tools: ToolInstance[]
+}
+
+function ToolContainer({ tools }: ToolContainerProps) {
   return (
     <div className="tool-container">
       {tools.map((tool) => (
@@ -11,7 +16,11 @@ function ToolContainer({ tools }) {
   )
 }
 
-function ToolItem({ tool }) {
+interface ToolItemProps {
+  tool: ToolInstance
+}
+
+function ToolItem({ tool }: ToolItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   switch (tool.status) {

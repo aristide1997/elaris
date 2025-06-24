@@ -1,6 +1,12 @@
+import React, { type ReactElement } from 'react'
 import './ChatHeader.css'
 
-function ChatHeader({ isConnected, onDebugClick }) {
+interface ChatHeaderProps {
+  isConnected: boolean
+  onDebugClick: () => void
+}
+
+function ChatHeader({ isConnected, onDebugClick }: ChatHeaderProps): ReactElement {
   return (
     <header className="header">
       <h1>🚀 MCP Chat Client</h1>

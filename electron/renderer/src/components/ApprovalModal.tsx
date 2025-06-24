@@ -1,9 +1,16 @@
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
+import type { MCPApprovalRequest } from '../types'
 import './ApprovalModal.css'
 
-function ApprovalModal({ request, onApprove, onDeny }) {
+interface ApprovalModalProps {
+  request: MCPApprovalRequest
+  onApprove: () => void
+  onDeny: () => void
+}
+
+function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): React.ReactElement | null {
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         onDeny()
       }

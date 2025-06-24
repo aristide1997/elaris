@@ -1,11 +1,16 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ChangeEvent } from 'react'
 import './ChatInput.css'
 
-function ChatInput({ onSendMessage, disabled }) {
-  const [message, setMessage] = useState('')
-  const textareaRef = useRef(null)
+interface ChatInputProps {
+  onSendMessage: (content: string) => void
+  disabled: boolean
+}
 
-  const handleSubmit = (e) => {
+function ChatInput({ onSendMessage, disabled }: ChatInputProps): React.ReactElement {
+  const [message, setMessage] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
     if (message.trim() && !disabled) {
       onSendMessage(message.trim())
@@ -13,22 +18,26 @@ function ChatInput({ onSendMessage, disabled }) {
     }
   }
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e)
+      if (message.trim() && !disabled) {
+        onSendMessage(message.trim())
+        setMessage('')
+      }
     }
   }
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
     setMessage(e.target.value)
   }
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+      const el = textareaRef.current
+      el.style.setProperty('height', 'auto')
+      el.style.setProperty('height', `${el.scrollHeight}px`)
     }
   }, [message])
 
@@ -41,7 +50,7 @@ function ChatInput({ onSendMessage, disabled }) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder="Type your message here..."
-          rows="1"
+          rows={1}
           disabled={disabled}
           className="message-input"
         />

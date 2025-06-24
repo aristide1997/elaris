@@ -1,7 +1,13 @@
+import React from 'react'
+import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'
 import './MessageItem.css'
 
-function MessageItem({ message }) {
+interface MessageItemProps {
+  message: UIMessage
+}
+
+function MessageItem({ message }: MessageItemProps) {
   const getMessageClassName = () => {
     switch (message.type) {
       case 'user':

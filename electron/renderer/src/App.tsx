@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ChatHeader from './components/ChatHeader'
 import ChatMessages from './components/ChatMessages'
 import ChatInput from './components/ChatInput'
 import ApprovalModal from './components/ApprovalModal'
 import MessageHistoryModal from './components/MessageHistoryModal'
 import { useMCPWebSocket } from './hooks/useMCPWebSocket'
+import type { UIMessage, MCPServerMessage, MCPClientMessage, MCPApprovalRequest } from './types'
 import './App.css'
 
-const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2,9)}`
+const generateId = (): string => `${Date.now()}-${Math.random().toString(36).substr(2,9)}`
 
 function App() {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<UIMessage[]>([
     {
       id: 'welcome',  // static welcome message
       type: 'system',
@@ -19,12 +20,12 @@ function App() {
     }
   ])
   
-  const [approvalRequest, setApprovalRequest] = useState(null)
-  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false)
+  const [approvalRequest, setApprovalRequest] = useState<MCPApprovalRequest | null>(null)
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState<boolean>(false)
   // Track current assistant message ID via ref for synchronous updates
-  const currentAssistantIdRef = useRef(null)
+  const currentAssistantIdRef = useRef<string | null>(null)
   // Track current tool session ID
-  const currentToolSessionIdRef = useRef(null)
+  const currentToolSessionIdRef = useRef<string | null>(null)
   
   const {
     isConnected,
@@ -35,7 +36,7 @@ function App() {
     onApprovalRequest: setApprovalRequest
   })
 
-  function handleWebSocketMessage(message) {
+  function handleWebSocketMessage(message: MCPServerMessage): void {
     console.log('Received message:', message)
     
     switch (message.type) {
@@ -204,7 +205,7 @@ function App() {
     setMessages(prev => [...prev, newMessage])
   }
 
-  function handleSendMessage(content) {
+  function handleSendMessage(content: string): void {
     // Add user message to UI
     addMessage('user', content)
     
@@ -217,7 +218,7 @@ function App() {
     }
   }
 
-  function handleApproval(approved) {
+  function handleApproval(approved: boolean): void {
     if (approvalRequest && sendWebSocketMessage) {
       // Update tool status based on approval
       if (currentToolSessionIdRef.current) {

@@ -1,9 +1,14 @@
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
+import type { UIMessage } from '../types'
 import MessageItem from './MessageItem'
 import './ChatMessages.css'
 
-function ChatMessages({ messages }) {
-  const messagesEndRef = useRef(null)
+interface ChatMessagesProps {
+  messages: UIMessage[]
+}
+
+function ChatMessages({ messages }: ChatMessagesProps) {
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
