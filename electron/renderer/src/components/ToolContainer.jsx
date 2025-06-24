@@ -4,8 +4,8 @@ import './ToolContainer.css'
 function ToolContainer({ tools }) {
   return (
     <div className="tool-container">
-      {tools.map((tool, index) => (
-        <ToolItem key={index} tool={tool} />
+      {tools.map((tool) => (
+        <ToolItem key={tool.id || tool.name} tool={tool} />
       ))}
     </div>
   )
@@ -14,13 +14,39 @@ function ToolContainer({ tools }) {
 function ToolItem({ tool }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  switch (tool.type) {
+  switch (tool.status) {
+    case 'pending_approval':
+      return (
+        <div className="tool-pending-inline">
+          ⏳ Awaiting approval: {tool.name}
+        </div>
+      )
+    
     case 'executing':
       return (
         <div className="tool-executing-inline">
           🔧 Executing tool: {tool.name}
         </div>
       )
+    
+    case 'completed':
+      if (tool.result) {
+        const lines = tool.result.split('\n')
+        return (
+          <details className="tool-result-details">
+            <summary>
+              ✅ {tool.name}: {lines.length} line{lines.length > 1 ? 's' : ''}
+            </summary>
+            <pre>{tool.result}</pre>
+          </details>
+        )
+      } else {
+        return (
+          <div className="tool-completed-inline">
+            ✅ {tool.name} completed
+          </div>
+        )
+      }
     
     case 'blocked':
       return (
@@ -29,27 +55,20 @@ function ToolItem({ tool }) {
         </div>
       )
     
-    case 'result':
-      const lines = tool.content.split('\n')
+    case 'error':
       return (
-        <details className="tool-result-details">
-          <summary>
-            Tool result: {lines.length} line{lines.length > 1 ? 's' : ''}
-          </summary>
-          <pre>{tool.content}</pre>
-        </details>
-      )
-    
-    case 'result_blocked':
-      return (
-        <div className="tool-blocked-inline">
-          ⛔ Tool result blocked (tool was not approved)
+        <div className="tool-error-inline">
+          ❌ Tool error: {tool.name} - {tool.result || 'Unknown error'}
         </div>
       )
     
     default:
-      return null
+      return (
+        <div className="tool-unknown-inline">
+          ❓ {tool.name}: {tool.status}
+        </div>
+      )
   }
 }
 
-export default ToolContainer 
+export default ToolContainer

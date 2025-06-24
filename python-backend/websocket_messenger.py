@@ -40,21 +40,31 @@ class WebSocketMessenger:
         """Send streaming text content"""
         await self.send_message("text_delta", content=content)
     
-    async def send_tool_executing(self, tool_name: str):
-        """Notify that a tool is being executed"""
-        await self.send_message("tool_executing", tool_name=tool_name)
+    # Tool execution phase events (new graph-aligned events)
+    async def send_tool_session_start(self):
+        """Signal start of tool execution phase (CallToolsNode)"""
+        await self.send_message("tool_session_start")
     
-    async def send_tool_blocked(self, tool_name: str):
-        """Notify that a tool was blocked"""
-        await self.send_message("tool_blocked", tool_name=tool_name)
+    async def send_tool_session_complete(self):
+        """Signal completion of tool execution phase"""
+        await self.send_message("tool_session_complete")
     
-    async def send_tool_result(self, content: str):
-        """Send tool execution result"""
-        await self.send_message("tool_result", content=content)
+    async def send_tool_start(self, tool_name: str, tool_id: str):
+        """Signal individual tool execution start"""
+        await self.send_message("tool_start", tool_name=tool_name, tool_id=tool_id)
     
-    async def send_tool_result_blocked(self):
-        """Notify that tool result was blocked"""
-        await self.send_message("tool_result_blocked")
+    async def send_tool_complete(self, tool_id: str, tool_name: str, content: str):
+        """Signal individual tool execution completion"""
+        await self.send_message("tool_complete", tool_id=tool_id, tool_name=tool_name, content=content)
+    
+    async def send_tool_blocked(self, tool_id: str, tool_name: str):
+        """Signal individual tool was blocked"""
+        await self.send_message("tool_blocked", tool_id=tool_id, tool_name=tool_name)
+    
+    async def send_tool_error(self, tool_id: str, tool_name: str, error: str):
+        """Signal individual tool error"""
+        await self.send_message("tool_error", tool_id=tool_id, tool_name=tool_name, error=error)
+    
     
     async def send_error(self, message: str):
         """Send error message"""

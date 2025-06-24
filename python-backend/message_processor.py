@@ -89,19 +89,29 @@ class MessageStreamProcessor:
             self._sent_complete = True
     
     async def _process_tool_calls(self, node, run):
-        """Process tool calls with approval workflow"""
+        """Process CallToolsNode - this handles both tool calls AND text-only responses"""
         tool_calls_pending = {}
+        tool_session_started = False
         
         async with node.stream(run.ctx) as handle_stream:
-            logger.info("Starting to iterate through tool call events...")
+            logger.info("Processing CallToolsNode stream...")
             async for event in handle_stream:
-                logger.info(f"Received event in tool calls stream: {type(event).__name__}")
+                logger.info(f"Received event in CallToolsNode stream: {type(event).__name__}")
                 
                 if isinstance(event, FunctionToolCallEvent):
+                    # First tool call event - start tool session
+                    if not tool_session_started:
+                        await self.messenger.send_tool_session_start()
+                        tool_session_started = True
                     await self._handle_tool_call_event(event, tool_calls_pending)
                 
                 elif isinstance(event, FunctionToolResultEvent):
                     await self._handle_tool_result_event(event, tool_calls_pending)
+        
+        # Complete tool session if we started one
+        if tool_session_started:
+            await self.messenger.send_tool_session_complete()
+        # If no tool events were yielded, this was a text-only response - no tool session needed
     
     async def _handle_tool_call_event(self, event: FunctionToolCallEvent, tool_calls_pending: Dict):
         """Handle a function tool call event - notify UI that tool is starting"""
@@ -109,14 +119,15 @@ class MessageStreamProcessor:
         tool_name = event.part.tool_name
         
         # Mark this tool call as pending
-        tool_calls_pending[tool_call_id] = True
+        tool_calls_pending[tool_call_id] = {'name': tool_name, 'started': True}
         
-        # Notify UI that tool is executing
-        await self.messenger.send_tool_executing(tool_name)
+        # Use new graph-aligned event with tool ID
+        await self.messenger.send_tool_start(tool_name, tool_call_id)
     
     async def _handle_tool_result_event(self, event: FunctionToolResultEvent, tool_calls_pending: Dict):
         """Handle a function tool result event - send result to UI based on content"""
-        result = event.result  # Fix: use .result not .part
+        result = event.result
+        tool_call_id = event.tool_call_id
         
         # Handle both ToolReturnPart and RetryPromptPart
         if hasattr(result, 'content'):
@@ -132,13 +143,12 @@ class MessageStreamProcessor:
         
         # Handle different result types based on content
         if "Tool execution denied by user" in content:
-            await self.messenger.send_tool_blocked(tool_name)
-            await self.messenger.send_tool_result_blocked()
+            await self.messenger.send_tool_blocked(tool_call_id, tool_name)
         elif "Tool execution error:" in content:
-            await self.messenger.send_error(content)
+            await self.messenger.send_tool_error(tool_call_id, tool_name, content)
         else:
             # Successful tool execution
             if content:
-                await self.messenger.send_tool_result(content)
+                await self.messenger.send_tool_complete(tool_call_id, tool_name, content)
             else:
-                await self.messenger.send_tool_result("Tool executed successfully (no output)")
+                await self.messenger.send_tool_complete(tool_call_id, tool_name, "Tool executed successfully (no output)")

@@ -2,12 +2,21 @@
   margin-bottom: 0.5rem;
 }
 
+.tool-pending-inline,
 .tool-executing-inline,
-.tool-blocked-inline {
+.tool-blocked-inline,
+.tool-completed-inline,
+.tool-error-inline {
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
+}
+
+.tool-pending-inline {
+  background: #fff3e0;
+  border: 1px solid #ff9800;
+  color: #ef6c00;
 }
 
 .tool-executing-inline {
@@ -17,6 +26,18 @@
 }
 
 .tool-blocked-inline {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  color: #c62828;
+}
+
+.tool-completed-inline {
+  background: #e8f5e8;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+}
+
+.tool-error-inline {
   background: #ffebee;
   border: 1px solid #f44336;
   color: #c62828;
@@ -46,4 +67,4 @@
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
-} 
+}

@@ -23,6 +23,8 @@ function App() {
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false)
   // Track current assistant message ID via ref for synchronous updates
   const currentAssistantIdRef = useRef(null)
+  // Track current tool session ID
+  const currentToolSessionIdRef = useRef(null)
   
   const {
     isConnected,
@@ -43,14 +45,12 @@ function App() {
         
       case 'assistant_start':
         console.log('Starting new assistant message')
-        // Only create a new assistant message if none is currently open (reuse fallback bubbles)
         if (!currentAssistantIdRef.current) {
           const newId = generateId()
           const newAssistantMsg = {
             id: newId,
             type: 'assistant',
             content: '',
-            tools: [],
             timestamp: new Date()
           }
           currentAssistantIdRef.current = newId
@@ -60,17 +60,14 @@ function App() {
         
       case 'text_delta':
         console.log('Received text_delta:', message.content)
-        // Determine which assistant message to update
         let msgId = currentAssistantIdRef.current
-        // Fallback if no active assistant message
         if (!msgId) {
           console.log('No assistant message, creating one from text_delta')
           msgId = generateId()
           currentAssistantIdRef.current = msgId
-          const fallbackMsg = { id: msgId, type: 'assistant', content: '', tools: [], timestamp: new Date() }
+          const fallbackMsg = { id: msgId, type: 'assistant', content: '', timestamp: new Date() }
           setMessages(prev => [...prev, fallbackMsg])
         }
-        // Append the delta content to the assistant message with msgId
         setMessages(prev => prev.map(msg =>
           msg.id === msgId
             ? { ...msg, content: msg.content + message.content }
@@ -79,85 +76,111 @@ function App() {
         break
         
       case 'assistant_complete':
-        // Clear the current assistant message ID
         currentAssistantIdRef.current = null
         break
+      
+      // New graph-aligned tool events
+      case 'tool_session_start':
+        console.log('Starting tool session')
+        const toolSessionId = generateId()
+        currentToolSessionIdRef.current = toolSessionId
+        const toolSessionMsg = {
+          id: toolSessionId,
+          type: 'tool_session',
+          tools: [],
+          status: 'executing',
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, toolSessionMsg])
+        break
         
-      case 'tool_executing':
-        // Handle tool executing update, grouping by assistant message or fallback
-        {
-          const toolUpdate = { type: 'executing', name: message.tool_name, timestamp: new Date() }
-          if (currentAssistantIdRef.current) {
-            // Append to current assistant message
-            setMessages(prev => prev.map(msg =>
-              msg.id === currentAssistantIdRef.current
-                ? { ...msg, tools: [...msg.tools, toolUpdate] }
-                : msg
-            ))
-          } else {
-            // Fallback: create a new assistant message for the tool update
-            const newId = generateId()
-            currentAssistantIdRef.current = newId
-            const newMsg = { id: newId, type: 'assistant', content: '', tools: [toolUpdate], timestamp: new Date() }
-            setMessages(prev => [...prev, newMsg])
-          }
+      case 'tool_start':
+        console.log('Tool starting:', message.tool_name, message.tool_id)
+        if (currentToolSessionIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentToolSessionIdRef.current
+              ? {
+                  ...msg,
+                  tools: [...msg.tools, {
+                    id: message.tool_id,
+                    name: message.tool_name,
+                    status: 'pending_approval',
+                    timestamp: new Date()
+                  }]
+                }
+              : msg
+          ))
+        }
+        break
+        
+      case 'tool_complete':
+        console.log('Tool completed:', message.tool_id)
+        if (currentToolSessionIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentToolSessionIdRef.current
+              ? {
+                  ...msg,
+                  status: 'completed',
+                  tools: msg.tools.map(tool =>
+                    tool.id === message.tool_id
+                      ? { ...tool, status: 'completed', result: message.content }
+                      : tool
+                  )
+                }
+              : msg
+          ))
         }
         break
         
       case 'tool_blocked':
-        // Handle tool blocked update, grouping by assistant message or fallback
-        {
-          const toolUpdate = { type: 'blocked', name: message.tool_name, timestamp: new Date() }
-          if (currentAssistantIdRef.current) {
-            setMessages(prev => prev.map(msg =>
-              msg.id === currentAssistantIdRef.current
-                ? { ...msg, tools: [...msg.tools, toolUpdate] }
-                : msg
-            ))
-          } else {
-            const newId = generateId()
-            currentAssistantIdRef.current = newId
-            const newMsg = { id: newId, type: 'assistant', content: '', tools: [toolUpdate], timestamp: new Date() }
-            setMessages(prev => [...prev, newMsg])
-          }
+        console.log('Tool blocked:', message.tool_id)
+        if (currentToolSessionIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentToolSessionIdRef.current
+              ? {
+                  ...msg,
+                  status: 'blocked',
+                  tools: msg.tools.map(tool =>
+                    tool.id === message.tool_id
+                      ? { ...tool, status: 'blocked' }
+                      : tool
+                  )
+                }
+              : msg
+          ))
         }
         break
         
-      case 'tool_result':
-        // Handle tool result update, grouping by assistant message or fallback
-        {
-          const toolUpdate = { type: 'result', content: message.content, timestamp: new Date() }
-          if (currentAssistantIdRef.current) {
-            setMessages(prev => prev.map(msg =>
-              msg.id === currentAssistantIdRef.current
-                ? { ...msg, tools: [...msg.tools, toolUpdate] }
-                : msg
-            ))
-          } else {
-            const newId = generateId()
-            currentAssistantIdRef.current = newId
-            const newMsg = { id: newId, type: 'assistant', content: '', tools: [toolUpdate], timestamp: new Date() }
-            setMessages(prev => [...prev, newMsg])
-          }
+      case 'tool_error':
+        console.log('Tool error:', message.tool_id)
+        if (currentToolSessionIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentToolSessionIdRef.current
+              ? {
+                  ...msg,
+                  tools: msg.tools.map(tool =>
+                    tool.id === message.tool_id
+                      ? { ...tool, status: 'error', result: message.error }
+                      : tool
+                  )
+                }
+              : msg
+          ))
         }
         break
         
-      case 'tool_result_blocked':
-        // Handle tool result blocked update, grouping by assistant message or fallback
-        {
-          const toolUpdate = { type: 'result_blocked', timestamp: new Date() }
-          if (currentAssistantIdRef.current) {
-            setMessages(prev => prev.map(msg =>
-              msg.id === currentAssistantIdRef.current
-                ? { ...msg, tools: [...msg.tools, toolUpdate] }
-                : msg
-            ))
-          } else {
-            const newId = generateId()
-            currentAssistantIdRef.current = newId
-            const newMsg = { id: newId, type: 'assistant', content: '', tools: [toolUpdate], timestamp: new Date() }
-            setMessages(prev => [...prev, newMsg])
-          }
+      case 'tool_session_complete':
+        console.log('Tool session completed')
+        if (currentToolSessionIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentToolSessionIdRef.current
+              ? { 
+                  ...msg, 
+                  status: msg.tools.some(tool => tool.status === 'blocked') ? 'blocked' : 'completed'
+                }
+              : msg
+          ))
+          currentToolSessionIdRef.current = null
         }
         break
 
@@ -196,6 +219,22 @@ function App() {
 
   function handleApproval(approved) {
     if (approvalRequest && sendWebSocketMessage) {
+      // Update tool status based on approval
+      if (currentToolSessionIdRef.current) {
+        setMessages(prev => prev.map(msg =>
+          msg.id === currentToolSessionIdRef.current
+            ? {
+                ...msg,
+                tools: msg.tools.map(tool =>
+                  tool.name === approvalRequest.tool_name && tool.status === 'pending_approval'
+                    ? { ...tool, status: approved ? 'executing' : 'blocked' }
+                    : tool
+                )
+              }
+            : msg
+        ))
+      }
+      
       sendWebSocketMessage({
         type: 'approval_response',
         approval_id: approvalRequest.approval_id,
