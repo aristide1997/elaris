@@ -11,6 +11,7 @@ from websocket_messenger import WebSocketMessenger
 from tool_approval import ToolApprovalManager
 from mcp_agent import MCPAgentManager
 from message_processor import MessageStreamProcessor
+from conversation_db import get_conversation_by_id, save_conversation, update_conversation
 
 logger = logging.getLogger(__name__)
 
@@ -35,16 +36,61 @@ class ChatSession:
         # Get the configured agent
         self.agent = self.agent_manager.get_agent()
     
-    async def handle_chat_message(self, user_input: str):
+    async def handle_chat_message(self, user_input: str, conversation_id: str):
         """Handle a chat message from the user with streaming response"""
         async with self._message_lock:
             try:
+                # Fetch previous messages if the conversation exists
+                conversation = await get_conversation_by_id(conversation_id)
+                if conversation:
+                    message_history = conversation['messages']
+                    logger.info(f"Continuing conversation {conversation_id} with {len(message_history)} messages")
+                else:
+                    message_history = None
+                    logger.info(f"Starting new conversation {conversation_id}")
+                
                 # Begin streaming iteration with the AI agent
-                async with self.agent.iter(user_input) as run:
+                async with self.agent.iter(user_input, message_history=message_history) as run:
                     await self.message_processor.process_agent_stream(run)
+                    
+                    # After stream completes, save or update the conversation
+                    await self._save_conversation(run.result, conversation_id)
+                    
             except Exception as e:
                 logger.error(f"Error handling chat message: {e}", exc_info=True)
                 await self.messenger.send_error(f"Error processing message: {str(e)}")
+    
+    async def _save_conversation(self, result, conversation_id: str):
+        """Save or update the conversation to database based on conversation_id"""
+        try:
+            # Get all messages (complete conversation history)
+            all_messages = result.all_messages()
+            # Check if this conversation already exists
+            existing = await get_conversation_by_id(conversation_id)
+            if existing:
+                await update_conversation(conversation_id, all_messages, result.usage)
+                # Get token count for logging
+                usage_data = result.usage() if callable(result.usage) else result.usage
+                token_count = getattr(usage_data, "total_tokens", "Unknown")
+                logger.info(f"Updated conversation {conversation_id} - "
+                            f"Messages: {len(all_messages)}, "
+                            f"Usage: {token_count} tokens")
+            else:
+                await save_conversation(
+                    conversation_id,
+                    all_messages,
+                    result.usage
+                )
+                # Get token count for logging
+                usage_data = result.usage() if callable(result.usage) else result.usage
+                token_count = getattr(usage_data, "total_tokens", "Unknown")
+                logger.info(f"Saved new conversation {conversation_id} - "
+                            f"Messages: {len(all_messages)}, "
+                            f"Usage: {token_count} tokens")
+            return conversation_id
+        except Exception as e:
+            logger.error(f"Error saving conversation: {e}", exc_info=True)
+            return None
     
     async def handle_approval_response(self, approval_id: str, approved: bool):
         """Handle approval response from the client"""

@@ -61,11 +61,6 @@ class WebSocketMessenger:
         """Signal individual tool was blocked"""
         await self.send_message("tool_blocked", tool_id=tool_id, tool_name=tool_name)
     
-    async def send_tool_error(self, tool_id: str, tool_name: str, error: str):
-        """Signal individual tool error"""
-        await self.send_message("tool_error", tool_id=tool_id, tool_name=tool_name, error=error)
-    
-    
     async def send_error(self, message: str):
         """Send error message"""
         await self.send_message("error", message=message)

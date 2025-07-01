@@ -1,0 +1,81 @@
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal content */
+.modal-content {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  width: 420px;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.conversation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.conversation-item {
+  margin-bottom: 8px;
+}
+
+.conversation-button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  background: #f7f7f7;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conversation-button:hover {
+  background: #eaeaea;
+}
+
+.conversation-date {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.conversation-preview {
+  flex: 2;
+  padding: 0 8px;
+  color: #333;
+}
+
+.conversation-count {
+  flex: 0;
+  font-size: 0.85rem;
+  color: #555;
+} 

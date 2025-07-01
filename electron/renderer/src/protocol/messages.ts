@@ -56,6 +56,7 @@ export interface ToolSessionCompleteEvent {
 export interface ApprovalRequestEvent {
   type: 'approval_request'
   approval_id: string
+  tool_id: string
   tool_name: string
   args: Record<string, any>
 }

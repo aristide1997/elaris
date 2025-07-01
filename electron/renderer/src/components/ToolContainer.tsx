@@ -64,13 +64,6 @@ function ToolItem({ tool }: ToolItemProps) {
         </div>
       )
     
-    case 'error':
-      return (
-        <div className="tool-error-inline">
-          ❌ Tool error: {tool.name} - {tool.result || 'Unknown error'}
-        </div>
-      )
-    
     default:
       return (
         <div className="tool-unknown-inline">

@@ -4,14 +4,18 @@ import './ChatHeader.css'
 interface ChatHeaderProps {
   isConnected: boolean
   onDebugClick: () => void
+  onHistoryClick: () => void
 }
 
-function ChatHeader({ isConnected, onDebugClick }: ChatHeaderProps): ReactElement {
+function ChatHeader({ isConnected, onDebugClick, onHistoryClick }: ChatHeaderProps): ReactElement {
   return (
     <header className="header">
       <h1>🚀 MCP Chat Client</h1>
       <div className="header-controls">
-        <button className="debug-button" onClick={onDebugClick} title="View Message History">
+        <button className="history-button" onClick={onHistoryClick} title="View Conversations">
+          📜 History
+        </button>
+        <button className="debug-button" onClick={onDebugClick} title="View Message Debug">
           🔍 Debug
         </button>
         <div className="connection-status">

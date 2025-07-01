@@ -141,14 +141,12 @@ class MessageStreamProcessor:
             content = str(result).strip()
             tool_name = getattr(result, 'tool_name', 'unknown_tool')
         
-        # Handle different result types based on content
+        # Only differentiate blocked tools, treat errors and successes the same
         if "Tool execution denied by user" in content:
             await self.messenger.send_tool_blocked(tool_call_id, tool_name)
-        elif "Tool execution error:" in content:
-            await self.messenger.send_tool_error(tool_call_id, tool_name, content)
         else:
-            # Successful tool execution
+            # All tool executions (success or error) are treated the same
             if content:
                 await self.messenger.send_tool_complete(tool_call_id, tool_name, content)
             else:
-                await self.messenger.send_tool_complete(tool_call_id, tool_name, "Tool executed successfully (no output)")
+                await self.messenger.send_tool_complete(tool_call_id, tool_name, "Tool executed (no output)")

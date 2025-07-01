@@ -72,5 +72,7 @@ class MCPAgentManager:
             result = await call_tool(tool_name, args)
             return result
         except Exception as e:
+            # Log the error but format it as a normal response for the agent
             logger.error(f"Error executing tool {tool_name}: {e}", exc_info=True)
-            return f"Tool execution error: {str(e)}"
+            # Return error information in a format similar to successful responses
+            return f"Error occurred: {str(e)}"

@@ -1,6 +1,6 @@
 import type { ClientToServerMessage, ServerToClientMessage, ApprovalRequestEvent } from './protocol/messages';
 
-export type ToolStatus = 'pending_approval' | 'executing' | 'completed' | 'blocked' | 'error';
+export type ToolStatus = 'pending_approval' | 'executing' | 'completed' | 'blocked';
 
 export interface ToolInstance {
   id: string;
@@ -45,4 +45,4 @@ export type UIMessage = SystemMessage | UserMessage | AssistantMessage | ToolSes
 
 export type MCPApprovalRequest = ApprovalRequestEvent;
 export type MCPServerMessage = ServerToClientMessage;
-export type MCPClientMessage = ClientToServerMessage; 
+export type MCPClientMessage = ClientToServerMessage;

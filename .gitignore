@@ -22,3 +22,6 @@ python-backend/venv/
 dist/
 build/
 node_modules/
+
+# DB
+*.db

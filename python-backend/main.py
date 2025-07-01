@@ -4,13 +4,15 @@ FastAPI WebSocket server for MCP Chat Client
 Provides a web interface for the MCP client with tool approval workflow
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import json
 import logging
 import os
 
 from chat_session import ChatSession
+from conversation_db import init_db, get_conversation_history, get_conversation_by_id, delete_conversation
 
 # Configure logging with timestamps and context
 logging.basicConfig(
@@ -20,6 +22,69 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MCP Chat Web Client", version="1.0.0")
+
+# Allow cross-origin requests from any origin (e.g. Vite dev server or Electron renderer)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# API endpoints for conversation management
+@app.get("/api/conversations")
+async def list_conversations(limit: int = 10):
+    """Get conversation history"""
+    try:
+        conversations = await get_conversation_history(limit)
+        return {
+            "status": "success",
+            "conversations": [
+                {
+                    "conversation_id": conv["conversation_id"],
+                    "created_at": conv["created_at"],
+                    "updated_at": conv["updated_at"],
+                    "message_count": len(conv["messages"]),
+                    # Include first user message as preview
+                    "preview": next((msg["content"] for msg in conv["messages"] 
+                                    if isinstance(msg, dict) and msg.get("type") == "user_prompt"), "")
+                }
+                for conv in conversations
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error listing conversations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/conversations/{conversation_id}")
+async def get_conversation(conversation_id: str):
+    """Get a specific conversation by ID"""
+    conversation = await get_conversation_by_id(conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail=f"Conversation {conversation_id} not found")
+    return {
+        "status": "success",
+        "conversation": conversation
+    }
+
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation_by_id(conversation_id: str):
+    """Delete a specific conversation by ID"""
+    success = await delete_conversation(conversation_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Conversation {conversation_id} not found")
+    return {
+        "status": "success",
+        "message": f"Conversation {conversation_id} deleted"
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize resources on startup"""
+    logger.info("Initializing database...")
+    await init_db()
+    logger.info("Database initialized")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -56,12 +121,19 @@ async def websocket_endpoint(websocket: WebSocket):
                     if data["type"] == "chat_message":
                         # Handle chat message
                         user_input = data["content"].strip()
+                        # Require conversation_id (provided by frontend)
+                        conversation_id = data.get("conversation_id")
+                        if not conversation_id:
+                            logger.error("Missing conversation_id from client message")
+                            await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
+                            continue
+                        
                         if user_input:
-                            logger.info(f"Received chat message: {user_input}")
+                            logger.info(f"Received chat message: {user_input} for conversation: {conversation_id}")
                             # Prune any completed tasks to avoid memory growth
                             chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
                             # Schedule handling chat message in background to allow processing approval responses
-                            task = asyncio.create_task(chat_session.handle_chat_message(user_input))
+                            task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id))
                             task.add_done_callback(_log_task_result)
                             chat_session.tasks.append(task)
                     
