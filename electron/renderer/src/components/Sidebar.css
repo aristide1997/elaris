@@ -2,22 +2,24 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f8f9fa;
+  background: var(--color-surface);
 }
 
 .sidebar-header {
   flex-shrink: 0;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e8ecf4;
-  padding: 1rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-3);
 }
 
 .sidebar-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 1rem 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-2) 0;
   padding: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .sidebar-content {
@@ -25,12 +27,48 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #f8f9fa;
+  background: var(--color-surface);
+  padding: var(--space-2) 0;
 }
 
 .sidebar-footer {
   flex-shrink: 0;
-  border-top: 1px solid #e8ecf4;
-  background: #f8f9fa;
-  padding-bottom: 4px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  padding: var(--space-2);
+}
+
+/* Improved scrolling area within sidebar content */
+.sidebar-content > * {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.sidebar-content > *::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-content > *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-content > *::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.sidebar-content > *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary);
+}
+
+/* Responsive - even more compact on mobile */
+@media (max-width: 640px) {
+  .sidebar-header {
+    padding: var(--space-2);
+  }
+  
+  .sidebar-footer {
+    padding: var(--space-1);
+  }
 }

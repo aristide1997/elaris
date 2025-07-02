@@ -1,10 +1,11 @@
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 280px 1fr;
   flex: 1;
   overflow: hidden;
-  background: white;
+  background: var(--color-background);
   position: relative;
+  gap: 0;
 }
 
 .layout.sidebar-collapsed {
@@ -12,14 +13,13 @@
 }
 
 .sidebar {
-  background: #f8f9fa;
-  border-right: 1px solid #e0e0e0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s ease;
-  z-index: 1000;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  position: relative;
 }
 
 .sidebar.collapsed {
@@ -30,5 +30,36 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: white;
+  background: var(--color-background);
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .layout {
+    grid-template-columns: 240px 1fr;
+  }
+  
+  .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 240px;
+    z-index: 1000;
+  }
+  
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+  
+  .layout.sidebar-collapsed .main-content {
+    grid-column: 1 / -1;
+  }
 }
