@@ -181,6 +181,13 @@ export function useConversation() {
     dispatch({ type: 'init_messages', payload: { messages: uiMsgs } })
   }
 
+  const startNewChat = () => {
+    const newConversationId = generateId()
+    setConversationId(newConversationId)
+    dispatch({ type: 'init_messages', payload: { messages: initialMessages } })
+    setIsConversationListOpen(false)
+  }
+
   return {
     messages: chatState.messages,
     isConnected,
@@ -194,6 +201,7 @@ export function useConversation() {
     openDebug,
     closeDebug,
     selectConversation,
+    startNewChat,
     serverPort
   }
-} 
+}

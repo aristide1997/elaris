@@ -1,0 +1,36 @@
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8f9fa;
+}
+
+.sidebar-header {
+  flex-shrink: 0;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8ecf4;
+  padding: 1rem;
+}
+
+.sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+  padding: 0;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.sidebar-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #e8ecf4;
+  background: #f8f9fa;
+  padding-bottom: 4px;
+}

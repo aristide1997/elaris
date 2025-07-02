@@ -1,0 +1,34 @@
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  flex: 1;
+  overflow: hidden;
+  background: white;
+  position: relative;
+}
+
+.layout.sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar {
+  background: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: white;
+}
