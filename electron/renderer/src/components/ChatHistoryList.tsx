@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useChat } from '../context/ChatContext'
+import { useChatStore } from '../stores/useChatStore'
 import './ChatHistoryList.css'
 
 interface ConversationSummary {
@@ -11,7 +11,9 @@ interface ConversationSummary {
 }
 
 const ChatHistoryList: React.FC = () => {
-  const { selectConversation, serverPort, conversationId } = useChat()
+  const selectConversation = useChatStore(state => state.selectConversation)
+  const serverPort = useChatStore(state => state.serverPort)
+  const conversationId = useChatStore(state => state.conversationId)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)

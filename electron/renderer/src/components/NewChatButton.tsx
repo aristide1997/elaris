@@ -1,9 +1,9 @@
 import React from 'react'
-import { useChat } from '../context/ChatContext'
+import { useChatStore } from '../stores/useChatStore'
 import './NewChatButton.css'
 
 const NewChatButton: React.FC = () => {
-  const { startNewChat } = useChat()
+  const startNewChat = useChatStore(state => state.startNewChat)
 
   return (
     <button className="new-chat-button" onClick={startNewChat}>
