@@ -1,4 +1,4 @@
-import { useState, useReducer } from 'react'
+import { useState, useReducer, useEffect, useRef } from 'react'
 import { useMCPWebSocket } from './useMCPWebSocket'
 import type { UIMessage, MCPServerMessage, MCPClientMessage, MCPApprovalRequest, ToolSessionMessage, ToolInstance } from '../types'
 import { messageReducer } from '../utils/messageReducer'
@@ -22,7 +22,7 @@ export function useConversation() {
   }
 
   const [chatState, dispatch] = useReducer(messageReducer, initialState)
-  const [conversationId, setConversationId] = useState<string>(() => generateId())
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [isConversationListOpen, setIsConversationListOpen] = useState<boolean>(false)
   const [approvalQueue, setApprovalQueue] = useState<MCPApprovalRequest[]>([])
   const [isDebugModalOpen, setIsDebugModalOpen] = useState<boolean>(false)
@@ -181,15 +181,37 @@ export function useConversation() {
     dispatch({ type: 'init_messages', payload: { messages: uiMsgs } })
   }
 
-  const startNewChat = () => {
-    const newConversationId = generateId()
-    setConversationId(newConversationId)
-    dispatch({ type: 'init_messages', payload: { messages: initialMessages } })
-    setIsConversationListOpen(false)
+  const startNewChat = async () => {
+    try {
+      // create stub conversation on server
+      const url = serverPort
+        ? `http://localhost:${serverPort}/api/conversations`
+        : `/api/conversations`
+      const resp = await fetch(url, { method: 'POST' })
+      if (!resp.ok) throw new Error(`Status ${resp.status}`)
+      const data = await resp.json()
+      const newConversationId = data.conversation_id
+      setConversationId(newConversationId)
+      dispatch({ type: 'init_messages', payload: { messages: initialMessages } })
+      setIsConversationListOpen(false)
+    } catch (err: any) {
+      console.error('Failed to create new conversation:', err)
+      dispatch({ type: 'error', payload: { message: `Failed to create new conversation: ${err.message}` } })
+    }
   }
+
+  // Initialize stub only once, after WebSocket connects
+  const didInitRef = useRef<boolean>(false)
+  useEffect(() => {
+    if (isConnected && !didInitRef.current) {
+      didInitRef.current = true
+      void startNewChat()
+    }
+  }, [isConnected])
 
   return {
     messages: chatState.messages,
+    conversationId,
     isConnected,
     sendMessage: handleSendMessage,
     currentApprovalRequest,

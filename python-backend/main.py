@@ -10,9 +10,11 @@ import asyncio
 import json
 import logging
 import os
+from uuid import uuid4
+from types import SimpleNamespace
 
 from chat_session import ChatSession
-from conversation_db import init_db, get_conversation_history, get_conversation_by_id, delete_conversation
+from conversation_db import init_db, get_conversation_history, get_conversation_by_id, delete_conversation, save_conversation
 
 # Configure logging with timestamps and context
 logging.basicConfig(
@@ -78,6 +80,14 @@ async def delete_conversation_by_id(conversation_id: str):
         "status": "success",
         "message": f"Conversation {conversation_id} deleted"
     }
+
+@app.post("/api/conversations")
+async def create_conversation():
+    """Create a new empty conversation stub"""
+    new_id = str(uuid4())
+    usage = SimpleNamespace(total_tokens=0, request_tokens=0, response_tokens=0, requests=0)
+    await save_conversation(new_id, [], usage)
+    return {"conversation_id": new_id}
 
 @app.on_event("startup")
 async def startup_event():

@@ -4,11 +4,14 @@ import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
 
 const ChatWindow: React.FC = () => {
-  const { messages, isConnected, sendMessage } = useChat()
+  const { messages, isConnected, sendMessage, conversationId } = useChat()
   return (
     <>
       <ChatMessages messages={messages} />
-      <ChatInput onSendMessage={sendMessage} disabled={!isConnected} />
+      <ChatInput
+        onSendMessage={sendMessage}
+        disabled={!isConnected || conversationId === null}
+      />
     </>
   )
 }

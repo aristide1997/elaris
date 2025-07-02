@@ -11,7 +11,7 @@ interface ConversationSummary {
 }
 
 const ChatHistoryList: React.FC = () => {
-  const { selectConversation, serverPort } = useChat()
+  const { selectConversation, serverPort, conversationId } = useChat()
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -33,7 +33,7 @@ const ChatHistoryList: React.FC = () => {
     }
 
     fetchConversations()
-  }, [serverPort])
+  }, [serverPort, conversationId])
 
   const handleSelectConversation = (conversationId: string) => {
     selectConversation(conversationId)
