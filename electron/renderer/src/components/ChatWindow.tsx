@@ -10,7 +10,7 @@ const ChatWindow: React.FC = () => {
       <ChatMessages messages={messages} />
       <ChatInput
         onSendMessage={sendMessage}
-        disabled={!isConnected || conversationId === null}
+        disabled={!isConnected || !conversationId}
       />
     </>
   )

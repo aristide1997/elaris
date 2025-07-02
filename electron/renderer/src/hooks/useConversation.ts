@@ -170,6 +170,12 @@ export function useConversation() {
   }
 
   const selectConversation = async (id: string) => {
+    // If no id provided, clear current conversation and reset messages to welcome
+    if (!id) {
+      setConversationId(null)
+      dispatch({ type: 'init_messages', payload: { messages: initialMessages } })
+      return
+    }
     setConversationId(id)
     const url = serverPort
       ? `http://localhost:${serverPort}/api/conversations/${id}`
