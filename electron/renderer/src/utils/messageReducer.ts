@@ -1,4 +1,5 @@
 import type { UIMessage, ToolInstance } from '../types'
+import { MessageService } from '../services/MessageService'
 
 interface ChatState {
   messages: UIMessage[]
@@ -24,38 +25,23 @@ type ChatAction =
   | { type: 'approval_response'; payload: { tool_id: string; approved: boolean } }
   | { type: 'init_messages'; payload: { messages: UIMessage[] } };
 
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2,9)}`
-}
-
 export function messageReducer(
   state: ChatState,
   action: ChatAction
 ): ChatState {
   switch (action.type) {
     case 'system_ready': {
-      const msg: UIMessage = {
-        id: generateId(),
-        type: 'system',
-        content: action.payload.message,
-        timestamp: new Date()
-      }
+      const msg = MessageService.systemMessage(action.payload.message)
       return { ...state, messages: [...state.messages, msg] }
     }
 
     case 'assistant_start': {
       if (!state.currentAssistantId) {
-        const newId = generateId()
-        const newMsg: UIMessage = {
-          id: newId,
-          type: 'assistant',
-          content: '',
-          timestamp: new Date()
-        }
+        const newMsg = MessageService.assistantStart()
         return {
           ...state,
           messages: [...state.messages, newMsg],
-          currentAssistantId: newId
+          currentAssistantId: newMsg.id
         }
       }
       return state
@@ -65,18 +51,13 @@ export function messageReducer(
       let assistantId = state.currentAssistantId
       let messages = state.messages
       if (!assistantId) {
-        assistantId = generateId()
-        const fallback: UIMessage = {
-          id: assistantId,
-          type: 'assistant',
-          content: '',
-          timestamp: new Date()
-        }
+        const fallback = MessageService.assistantStart()
+        assistantId = fallback.id
         messages = [...messages, fallback]
       }
       messages = messages.map(m =>
         m.id === assistantId
-          ? { ...m, content: (m.content ?? '') + action.payload.content }
+          ? MessageService.appendAssistantDelta(m as any, action.payload.content)
           : m
       )
       return { ...state, messages, currentAssistantId: assistantId }
@@ -86,18 +67,11 @@ export function messageReducer(
       return { ...state, currentAssistantId: null }
 
     case 'tool_session_start': {
-      const sessionId = generateId()
-      const session: UIMessage = {
-        id: sessionId,
-        type: 'tool_session',
-        tools: [],
-        status: 'executing',
-        timestamp: new Date()
-      }
+      const session = MessageService.toolSessionMessage()
       return {
         ...state,
         messages: [...state.messages, session],
-        currentToolSessionId: sessionId
+        currentToolSessionId: session.id
       }
     }
 
@@ -108,10 +82,7 @@ export function messageReducer(
         if (m.id === state.currentToolSessionId) {
           return {
             ...m,
-            tools: [
-              ...(m.tools ?? []),
-              { id: tool_id, name: tool_name, status: 'pending_approval', timestamp: new Date() } as ToolInstance
-            ]
+            tools: [...(m.tools ?? []), MessageService.createToolInstance(tool_id, tool_name)]
           } as UIMessage
         }
         return m
@@ -193,23 +164,12 @@ export function messageReducer(
     }
 
     case 'error': {
-      const msg: UIMessage = {
-        id: generateId(),
-        type: 'system',
-        content: `❌ Error: ${action.payload.message}`,
-        subtype: 'error',
-        timestamp: new Date()
-      }
+      const msg = MessageService.errorMessage(action.payload.message)
       return { ...state, messages: [...state.messages, msg] }
     }
 
     case 'add_user': {
-      const msg: UIMessage = {
-        id: generateId(),
-        type: 'user',
-        content: action.payload.content,
-        timestamp: new Date()
-      }
+      const msg = MessageService.userMessage(action.payload.content)
       return { ...state, messages: [...state.messages, msg] }
     }
 
