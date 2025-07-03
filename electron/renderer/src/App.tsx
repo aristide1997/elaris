@@ -1,19 +1,16 @@
 import React from 'react'
-import Layout from './components/Layout'
-import Sidebar from './components/Sidebar'
-import ChatWindow from './components/ChatWindow'
-import ChatHeader from './components/ChatHeader'
-import Modals from './components/Modals'
-import { useChatStore } from './stores/useChatStore'
-import { useUIStore } from './stores/useUIStore'
-import { useWebSocketConnection } from './hooks/useWebSocketConnection'
+import { Layout, Sidebar, ChatHeader, useUIStore } from './features/ui'
+import { ChatWindow } from './features/chat'
+import { useConnectionStore } from './features/connection'
+import { useWebSocketConnection } from './features/connection'
+import { Modals } from './shared/components/Modals'
 import './App.css'
 
 function App() {
   // Initialize WebSocket connection and store integration
   useWebSocketConnection()
   
-  const isConnected = useChatStore(state => state.isConnected)
+  const isConnected = useConnectionStore(state => state.isConnected)
   const { isSidebarCollapsed, toggleSidebar, openDebug } = useUIStore()
 
   return (

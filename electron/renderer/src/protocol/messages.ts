@@ -84,6 +84,7 @@ export type ServerToClientMessage =
 export interface ChatMessage {
   type: 'chat_message'
   content: string
+  conversation_id: string
 }
 
 export interface ApprovalResponseMessage {
