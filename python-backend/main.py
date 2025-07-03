@@ -15,6 +15,9 @@ from types import SimpleNamespace
 
 from chat_session import ChatSession
 from conversation_db import init_db, get_conversation_history, get_conversation_by_id, delete_conversation, save_conversation
+from settings import settings_manager, validate_settings, validate_mcp_servers
+from config import settings
+from mcp_agent import MCPAgentManager
 
 # Configure logging with timestamps and context
 logging.basicConfig(
@@ -89,12 +92,75 @@ async def create_conversation():
     await save_conversation(new_id, [], usage)
     return {"conversation_id": new_id}
 
+# API endpoints for settings management
+@app.get("/api/settings")
+async def get_settings():
+    """Get current settings"""
+    try:
+        current_settings = await settings_manager.load_settings()
+        return {
+            "status": "success",
+            "settings": current_settings
+        }
+    except Exception as e:
+        logger.error(f"Error getting settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/settings")
+async def update_settings(new_settings: dict):
+    """Update settings"""
+    try:
+        # Validate settings
+        validation_errors = validate_settings(new_settings)
+        if validation_errors:
+            return {
+                "status": "error",
+                "message": "Validation failed",
+                "errors": validation_errors
+            }
+        
+        # Save settings
+        await settings_manager.save_settings(new_settings)
+        
+        # Reload app config from settings file
+        await settings.load_from_settings_file()
+        logger.info("Settings updated and app config reloaded")
+        
+        return {
+            "status": "success",
+            "message": "Settings updated successfully"
+        }
+    except ValueError as e:
+        logger.error(f"Settings validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error updating settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/settings/validate-mcp")
+async def validate_mcp_config(mcp_config: dict):
+    """Validate MCP servers configuration"""
+    try:
+        errors = validate_mcp_servers(mcp_config)
+        return {
+            "status": "success",
+            "valid": len(errors) == 0,
+            "errors": errors
+        }
+    except Exception as e:
+        logger.error(f"Error validating MCP config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize resources on startup"""
     logger.info("Initializing database...")
     await init_db()
     logger.info("Database initialized")
+    
+    logger.info("Loading settings from file...")
+    await settings.load_from_settings_file()
+    logger.info("Settings loaded")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -116,54 +182,77 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         # Initialize MCP servers once for this connection
-        async with chat_session.agent.run_mcp_servers():
-            logger.info("MCP servers initialized for WebSocket connection")
-            
-            # Send ready signal to client
-            await chat_session.send_system_ready()
-            
-            # Main message handling loop
-            while True:
-                try:
-                    # Receive message from client
-                    data = await websocket.receive_json()
+        await chat_session.start_mcp_servers()
+        logger.info("MCP servers initialized for WebSocket connection")
+        
+        # Send ready signal to client
+        await chat_session.send_system_ready()
+        
+        # Main message handling loop
+        while True:
+            try:
+                # Receive message from client
+                data = await websocket.receive_json()
+                
+                if data["type"] == "chat_message":
+                    # Handle chat message
+                    user_input = data["content"].strip()
+                    # Require conversation_id (provided by frontend)
+                    conversation_id = data.get("conversation_id")
+                    if not conversation_id:
+                        logger.error("Missing conversation_id from client message")
+                        await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
+                        continue
                     
-                    if data["type"] == "chat_message":
-                        # Handle chat message
-                        user_input = data["content"].strip()
-                        # Require conversation_id (provided by frontend)
-                        conversation_id = data.get("conversation_id")
-                        if not conversation_id:
-                            logger.error("Missing conversation_id from client message")
-                            await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
-                            continue
-                        
-                        if user_input:
-                            logger.info(f"Received chat message: {user_input} for conversation: {conversation_id}")
-                            # Prune any completed tasks to avoid memory growth
-                            chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
-                            # Schedule handling chat message in background to allow processing approval responses
-                            task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id))
-                            task.add_done_callback(_log_task_result)
-                            chat_session.tasks.append(task)
-                    
-                    elif data["type"] == "approval_response":
-                        # Handle tool approval response
-                        approval_id = data["approval_id"]
-                        approved = data["approved"]
-                        logger.info(f"Received approval response: {approval_id} = {approved}")
-                        await chat_session.handle_approval_response(approval_id, approved)
-                    
+                    if user_input:
+                        logger.info(f"Received chat message: {user_input} for conversation: {conversation_id}")
+                        # Prune any completed tasks to avoid memory growth
+                        chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
+                        # Schedule handling chat message in background to allow processing approval responses
+                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id))
+                        task.add_done_callback(_log_task_result)
+                        chat_session.tasks.append(task)
+                
+                elif data["type"] == "approval_response":
+                    # Handle tool approval response
+                    approval_id = data["approval_id"]
+                    approved = data["approved"]
+                    logger.info(f"Received approval response: {approval_id} = {approved}")
+                    await chat_session.handle_approval_response(approval_id, approved)
+                
+                elif data["type"] == "update_settings":
+                    new_settings = data.get("settings")
+                    validation_errors = validate_settings(new_settings)
+                    if validation_errors:
+                        await websocket.send_json({"type": "error", "message": "Settings validation failed", "errors": validation_errors})
                     else:
-                        logger.warning(f"Unknown message type: {data['type']}")
-                        
-                except json.JSONDecodeError:
-                    logger.error("Invalid JSON received from client")
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": "Invalid JSON format"
-                    })
+                        # Persist and reload global settings
+                        await settings_manager.save_settings(new_settings)
+                        await settings.load_from_settings_file()
+
+                        # Restart MCP servers with new configuration
+                        await chat_session.stop_mcp_servers()
+
+                        # Reinitialize agent with updated settings
+                        chat_session.agent_manager = MCPAgentManager(chat_session.approval_manager)
+                        chat_session.agent = chat_session.agent_manager.get_agent()
+
+                        # Start MCP servers for new agent
+                        await chat_session.start_mcp_servers()
+
+                        await websocket.send_json({"type": "settings_updated", "settings": new_settings})
+                    continue
+                
+                else:
+                    logger.warning(f"Unknown message type: {data['type']}")
                     
+            except json.JSONDecodeError:
+                logger.error("Invalid JSON received from client")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "Invalid JSON format"
+                })
+                
     except WebSocketDisconnect:
         logger.info("WebSocket connection closed")
     except Exception as e:
@@ -182,6 +271,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if not t.done():
                 t.cancel()
         logger.info("Cancelled background chat tasks")
+        # Stop MCP servers
+        await chat_session.stop_mcp_servers()
 
 if __name__ == "__main__":
     import uvicorn

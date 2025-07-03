@@ -1,10 +1,12 @@
 import React from 'react'
+import { useUIStore } from '../stores/useUIStore'
 import './SettingsButton.css'
 
 const SettingsButton: React.FC = () => {
+  const { openSettings } = useUIStore()
+
   const handleSettingsClick = () => {
-    // TODO: Implement settings functionality
-    console.log('Settings clicked - to be implemented')
+    openSettings()
   }
 
   return (

@@ -21,7 +21,11 @@ class MCPAgentManager:
         self.approval_manager = approval_manager
         # Use provided servers or load from central config
         self.servers = servers if servers is not None else self._load_mcp_servers()
-        self.agent = Agent(settings.model_name, mcp_servers=self.servers)
+        self.agent = Agent(
+            settings.model_name, 
+            mcp_servers=self.servers,
+            system_prompt=settings.system_prompt
+        )
     
     def _load_mcp_servers(self) -> List[MCPServerStdio]:
         """Load MCP servers from configuration"""

@@ -3,6 +3,7 @@ import { useMessagesStore } from '../../features/chat'
 import { useConnectionStore } from '../../features/connection'
 import { useApprovalFlow, ApprovalModal } from '../../features/approval'
 import { useUIStore, MessageHistoryModal } from '../../features/ui'
+import SettingsModal from '../../features/ui/components/SettingsModal'
 
 const Modals: React.FC = () => {
   const { messages, currentToolSessionId, updateMessage } = useMessagesStore()
@@ -12,6 +13,7 @@ const Modals: React.FC = () => {
   
   const isDebugOpen = useUIStore(state => state.isDebugModalOpen)
   const closeDebug = useUIStore(state => state.closeDebug)
+  const isSettingsOpen = useUIStore(state => state.isSettingsModalOpen)
 
   const approve = (approved: boolean) => {
     const req = currentApprovalRequest
@@ -46,9 +48,10 @@ const Modals: React.FC = () => {
         isOpen={isDebugOpen}
         onClose={closeDebug}
       />
+      {isSettingsOpen && <SettingsModal />}
     </>
   )
 }
 
 export default Modals
-export { Modals } 
+export { Modals }

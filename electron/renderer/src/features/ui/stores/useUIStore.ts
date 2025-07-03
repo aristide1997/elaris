@@ -4,6 +4,7 @@ import { devtools } from 'zustand/middleware'
 interface UIState {
   isConversationListOpen: boolean
   isDebugModalOpen: boolean
+  isSettingsModalOpen: boolean
   isSidebarCollapsed: boolean
 }
 
@@ -12,6 +13,8 @@ interface UIActions {
   closeHistory: () => void
   openDebug: () => void
   closeDebug: () => void
+  openSettings: () => void
+  closeSettings: () => void
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
 }
@@ -21,6 +24,7 @@ type UIStore = UIState & UIActions
 const initialState: UIState = {
   isConversationListOpen: false,
   isDebugModalOpen: false,
+  isSettingsModalOpen: false,
   isSidebarCollapsed: false
 }
 
@@ -45,6 +49,14 @@ export const useUIStore = create<UIStore>()(
 
       closeDebug: () => {
         set({ isDebugModalOpen: false }, false, 'closeDebug')
+      },
+
+      openSettings: () => {
+        set({ isSettingsModalOpen: true }, false, 'openSettings')
+      },
+
+      closeSettings: () => {
+        set({ isSettingsModalOpen: false }, false, 'closeSettings')
       },
 
       toggleSidebar: () => {

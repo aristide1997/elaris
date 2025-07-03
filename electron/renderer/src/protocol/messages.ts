@@ -66,6 +66,11 @@ export interface ErrorEvent {
   message: string
 }
 
+export interface SettingsUpdatedEvent {
+  type: 'settings_updated'
+  settings: Record<string, any>
+}
+
 export type ServerToClientMessage =
   | SystemReadyEvent
   | AssistantStartEvent
@@ -79,6 +84,7 @@ export type ServerToClientMessage =
   | ToolSessionCompleteEvent
   | ApprovalRequestEvent
   | ErrorEvent
+  | SettingsUpdatedEvent
 
 // Messages from Client → Server
 export interface ChatMessage {
@@ -93,6 +99,12 @@ export interface ApprovalResponseMessage {
   approved: boolean
 }
 
+export interface UpdateSettingsMessage {
+  type: 'update_settings'
+  settings: Record<string, any>
+}
+
 export type ClientToServerMessage =
   | ChatMessage
-  | ApprovalResponseMessage 
+  | ApprovalResponseMessage
+  | UpdateSettingsMessage
