@@ -6,7 +6,6 @@ Chat Session - Main orchestrator for chat conversations with AI agents
 import asyncio
 import logging
 from fastapi import WebSocket
-from contextlib import AsyncExitStack
 
 from websocket_messenger import WebSocketMessenger
 from tool_approval import ToolApprovalManager
@@ -34,25 +33,21 @@ class ChatSession:
         # Ensure messages are processed sequentially per session
         self._message_lock = asyncio.Lock()
         
-        # Get the configured agent
-        self.agent = self.agent_manager.get_agent()
-        # Prepare for MCP server lifecycle management
-        self._mcp_exit_stack: AsyncExitStack | None = None
+        # Agent will be initialized lazily
+        self.agent = None
     
-    async def start_mcp_servers(self):
-        """Start MCP server subprocesses for this session."""
-        # Tear down existing MCP servers if any
-        if self._mcp_exit_stack:
-            await self._mcp_exit_stack.aclose()
-        self._mcp_exit_stack = AsyncExitStack()
-        for server in self.agent._mcp_servers:
-            await self._mcp_exit_stack.enter_async_context(server)
-
-    async def stop_mcp_servers(self):
-        """Stop MCP servers for this session."""
-        if self._mcp_exit_stack:
-            await self._mcp_exit_stack.aclose()
-            self._mcp_exit_stack = None
+    async def initialize(self):
+        """Initialize the chat session with agent"""
+        if self.agent is None:
+            await self.agent_manager.initialize()
+            self.agent = await self.agent_manager.get_agent()
+            logger.info("Chat session initialized")
+    
+    async def reinitialize_agent(self):
+        """Reinitialize the agent (e.g., after configuration changes)"""
+        await self.agent_manager.reinitialize()
+        self.agent = await self.agent_manager.get_agent()
+        logger.info("Chat session agent reinitialized")
 
     async def handle_chat_message(self, user_input: str, conversation_id: str):
         """Handle a chat message from the user with streaming response"""

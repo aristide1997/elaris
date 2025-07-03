@@ -10,6 +10,7 @@ const SettingsModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [mcpJsonText, setMcpJsonText] = useState('')
   const [mcpJsonError, setMcpJsonError] = useState<string | null>(null)
+  const [mcpJsonTouched, setMcpJsonTouched] = useState(false)
 
   const {
     settings,
@@ -97,6 +98,7 @@ const SettingsModal: React.FC = () => {
   }
 
   const handleMcpJsonChange = (value: string) => {
+    setMcpJsonTouched(true)
     setMcpJsonText(value)
     setMcpJsonError(null)
     
@@ -111,6 +113,7 @@ const SettingsModal: React.FC = () => {
   }
 
   const formatMcpJson = () => {
+    setMcpJsonTouched(true)
     try {
       const parsed = JSON.parse(mcpJsonText)
       setMcpJsonText(JSON.stringify(parsed, null, 2))
@@ -259,6 +262,11 @@ const SettingsModal: React.FC = () => {
                   {mcpJsonError && (
                     <div className="form-description" style={{ color: '#dc3545', marginTop: '8px' }}>
                       {mcpJsonError}
+                    </div>
+                  )}
+                  {mcpJsonTouched && !mcpJsonError && (
+                    <div className="form-description" style={{ color: '#28a745', marginTop: '8px' }}>
+                      JSON is valid
                     </div>
                   )}
                   <div className="form-description">

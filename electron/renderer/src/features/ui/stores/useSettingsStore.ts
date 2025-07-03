@@ -87,15 +87,14 @@ export const useSettingsStore = create<SettingsStore>()(
             set({ 
               settings: settings, 
               isLoading: false,
-              isDirty: false 
+              isDirty: false,
+              validationErrors: [],
+              error: null
             }, false, 'saveSettings/success')
-          } else if (data.status === 'error' && data.errors) {
-            set({ 
-              validationErrors: data.errors,
-              isLoading: false 
-            }, false, 'saveSettings/validation-error')
           } else {
+            // Handle both validation errors and general errors from backend
             set({ 
+              validationErrors: data.errors || [],
               error: data.message || 'Failed to save settings',
               isLoading: false 
             }, false, 'saveSettings/error')
@@ -103,6 +102,7 @@ export const useSettingsStore = create<SettingsStore>()(
         } catch (error) {
           set({ 
             error: `Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            validationErrors: [],
             isLoading: false 
           }, false, 'saveSettings/error')
         }

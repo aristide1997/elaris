@@ -15,9 +15,10 @@ from types import SimpleNamespace
 
 from chat_session import ChatSession
 from conversation_db import init_db, get_conversation_history, get_conversation_by_id, delete_conversation, save_conversation
-from settings import settings_manager, validate_settings, validate_mcp_servers
-from config import settings
-from mcp_agent import MCPAgentManager
+from settings_service import settings_service
+from config import config_manager
+from mcp_manager import get_mcp_manager
+from exceptions import ValidationError, SettingsError, MCPServerError
 
 # Configure logging with timestamps and context
 logging.basicConfig(
@@ -97,11 +98,14 @@ async def create_conversation():
 async def get_settings():
     """Get current settings"""
     try:
-        current_settings = await settings_manager.load_settings()
+        current_settings = await settings_service.get_settings()
         return {
             "status": "success",
             "settings": current_settings
         }
+    except SettingsError as e:
+        logger.error(f"Settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting settings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -110,29 +114,21 @@ async def get_settings():
 async def update_settings(new_settings: dict):
     """Update settings"""
     try:
-        # Validate settings
-        validation_errors = validate_settings(new_settings)
-        if validation_errors:
+        result = await settings_service.update_settings(new_settings)
+        
+        if result.success:
+            return {
+                "status": "success",
+                "message": result.message,
+                "changed_keys": result.changed_keys
+            }
+        else:
             return {
                 "status": "error",
-                "message": "Validation failed",
-                "errors": validation_errors
+                "message": result.message,
+                "errors": result.errors
             }
-        
-        # Save settings
-        await settings_manager.save_settings(new_settings)
-        
-        # Reload app config from settings file
-        await settings.load_from_settings_file()
-        logger.info("Settings updated and app config reloaded")
-        
-        return {
-            "status": "success",
-            "message": "Settings updated successfully"
-        }
-    except ValueError as e:
-        logger.error(f"Settings validation error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+            
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -141,11 +137,11 @@ async def update_settings(new_settings: dict):
 async def validate_mcp_config(mcp_config: dict):
     """Validate MCP servers configuration"""
     try:
-        errors = validate_mcp_servers(mcp_config)
+        result = await settings_service.validate_mcp_servers(mcp_config)
         return {
             "status": "success",
-            "valid": len(errors) == 0,
-            "errors": errors
+            "valid": result.success,
+            "errors": result.errors if not result.success else []
         }
     except Exception as e:
         logger.error(f"Error validating MCP config: {e}")
@@ -158,9 +154,13 @@ async def startup_event():
     await init_db()
     logger.info("Database initialized")
     
-    logger.info("Loading settings from file...")
-    await settings.load_from_settings_file()
-    logger.info("Settings loaded")
+    logger.info("Loading configuration...")
+    await config_manager.load_config()
+    logger.info("Configuration loaded")
+    
+    logger.info("Initializing Global MCP Manager...")
+    await get_mcp_manager()
+    logger.info("Global MCP Manager initialized")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -181,9 +181,9 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
     
     try:
-        # Initialize MCP servers once for this connection
-        await chat_session.start_mcp_servers()
-        logger.info("MCP servers initialized for WebSocket connection")
+        # Initialize chat session (which will initialize the agent)
+        await chat_session.initialize()
+        logger.info("Chat session initialized for WebSocket connection")
         
         # Send ready signal to client
         await chat_session.send_system_ready()
@@ -221,27 +221,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     await chat_session.handle_approval_response(approval_id, approved)
                 
                 elif data["type"] == "update_settings":
-                    new_settings = data.get("settings")
-                    validation_errors = validate_settings(new_settings)
-                    if validation_errors:
-                        await websocket.send_json({"type": "error", "message": "Settings validation failed", "errors": validation_errors})
-                    else:
-                        # Persist and reload global settings
-                        await settings_manager.save_settings(new_settings)
-                        await settings.load_from_settings_file()
-
-                        # Restart MCP servers with new configuration
-                        await chat_session.stop_mcp_servers()
-
-                        # Reinitialize agent with updated settings
-                        chat_session.agent_manager = MCPAgentManager(chat_session.approval_manager)
-                        chat_session.agent = chat_session.agent_manager.get_agent()
-
-                        # Start MCP servers for new agent
-                        await chat_session.start_mcp_servers()
-
-                        await websocket.send_json({"type": "settings_updated", "settings": new_settings})
-                    continue
+                    # Handle dynamic settings update mid-session
+                    logger.info("Received update_settings via WebSocket, reinitializing agent with new settings")
+                    await chat_session.reinitialize_agent()
+                    await chat_session.send_system_ready("Settings updated successfully")
                 
                 else:
                     logger.warning(f"Unknown message type: {data['type']}")
@@ -271,8 +254,6 @@ async def websocket_endpoint(websocket: WebSocket):
             if not t.done():
                 t.cancel()
         logger.info("Cancelled background chat tasks")
-        # Stop MCP servers
-        await chat_session.stop_mcp_servers()
 
 if __name__ == "__main__":
     import uvicorn
