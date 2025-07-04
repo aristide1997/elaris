@@ -17,8 +17,8 @@ from pydantic_ai.messages import (
     ToolCallPartDelta,
 )
 
-from websocket_messenger import WebSocketMessenger
-from tool_approval import ToolApprovalManager
+from core.messaging import WebSocketMessenger
+from services.tool_approval import ToolApprovalManager
 
 logger = logging.getLogger(__name__)
 

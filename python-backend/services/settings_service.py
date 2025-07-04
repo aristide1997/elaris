@@ -7,8 +7,8 @@ import logging
 from typing import Dict, Any, List
 from dataclasses import dataclass
 
-from config import config_manager
-from exceptions import ValidationError, SettingsError
+from core.config import config_manager
+from core.exceptions import ValidationError, SettingsError
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +185,7 @@ class SettingsService:
     async def reset_to_defaults(self) -> SettingsUpdateResult:
         """Reset all settings to default values"""
         try:
-            from config import DEFAULT_CONFIG
+            from core.config import DEFAULT_CONFIG
             return await self.update_settings(DEFAULT_CONFIG.copy())
         except Exception as e:
             logger.error(f"Failed to reset settings to defaults: {e}", exc_info=True)

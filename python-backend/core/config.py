@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional, Callable, Set
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from exceptions import ConfigurationError, ValidationError
+from core.exceptions import ConfigurationError, ValidationError
 
 logger = logging.getLogger(__name__)
 

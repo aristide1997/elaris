@@ -10,8 +10,8 @@ from typing import List, Dict, Any, Optional
 from contextlib import AsyncExitStack
 
 from pydantic_ai.mcp import MCPServerStdio
-from config import config_manager, ConfigChangeEvent
-from exceptions import MCPServerError
+from core.config import config_manager, ConfigChangeEvent
+from core.exceptions import MCPServerError
 
 logger = logging.getLogger(__name__)
 

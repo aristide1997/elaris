@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Conversation Database - SQLite database for storing chat conversations
+Database Module - SQLite database operations for conversations
 """
 
 import aiosqlite

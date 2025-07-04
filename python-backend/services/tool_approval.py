@@ -8,8 +8,8 @@ import uuid
 import logging
 from typing import Dict
 
-from websocket_messenger import WebSocketMessenger
-from config import settings
+from core.messaging import WebSocketMessenger
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -7,11 +7,11 @@ import asyncio
 import logging
 from fastapi import WebSocket
 
-from websocket_messenger import WebSocketMessenger
-from tool_approval import ToolApprovalManager
-from mcp_agent import MCPAgentManager
-from message_processor import MessageStreamProcessor
-from conversation_db import get_conversation_by_id, save_conversation, update_conversation
+from core.messaging import WebSocketMessenger
+from services.tool_approval import ToolApprovalManager
+from services.mcp_agent import MCPAgentManager
+from services.message_processor import MessageStreamProcessor
+from core.database import get_conversation_by_id, save_conversation, update_conversation
 
 logger = logging.getLogger(__name__)
 

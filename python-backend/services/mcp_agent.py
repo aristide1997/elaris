@@ -8,10 +8,10 @@ from typing import Any
 
 from pydantic_ai import Agent
 from pydantic_ai.mcp import CallToolFunc
-from tool_approval import ToolApprovalManager
-from config import config_manager
-from mcp_manager import get_mcp_manager
-from exceptions import MCPServerError
+from services.tool_approval import ToolApprovalManager
+from core.config import config_manager
+from services.mcp_service import get_mcp_manager
+from core.exceptions import MCPServerError
 
 logger = logging.getLogger(__name__)
 
