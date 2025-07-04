@@ -31,6 +31,9 @@ class GlobalMCPManager:
         self._initialized = False
         self._initialization_lock = asyncio.Lock()
         
+        # Runtime toggles - servers that are configured but disabled
+        self.disabled_servers: set[str] = set()
+        
         # Register for configuration changes
         config_manager.add_observer(self._on_config_change)
     
@@ -163,6 +166,78 @@ class GlobalMCPManager:
     def get_server_configs(self) -> Dict[str, Dict[str, Any]]:
         """Get the current server configurations"""
         return self.server_configs.copy()
+    
+    def get_enabled_servers(self) -> List[MCPServerStdio]:
+        """Get the list of enabled (not disabled) MCP servers"""
+        if not self.server_configs:
+            return []
+        
+        enabled_servers = []
+        for i, server in enumerate(self.servers):
+            # Map server index to server name (we need to track this better)
+            server_names = list(self.server_configs.keys())
+            if i < len(server_names):
+                server_name = server_names[i]
+                if server_name not in self.disabled_servers:
+                    enabled_servers.append(server)
+        
+        return enabled_servers
+    
+    def get_server_states(self) -> Dict[str, Dict[str, Any]]:
+        """Get current states of all configured MCP servers"""
+        states = {}
+        
+        # Get list of server names in the same order as servers list
+        server_names = list(self.server_configs.keys())
+        
+        for i, server_name in enumerate(server_names):
+            is_configured = True
+            is_enabled = server_name not in self.disabled_servers
+            is_running = False
+            
+            # Check if corresponding server is running
+            if i < len(self.servers):
+                server = self.servers[i]
+                try:
+                    # Check if the server process is alive
+                    if hasattr(server, '_process') and server._process:
+                        is_running = server._process.returncode is None
+                    else:
+                        # If no process attribute, assume running if server exists
+                        is_running = True
+                except Exception as e:
+                    logger.error(f"Error checking server {server_name} status: {e}")
+                    is_running = False
+            
+            states[server_name] = {
+                "configured": is_configured,
+                "enabled": is_enabled,
+                "running": is_running and is_enabled  # Only show as running if enabled
+            }
+        
+        return states
+    
+    async def toggle_server(self, server_name: str, enabled: bool) -> bool:
+        """Toggle an individual MCP server on/off"""
+        if server_name not in self.server_configs:
+            logger.error(f"Server '{server_name}' not found in configuration")
+            return False
+        
+        try:
+            if enabled:
+                # Enable server (remove from disabled set)
+                self.disabled_servers.discard(server_name)
+                logger.info(f"Enabled MCP server: {server_name}")
+            else:
+                # Disable server (add to disabled set)
+                self.disabled_servers.add(server_name)
+                logger.info(f"Disabled MCP server: {server_name}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to toggle server '{server_name}': {e}", exc_info=True)
+            return False
     
     async def restart_servers(self) -> None:
         """Manually restart all MCP servers with current configuration"""

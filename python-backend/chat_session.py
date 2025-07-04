@@ -32,23 +32,7 @@ class ChatSession:
         self.tasks = []
         # Ensure messages are processed sequentially per session
         self._message_lock = asyncio.Lock()
-        
-        # Agent will be initialized lazily
-        self.agent = None
     
-    async def initialize(self):
-        """Initialize the chat session with agent"""
-        if self.agent is None:
-            await self.agent_manager.initialize()
-            self.agent = await self.agent_manager.get_agent()
-            logger.info("Chat session initialized")
-    
-    async def reinitialize_agent(self):
-        """Reinitialize the agent (e.g., after configuration changes)"""
-        await self.agent_manager.reinitialize()
-        self.agent = await self.agent_manager.get_agent()
-        logger.info("Chat session agent reinitialized")
-
     async def handle_chat_message(self, user_input: str, conversation_id: str):
         """Handle a chat message from the user with streaming response"""
         async with self._message_lock:
@@ -62,8 +46,11 @@ class ChatSession:
                     message_history = None
                     logger.info(f"Starting new conversation {conversation_id}")
                 
+                # Create a fresh agent for this message with current enabled servers
+                agent = await self.agent_manager.create_agent()
+                
                 # Begin streaming iteration with the AI agent
-                async with self.agent.iter(user_input, message_history=message_history) as run:
+                async with agent.iter(user_input, message_history=message_history) as run:
                     await self.message_processor.process_agent_stream(run)
                     
                     # After stream completes, save or update the conversation
@@ -112,3 +99,16 @@ class ChatSession:
     async def send_system_ready(self, message: str = "MCP servers ready! You can start chatting."):
         """Send system ready notification to client"""
         await self.messenger.send_system_ready(message)
+    
+    async def cleanup(self):
+        """Cleanup chat session resources"""
+        # Cancel any pending tasks
+        for task in self.tasks:
+            if not task.done():
+                task.cancel()
+        
+        # Wait for tasks to finish cancelling
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+        
+        logger.info("Chat session cleanup completed")

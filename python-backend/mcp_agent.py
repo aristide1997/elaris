@@ -16,54 +16,39 @@ from exceptions import MCPServerError
 logger = logging.getLogger(__name__)
 
 class MCPAgentManager:
-    """Manages AI agent with human approval for tool execution using global MCP servers"""
+    """Manages AI agent creation with human approval for tool execution using enabled MCP servers"""
     
     def __init__(self, approval_manager: ToolApprovalManager):
         self.approval_manager = approval_manager
-        self.agent = None
-        self._initialized = False
     
-    async def initialize(self) -> None:
-        """Initialize the agent with current configuration and global MCP servers"""
-        if self._initialized:
-            return
-            
+    async def create_agent(self) -> Agent:
+        """Create a fresh agent with current configuration and enabled MCP servers"""
         try:
             # Get current configuration
             config = await config_manager.load_config()
             
-            # Get global MCP servers
+            # Get only enabled MCP servers
             mcp_manager = await get_mcp_manager()
-            servers = mcp_manager.get_servers()
+            servers = mcp_manager.get_enabled_servers()
             
             # Set up process_tool_call for each server
             for server in servers:
                 server.process_tool_call = self._process_tool_call
             
-            # Create agent with configuration and servers
-            self.agent = Agent(
+            # Create agent with configuration and enabled servers
+            agent = Agent(
                 config["model_name"], 
                 mcp_servers=servers,
                 system_prompt=config["system_prompt"]
             )
             
-            self._initialized = True
-            logger.info(f"MCP Agent initialized with {len(servers)} servers")
+            logger.info(f"Created MCP Agent with {len(servers)} enabled servers")
+            return agent
             
         except Exception as e:
-            logger.error(f"Failed to initialize MCP Agent: {e}", exc_info=True)
-            raise MCPServerError(f"Agent initialization failed: {e}")
+            logger.error(f"Failed to create MCP Agent: {e}", exc_info=True)
+            raise MCPServerError(f"Agent creation failed: {e}")
     
-    async def get_agent(self) -> Agent:
-        """Get the configured AI agent"""
-        if not self._initialized:
-            await self.initialize()
-        return self.agent
-    
-    async def reinitialize(self) -> None:
-        """Reinitialize the agent (e.g., after configuration changes)"""
-        self._initialized = False
-        await self.initialize()
 
     async def _process_tool_call(
         self, ctx: Any, call_tool: CallToolFunc, tool_name: str, args: dict[str, Any]

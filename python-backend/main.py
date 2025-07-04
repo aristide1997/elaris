@@ -147,6 +147,49 @@ async def validate_mcp_config(mcp_config: dict):
         logger.error(f"Error validating MCP config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# API endpoints for MCP server runtime management
+@app.get("/api/mcp-servers/states")
+async def get_mcp_server_states():
+    """Get current states of all MCP servers"""
+    try:
+        mcp_manager = await get_mcp_manager()
+        states = mcp_manager.get_server_states()
+        return {
+            "status": "success",
+            "servers": states
+        }
+    except Exception as e:
+        logger.error(f"Error getting MCP server states: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/mcp-servers/toggle")
+async def toggle_mcp_server(request: dict):
+    """Toggle an individual MCP server on/off"""
+    try:
+        server_name = request.get("server_name")
+        enabled = request.get("enabled")
+        
+        if server_name is None or enabled is None:
+            raise HTTPException(status_code=400, detail="Missing server_name or enabled parameter")
+        
+        mcp_manager = await get_mcp_manager()
+        success = await mcp_manager.toggle_server(server_name, enabled)
+        
+        if success:
+            return {
+                "status": "success",
+                "message": f"Server '{server_name}' {'enabled' if enabled else 'disabled'} successfully"
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"Failed to {'enable' if enabled else 'disable'} server '{server_name}'"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error toggling MCP server: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize resources on startup"""
@@ -181,10 +224,6 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
     
     try:
-        # Initialize chat session (which will initialize the agent)
-        await chat_session.initialize()
-        logger.info("Chat session initialized for WebSocket connection")
-        
         # Send ready signal to client
         await chat_session.send_system_ready()
         
@@ -222,8 +261,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 
                 elif data["type"] == "update_settings":
                     # Handle dynamic settings update mid-session
-                    logger.info("Received update_settings via WebSocket, reinitializing agent with new settings")
-                    await chat_session.reinitialize_agent()
+                    logger.info("Received update_settings via WebSocket - next message will use updated settings automatically")
                     await chat_session.send_system_ready("Settings updated successfully")
                 
                 else:
@@ -254,6 +292,12 @@ async def websocket_endpoint(websocket: WebSocket):
             if not t.done():
                 t.cancel()
         logger.info("Cancelled background chat tasks")
+        
+        # Cleanup chat session resources
+        try:
+            await chat_session.cleanup()
+        except Exception as e:
+            logger.error(f"Error during chat session cleanup: {e}")
 
 if __name__ == "__main__":
     import uvicorn

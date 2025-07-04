@@ -1,4 +1,5 @@
 import React, { type ReactElement } from 'react'
+import { MCPServerDropdown } from '../../connection'
 import './ChatHeader.css'
 
 interface ChatHeaderProps {
@@ -25,6 +26,7 @@ function ChatHeader({ isConnected, onDebugClick, onToggleSidebar }: ChatHeaderPr
         <button className="debug-button" onClick={onDebugClick} title="View Message Debug">
           🔍 Debug
         </button>
+        <MCPServerDropdown />
         <div className="connection-status">
           <span className={`status-dot ${isConnected ? 'connected' : ''}`}></span>
           <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
