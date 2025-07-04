@@ -57,7 +57,7 @@ export const useConversationStore = create<ConversationStore>()(
       mapConversationToUI: (conv: { messages: any[] }) => {
         const generateId = (): string => `${Date.now()}-${Math.random().toString(36).substr(2,9)}`
         
-        function mapPartToUIMessage(part: any): UIMessage {
+        function mapPartToUIMessage(part: any): UIMessage | null {
           const base = {
             id: generateId(),
             timestamp: new Date(part.timestamp),
@@ -65,7 +65,7 @@ export const useConversationStore = create<ConversationStore>()(
           }
           switch (part.part_kind) {
             case 'system-prompt':
-              return { ...base, type: 'system', subtype: 'info' }
+              return null // Skip system prompts - don't show in chat history
             case 'user-prompt':
               return { ...base, type: 'user' }
             case 'text':
@@ -126,11 +126,11 @@ export const useConversationStore = create<ConversationStore>()(
                   break
                 }
                 default:
-                  uiMsgs.push(mapPartToUIMessage(part))
+                  mapPartToUIMessage(part) && uiMsgs.push(mapPartToUIMessage(part)!)
               }
             })
           } else {
-            uiMsgs.push(mapPartToUIMessage(msg))
+            mapPartToUIMessage(msg) && uiMsgs.push(mapPartToUIMessage(msg)!)
           }
         })
         return uiMsgs
@@ -140,4 +140,4 @@ export const useConversationStore = create<ConversationStore>()(
       name: 'conversation-store'
     }
   )
-) 
+)
