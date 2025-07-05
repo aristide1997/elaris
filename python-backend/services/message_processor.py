@@ -80,6 +80,12 @@ class MessageStreamProcessor:
                     await self.messenger.send_text_delta(event.delta.content_delta)
                 elif isinstance(event, PartStartEvent):
                     logger.info(f"Part start event: {event}")
+                    # Handle PartStartEvent by sending text to client
+                    if hasattr(event.part, 'content'):
+                        if not started:
+                            await self.messenger.send_assistant_start()
+                            started = True
+                        await self.messenger.send_text_delta(event.part.content)
                 elif isinstance(event, FinalResultEvent):
                     logger.info(f"Final result event: {event}")
         # Close the bubble if we opened one

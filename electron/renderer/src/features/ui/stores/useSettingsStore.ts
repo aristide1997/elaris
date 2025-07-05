@@ -3,7 +3,11 @@ import { devtools } from 'zustand/middleware'
 
 interface Settings {
   system_prompt: string
-  model_name: string
+  llm_provider: {
+    provider: string
+    model: string
+    config: Record<string, any>
+  }
   approval_timeout: number
   mcp_servers: Record<string, any>
 }

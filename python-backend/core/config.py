@@ -21,7 +21,11 @@ CONFIG_FILE = "settings.json"
 # Default configuration values
 DEFAULT_CONFIG = {
     "system_prompt": "You are a helpful AI assistant.",
-    "model_name": "openai:gpt-4o-mini",
+    "llm_provider": {
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "config": {}  # Provider-specific configuration
+    },
     "approval_timeout": 60.0,
     "mcp_servers": {
         "desktop-commander": {
@@ -197,7 +201,7 @@ class ConfigManager:
         errors = []
         
         # Check required fields
-        required_fields = ["system_prompt", "model_name", "approval_timeout", "mcp_servers"]
+        required_fields = ["system_prompt", "llm_provider", "approval_timeout", "mcp_servers"]
         for field in required_fields:
             if field not in config:
                 errors.append(f"Missing required field: {field}")
@@ -209,11 +213,10 @@ class ConfigManager:
             elif not config["system_prompt"].strip():
                 errors.append("system_prompt cannot be empty")
         
-        if "model_name" in config:
-            if not isinstance(config["model_name"], str):
-                errors.append("model_name must be a string")
-            elif not config["model_name"].strip():
-                errors.append("model_name cannot be empty")
+        # Validate LLM provider configuration
+        if "llm_provider" in config:
+            llm_errors = self._validate_llm_provider(config["llm_provider"])
+            errors.extend(llm_errors)
         
         if "approval_timeout" in config:
             timeout = config["approval_timeout"]
@@ -226,6 +229,41 @@ class ConfigManager:
         if "mcp_servers" in config:
             mcp_errors = self._validate_mcp_servers(config["mcp_servers"])
             errors.extend(mcp_errors)
+        
+        return errors
+    
+    def _validate_llm_provider(self, llm_provider: Any) -> List[str]:
+        """Validate LLM provider configuration"""
+        errors = []
+        
+        if not isinstance(llm_provider, dict):
+            errors.append("llm_provider must be an object")
+            return errors
+        
+        # Check required fields
+        required_fields = ["provider", "model", "config"]
+        for field in required_fields:
+            if field not in llm_provider:
+                errors.append(f"llm_provider missing required field: {field}")
+        
+        # Validate provider field
+        if "provider" in llm_provider:
+            if not isinstance(llm_provider["provider"], str):
+                errors.append("llm_provider.provider must be a string")
+            elif not llm_provider["provider"].strip():
+                errors.append("llm_provider.provider cannot be empty")
+        
+        # Validate model field
+        if "model" in llm_provider:
+            if not isinstance(llm_provider["model"], str):
+                errors.append("llm_provider.model must be a string")
+            elif not llm_provider["model"].strip():
+                errors.append("llm_provider.model cannot be empty")
+        
+        # Validate config field
+        if "config" in llm_provider:
+            if not isinstance(llm_provider["config"], dict):
+                errors.append("llm_provider.config must be an object")
         
         return errors
     

@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useUIStore } from '../stores/useUIStore'
 import { useConnectionStore } from '../../connection/stores/useConnectionStore'
+import { useLLMProviderStore } from '../stores/useLLMProviderStore'
 import './SettingsModal.css'
 
-type TabType = 'general' | 'mcp'
+type TabType = 'general' | 'llm' | 'mcp'
 
 const SettingsModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [mcpJsonText, setMcpJsonText] = useState('')
   const [mcpJsonError, setMcpJsonError] = useState<string | null>(null)
   const [mcpJsonTouched, setMcpJsonTouched] = useState(false)
+
+  // LLM Provider state
+  const [selectedProvider, setSelectedProvider] = useState('')
+  const [selectedModel, setSelectedModel] = useState('')
+  const [providerConfig, setProviderConfig] = useState<Record<string, any>>({})
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string } | null>(null)
+  const [isTestingProvider, setIsTestingProvider] = useState(false)
 
   const {
     settings,
@@ -28,10 +36,51 @@ const SettingsModal: React.FC = () => {
   const { closeSettings } = useUIStore()
   const sendMessage = useConnectionStore(state => state.sendMessage)
 
+  // LLM Provider store
+  const {
+    availableProviders,
+    currentProvider,
+    isLoading: isProviderLoading,
+    error: providerError,
+    loadAvailableProviders,
+    loadCurrentProvider,
+    testProvider,
+    configureProvider,
+    clearError: clearProviderError
+  } = useLLMProviderStore()
+
   // Load settings when modal opens
   useEffect(() => {
     loadSettings()
   }, [loadSettings])
+
+  // Load LLM provider data when modal opens
+  useEffect(() => {
+    if (activeTab === 'llm') {
+      loadAvailableProviders()
+      loadCurrentProvider()
+    }
+  }, [activeTab, loadAvailableProviders, loadCurrentProvider])
+
+  // Initialize LLM form state when current provider loads
+  useEffect(() => {
+    if (currentProvider) {
+      setSelectedProvider(currentProvider.provider)
+      setSelectedModel(currentProvider.model)
+      setProviderConfig(currentProvider.config)
+    }
+  }, [currentProvider])
+
+  // Helper function to update LLM provider in main settings
+  const updateLLMProviderSettings = (provider: string, model: string, config: Record<string, any>) => {
+    updateSettings({
+      llm_provider: {
+        provider,
+        model,
+        config
+      }
+    })
+  }
 
   // Update MCP JSON text when settings change
   useEffect(() => {
@@ -86,9 +135,6 @@ const SettingsModal: React.FC = () => {
     updateSettings({ system_prompt: value })
   }
 
-  const handleModelNameChange = (value: string) => {
-    updateSettings({ model_name: value })
-  }
 
   const handleApprovalTimeoutChange = (value: string) => {
     const numValue = parseFloat(value)
@@ -174,6 +220,12 @@ const SettingsModal: React.FC = () => {
               General
             </button>
             <button
+              className={`settings-tab ${activeTab === 'llm' ? 'active' : ''}`}
+              onClick={() => setActiveTab('llm')}
+            >
+              LLM Provider
+            </button>
+            <button
               className={`settings-tab ${activeTab === 'mcp' ? 'active' : ''}`}
               onClick={() => setActiveTab('mcp')}
             >
@@ -211,20 +263,6 @@ const SettingsModal: React.FC = () => {
                 </div>
 
                 <div className="settings-form-group">
-                  <label htmlFor="model-name">Model Name</label>
-                  <input
-                    id="model-name"
-                    type="text"
-                    value={settings.model_name}
-                    onChange={(e) => handleModelNameChange(e.target.value)}
-                    placeholder="e.g., openai:gpt-4o-mini"
-                  />
-                  <div className="form-description">
-                    The AI model to use for responses (e.g., openai:gpt-4o-mini, anthropic:claude-3-sonnet).
-                  </div>
-                </div>
-
-                <div className="settings-form-group">
                   <label htmlFor="approval-timeout">Approval Timeout (seconds)</label>
                   <input
                     id="approval-timeout"
@@ -238,6 +276,144 @@ const SettingsModal: React.FC = () => {
                     How long to wait for tool approval before timing out.
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'llm' && (
+              <div>
+                {providerError && (
+                  <div className="settings-errors">
+                    <div>{providerError}</div>
+                  </div>
+                )}
+
+                {isProviderLoading ? (
+                  <div>Loading LLM providers...</div>
+                ) : (
+                  <>
+                    <div className="settings-form-group">
+                      <label htmlFor="llm-provider-select">LLM Provider</label>
+                      <select
+                        id="llm-provider-select"
+                        value={selectedProvider}
+                        onChange={(e) => {
+                          setSelectedProvider(e.target.value)
+                          setSelectedModel('')
+                          setProviderConfig({})
+                          setTestResult(null)
+                          updateLLMProviderSettings(e.target.value, '', {})
+                        }}
+                      >
+                        <option value="">Select a provider...</option>
+                        {Object.values(availableProviders).map(provider => (
+                          <option key={provider.name} value={provider.name}>
+                            {provider.display_name}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedProvider && availableProviders[selectedProvider] && (
+                        <div className="form-description">
+                          {availableProviders[selectedProvider].description}
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedProvider && availableProviders[selectedProvider] && (
+                      <>
+                        <div className="settings-form-group">
+                          <label htmlFor="llm-model-input">Model</label>
+                          <input
+                            id="llm-model-input"
+                            type="text"
+                            list="model-suggestions"
+                            value={selectedModel}
+                            onChange={(e) => {
+                              setSelectedModel(e.target.value)
+                              setTestResult(null)
+                              updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
+                            }}
+                            placeholder="Enter model name or select from suggestions..."
+                          />
+                          <datalist id="model-suggestions">
+                            {availableProviders[selectedProvider].default_models.map(model => (
+                              <option key={model} value={model} />
+                            ))}
+                          </datalist>
+                          <div className="form-description">
+                            Enter the model name to use with this provider. You can type a custom model name or select from the suggestions above.
+                            <br />
+                            <strong>Common models:</strong> {availableProviders[selectedProvider].default_models.slice(0, 3).join(', ')}
+                            {availableProviders[selectedProvider].default_models.length > 3 && '...'}
+                          </div>
+                        </div>
+
+                        {availableProviders[selectedProvider].auth_fields.map(field => (
+                          <div key={field.name} className="settings-form-group">
+                            <label htmlFor={`llm-${field.name}`}>
+                              {field.name.charAt(0).toUpperCase() + field.name.slice(1).replace('_', ' ')}
+                              {field.required && <span style={{ color: '#dc3545' }}> *</span>}
+                            </label>
+                            <input
+                              id={`llm-${field.name}`}
+                              type={field.type === 'password' ? 'password' : 'text'}
+                              value={providerConfig[field.name] || ''}
+                              onChange={(e) => {
+                                const newConfig = {
+                                  ...providerConfig,
+                                  [field.name]: e.target.value
+                                }
+                                setProviderConfig(newConfig)
+                                setTestResult(null)
+                                updateLLMProviderSettings(selectedProvider, selectedModel, newConfig)
+                              }}
+                              placeholder={field.description}
+                              required={field.required}
+                            />
+                            <div className="form-description">
+                              {field.description}
+                            </div>
+                          </div>
+                        ))}
+
+                        {selectedProvider && selectedModel && (
+                          <div className="settings-form-group">
+                            <button
+                              type="button"
+                              className="settings-btn secondary"
+                              onClick={async () => {
+                                setIsTestingProvider(true)
+                                setTestResult(null)
+                                try {
+                                  const result = await testProvider(selectedProvider, selectedModel, providerConfig)
+                                  setTestResult(result)
+                                } finally {
+                                  setIsTestingProvider(false)
+                                }
+                              }}
+                              disabled={isTestingProvider}
+                            >
+                              {isTestingProvider ? 'Testing...' : 'Test Connection'}
+                            </button>
+
+                            {testResult && (
+                              <div 
+                                className="form-description" 
+                                style={{ 
+                                  color: testResult.success ? '#28a745' : '#dc3545',
+                                  marginTop: '8px'
+                                }}
+                              >
+                                {testResult.message}
+                                {testResult.error && ` - ${testResult.error}`}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             )}
 

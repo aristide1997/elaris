@@ -11,6 +11,7 @@ import os
 from api.conversations import router as conversations_router
 from api.settings import router as settings_router
 from api.mcp_servers import router as mcp_servers_router
+from api.llm_providers import router as llm_providers_router
 from api.websocket import websocket_endpoint
 from core.database import init_db
 from core.config import config_manager
@@ -39,6 +40,7 @@ app.add_middleware(
 app.include_router(conversations_router)
 app.include_router(settings_router)
 app.include_router(mcp_servers_router)
+app.include_router(llm_providers_router)
 
 # WebSocket endpoint
 @app.websocket("/ws")

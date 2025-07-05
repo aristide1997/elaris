@@ -9,6 +9,7 @@ from typing import Any
 from pydantic_ai import Agent
 from pydantic_ai.mcp import CallToolFunc
 from services.tool_approval import ToolApprovalManager
+from services.llm_provider_service import llm_provider_service, ProviderConfig
 from core.config import config_manager
 from services.mcp_service import get_mcp_manager
 from core.exceptions import MCPServerError
@@ -27,6 +28,17 @@ class MCPAgentManager:
             # Get current configuration
             config = await config_manager.load_config()
             
+            # Get LLM provider configuration
+            llm_config = config["llm_provider"]
+            provider_config = ProviderConfig(
+                provider=llm_config["provider"],
+                model=llm_config["model"],
+                config=llm_config["config"]
+            )
+            
+            # Create provider instance using pydantic-ai
+            provider_instance = llm_provider_service.create_provider_instance(provider_config)
+            
             # Get only enabled MCP servers
             mcp_manager = await get_mcp_manager()
             servers = mcp_manager.get_enabled_servers()
@@ -35,14 +47,36 @@ class MCPAgentManager:
             for server in servers:
                 server.process_tool_call = self._process_tool_call
             
-            # Create agent with configuration and enabled servers
+            # Determine model argument: special-case Bedrock and Google GLA to pass provider instances
+            if provider_config.provider == 'bedrock':
+                # Use BedrockConverseModel with the created BedrockProvider instance
+                from pydantic_ai.models.bedrock import BedrockConverseModel
+                model_arg = BedrockConverseModel(
+                    provider_config.model,
+                    provider=provider_instance
+                )
+            elif provider_config.provider == 'google-gla':
+                # Use GoogleModel with a GoogleProvider built from the API key in config
+                from pydantic_ai.providers.google import GoogleProvider
+                from pydantic_ai.models.google import GoogleModel
+                api_key = provider_config.config.get('api_key')
+                google_provider = GoogleProvider(api_key=api_key)
+                model_arg = GoogleModel(
+                    provider_config.model,
+                    provider=google_provider
+                )
+            else:
+                # Use model spec string for other providers
+                model_arg = f"{provider_config.provider}:{provider_config.model}"
+
+            # Create agent with configured model and enabled servers
             agent = Agent(
-                config["model_name"], 
+                model_arg,
                 mcp_servers=servers,
                 system_prompt=config["system_prompt"]
             )
             
-            logger.info(f"Created MCP Agent with {len(servers)} enabled servers")
+            logger.info(f"Created MCP Agent with provider '{provider_config.provider}', model '{provider_config.model}', and {len(servers)} enabled servers")
             return agent
             
         except Exception as e:
