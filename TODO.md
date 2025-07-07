@@ -1,6 +1,6 @@
 stop llm stream when you want during reply
 chat name preview with first message text
-always save user message before llm response, and then save all response
+model picker for all current provider models (litellm?) 
 default MD format all llm text
 add ``` code parsers
 add always accept tool calls settings

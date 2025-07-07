@@ -12,6 +12,7 @@ from services.tool_approval import ToolApprovalManager
 from services.mcp_agent import MCPAgentManager
 from services.message_processor import MessageStreamProcessor
 from core.database import get_conversation_by_id, save_conversation, update_conversation
+from pydantic_ai.messages import ModelRequest, Usage
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +41,22 @@ class ChatSession:
                 # Fetch previous messages if the conversation exists
                 conversation = await get_conversation_by_id(conversation_id)
                 if conversation:
-                    message_history = conversation['messages']
-                    logger.info(f"Continuing conversation {conversation_id} with {len(message_history)} messages")
+                    existing_messages = conversation['messages']
+                    logger.info(f"Continuing conversation {conversation_id} with {len(existing_messages)} messages")
                 else:
-                    message_history = None
+                    existing_messages = []
                     logger.info(f"Starting new conversation {conversation_id}")
                 
+                # Always save user message before streaming response
+                user_request = ModelRequest.user_text_prompt(user_input)
+                if conversation:
+                    await update_conversation(conversation_id, existing_messages + [user_request], Usage())
+                else:
+                    await save_conversation(conversation_id, [user_request], Usage())
+                
+                # Prepare message history for agent iteration
+                message_history = existing_messages if existing_messages else None
+
                 # Create a fresh agent for this message with current enabled servers
                 agent = await self.agent_manager.create_agent()
                 
