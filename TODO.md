@@ -5,3 +5,4 @@ add ``` code parsers
 add always accept tool calls settings
 a2a
 replay or edit user messages and edit history in db
+smart llm absed message chat preview
