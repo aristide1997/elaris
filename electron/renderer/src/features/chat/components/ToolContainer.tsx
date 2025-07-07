@@ -9,8 +9,8 @@ interface ToolContainerProps {
 function ToolContainer({ tools }: ToolContainerProps) {
   return (
     <div className="tool-container">
-      {tools.map((tool) => (
-        <ToolItem key={tool.id || tool.name} tool={tool} />
+      {tools.map((tool, index) => (
+        <ToolItem key={tool.id || `${tool.name}-${index}`} tool={tool} />
       ))}
     </div>
   )
@@ -23,54 +23,83 @@ interface ToolItemProps {
 function ToolItem({ tool }: ToolItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  switch (tool.status) {
-    case 'pending_approval':
-      return (
-        <div className="tool-pending-inline">
-          ⏳ Awaiting approval: {tool.name}
-        </div>
-      )
-    
-    case 'executing':
-      return (
-        <div className="tool-executing-inline">
-          🔧 Executing tool: {tool.name}
-        </div>
-      )
-    
-    case 'completed':
-      if (tool.result) {
-        const lines = tool.result.split('\n')
-        return (
-          <details className="tool-result-details">
-            <summary>
-              ✅ {tool.name}: {lines.length} line{lines.length > 1 ? 's' : ''}
-            </summary>
-            <pre>{tool.result}</pre>
-          </details>
-        )
-      } else {
-        return (
-          <div className="tool-completed-inline">
-            ✅ {tool.name} completed
-          </div>
-        )
-      }
-    
-    case 'blocked':
-      return (
-        <div className="tool-blocked-inline">
-          ⛔ Tool blocked: {tool.name}
-        </div>
-      )
-    
-    default:
-      return (
-        <div className="tool-unknown-inline">
-          ❓ {tool.name}: {tool.status}
-        </div>
-      )
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pending_approval':
+        return { 
+          dot: 'pending', 
+          text: 'Awaiting approval' 
+        }
+      case 'executing':
+        return { 
+          dot: 'executing', 
+          text: 'Executing' 
+        }
+      case 'completed':
+        return { 
+          dot: 'completed', 
+          text: 'Completed' 
+        }
+      case 'blocked':
+        return { 
+          dot: 'blocked', 
+          text: 'Blocked' 
+        }
+      default:
+        return { 
+          dot: 'pending', 
+          text: status 
+        }
+    }
   }
+
+  const statusInfo = getStatusInfo(tool.status)
+
+  // For simple status display (no result)
+  if (tool.status !== 'completed' || !tool.result) {
+    return (
+      <div className="tool-item">
+        <div className="tool-item-inline">
+          <div className={`tool-status-dot ${statusInfo.dot}`}></div>
+          <span className="tool-name">{tool.name}</span>
+          <span className="tool-status-text">— {statusInfo.text}</span>
+        </div>
+      </div>
+    )
+  }
+
+  // For completed tools with results
+  const lines = tool.result.split('\n')
+  const lineCount = lines.length
+
+  return (
+    <div className="tool-item">
+      <div 
+        className={`tool-result-summary ${isExpanded ? 'expanded' : ''}`}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="tool-result-info">
+          <div className={`tool-status-dot ${statusInfo.dot}`}></div>
+          <span className="tool-name">{tool.name}</span>
+          <span className="tool-status-text">— {lineCount} line{lineCount !== 1 ? 's' : ''}</span>
+        </div>
+        <svg 
+          className="tool-expand-icon" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+      
+      {isExpanded && (
+        <div className="tool-result">
+          <pre>{tool.result}</pre>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default ToolContainer
