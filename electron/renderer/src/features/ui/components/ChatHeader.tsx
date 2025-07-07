@@ -7,9 +7,10 @@ interface ChatHeaderProps {
   onDebugClick: () => void
   onToggleSidebar: () => void
   isSidebarCollapsed?: boolean
+  debugMode?: boolean
 }
 
-function ChatHeader({ isConnected, onDebugClick, onToggleSidebar }: ChatHeaderProps): ReactElement {
+function ChatHeader({ isConnected, onDebugClick, onToggleSidebar, debugMode = true }: ChatHeaderProps): ReactElement {
   return (
     <header className="header">
       <div className="header-left">
@@ -23,14 +24,18 @@ function ChatHeader({ isConnected, onDebugClick, onToggleSidebar }: ChatHeaderPr
         <h1>🚀 MCP Chat Client</h1>
       </div>
       <div className="header-controls">
-        <button className="debug-button" onClick={onDebugClick} title="View Message Debug">
-          🔍 Debug
-        </button>
+        {debugMode && (
+          <button className="debug-button" onClick={onDebugClick} title="View Message Debug">
+            🔍 Debug
+          </button>
+        )}
         <MCPServerDropdown />
-        <div className="connection-status">
-          <span className={`status-dot ${isConnected ? 'connected' : ''}`}></span>
-          <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-        </div>
+        {debugMode && (
+          <div className="connection-status">
+            <span className={`status-dot ${isConnected ? 'connected' : ''}`}></span>
+            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+          </div>
+        )}
       </div>
     </header>
   )

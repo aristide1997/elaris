@@ -139,6 +139,17 @@
   margin-top: 4px;
 }
 
+/* Add override for checkbox inputs in settings-form-group to fix their styling */
+.settings-form-group input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
 .json-editor {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 13px;

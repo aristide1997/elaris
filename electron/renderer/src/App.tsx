@@ -1,5 +1,5 @@
-import React from 'react'
-import { Layout, Sidebar, ChatHeader, useUIStore } from './features/ui'
+import React, { useEffect } from 'react'
+import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore } from './features/ui'
 import { ChatWindow } from './features/chat'
 import { useConnectionStore } from './features/connection'
 import { useWebSocketConnection } from './features/connection'
@@ -12,6 +12,12 @@ function App() {
   
   const isConnected = useConnectionStore(state => state.isConnected)
   const { isSidebarCollapsed, toggleSidebar, openDebug } = useUIStore()
+  const { settings, loadSettings } = useSettingsStore()
+
+  // Load settings on app start
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   return (
     <div className="app">
@@ -20,6 +26,7 @@ function App() {
         onDebugClick={openDebug}
         onToggleSidebar={toggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
+        debugMode={settings?.debug_mode ?? true}
       />
       <Layout sidebar={<Sidebar />} isSidebarCollapsed={isSidebarCollapsed}>
         <ChatWindow />

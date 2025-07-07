@@ -143,6 +143,10 @@ const SettingsModal: React.FC = () => {
     }
   }
 
+  const handleDebugModeChange = (checked: boolean) => {
+    updateSettings({ debug_mode: checked })
+  }
+
   const handleMcpJsonChange = (value: string) => {
     setMcpJsonTouched(true)
     setMcpJsonText(value)
@@ -274,6 +278,22 @@ const SettingsModal: React.FC = () => {
                   />
                   <div className="form-description">
                     How long to wait for tool approval before timing out.
+                  </div>
+                </div>
+
+                <div className="settings-form-group">
+                  <label htmlFor="debug-mode">
+                    <input
+                      id="debug-mode"
+                      type="checkbox"
+                      checked={settings.debug_mode}
+                      onChange={(e) => handleDebugModeChange(e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    Debug Mode
+                  </label>
+                  <div className="form-description">
+                    Show debug button and connection status in the header for troubleshooting.
                   </div>
                 </div>
               </div>
