@@ -14,6 +14,37 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/conversations", tags=["conversations"])
 
+def _truncate_preview(text: str, max_words: int = 4) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words]) + "..."
+
+def _get_first_user_message(messages: list) -> str:
+    for msg in messages:
+        # Handle objects with parts attribute (ModelRequest, ModelResponse)
+        parts = getattr(msg, "parts", None)
+        if parts:
+            for part in parts:
+                if getattr(part, "part_kind", None) == "user-prompt":
+                    content = getattr(part, "content", "")
+                    # Return string content directly
+                    if isinstance(content, str):
+                        return content
+                    # Flatten list content if necessary
+                    if isinstance(content, (list, tuple)):
+                        fragments: list[str] = []
+                        for item in content:
+                            if isinstance(item, str):
+                                fragments.append(item)
+                            elif isinstance(item, dict) and "content" in item:
+                                fragments.append(str(item["content"]))
+                        return " ".join(fragments)
+        # Fallback for raw dict messages
+        if isinstance(msg, dict) and msg.get("type") == "user_prompt":
+            return msg.get("content", "")
+    return ""
+
 @router.get("")
 async def list_conversations(limit: int = 10):
     """Get conversation history"""
@@ -28,8 +59,7 @@ async def list_conversations(limit: int = 10):
                     "updated_at": conv["updated_at"],
                     "message_count": len(conv["messages"]),
                     # Include first user message as preview
-                    "preview": next((msg["content"] for msg in conv["messages"] 
-                                    if isinstance(msg, dict) and msg.get("type") == "user_prompt"), "")
+                    "preview": _truncate_preview(_get_first_user_message(conv["messages"]))
                 }
                 for conv in conversations
             ]

@@ -1,5 +1,4 @@
 stop llm stream when you want during reply
-chat name preview with first message text
 model picker for all current provider models (litellm?) 
 default MD format all llm text
 add ``` code parsers
