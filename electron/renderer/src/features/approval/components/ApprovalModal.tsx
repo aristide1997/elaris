@@ -23,23 +23,50 @@ function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): Reac
   if (!request) return null
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header">
-          <h3>🔧 Tool Execution Approval</h3>
+    <div className="approval-modal-overlay">
+      <div className="approval-modal">
+        <div className="approval-modal-header">
+          <h3>
+            <span className="tool-icon">🔧</span>
+            Tool Execution Approval
+          </h3>
         </div>
-        <div className="modal-body">
-          <p><strong>Tool:</strong> {request.tool_name}</p>
-          <p><strong>Arguments:</strong></p>
-          <pre>{JSON.stringify(request.args, null, 2)}</pre>
-          <p className="warning">⚠️ Do you want to allow this tool to execute?</p>
+        
+        <div className="approval-modal-body">
+          <div className="approval-modal-field">
+            <label>Tool Name</label>
+            <div className="field-value">{request.tool_name}</div>
+          </div>
+          
+          <div className="approval-modal-field">
+            <label>Arguments</label>
+            <pre>{JSON.stringify(request.args, null, 2)}</pre>
+          </div>
+          
+          <div className="approval-warning">
+            <div className="warning-icon">!</div>
+            <div className="warning-text">
+              Do you want to allow this tool to execute?
+            </div>
+          </div>
         </div>
-        <div className="modal-footer">
-          <button className="btn btn-danger" onClick={onDeny}>
-            ❌ Deny
+        
+        <div className="approval-modal-footer">
+          <button 
+            className="approval-btn approval-btn-deny" 
+            onClick={onDeny}
+            type="button"
+          >
+            <span className="approval-btn-icon">✕</span>
+            Deny
           </button>
-          <button className="btn btn-success" onClick={onApprove}>
-            ✅ Approve
+          <button 
+            className="approval-btn approval-btn-approve" 
+            onClick={onApprove}
+            type="button"
+          >
+            <span className="approval-btn-icon">✓</span>
+            Approve
           </button>
         </div>
       </div>
@@ -47,4 +74,4 @@ function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): Reac
   )
 }
 
-export default ApprovalModal 
+export default ApprovalModal
