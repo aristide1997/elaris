@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
-import { useUIStore } from '../stores/useUIStore'
 import { useConnectionStore } from '../../connection/stores/useConnectionStore'
 import { useLLMProviderStore } from '../stores/useLLMProviderStore'
-import './SettingsModal.css'
+import { useWebSocketConnection } from '../../connection'
+import './SettingsWindow.css'
 
 type TabType = 'general' | 'llm' | 'mcp'
 
-const SettingsModal: React.FC = () => {
+const SettingsWindow: React.FC = () => {
+  // Initialize WebSocket connection for this window
+  useWebSocketConnection()
+
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [mcpJsonText, setMcpJsonText] = useState('')
   const [mcpJsonError, setMcpJsonError] = useState<string | null>(null)
@@ -33,7 +36,6 @@ const SettingsModal: React.FC = () => {
     clearError
   } = useSettingsStore()
 
-  const { closeSettings } = useUIStore()
   const sendMessage = useConnectionStore(state => state.sendMessage)
 
   // LLM Provider store
@@ -49,7 +51,7 @@ const SettingsModal: React.FC = () => {
     clearError: clearProviderError
   } = useLLMProviderStore()
 
-  // Load settings when modal opens
+  // Load settings when window opens
   useEffect(() => {
     loadSettings()
   }, [loadSettings])
@@ -90,14 +92,18 @@ const SettingsModal: React.FC = () => {
     }
   }, [settings?.mcp_servers])
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (isDirty) {
       if (confirm('You have unsaved changes. Are you sure you want to close?')) {
         resetSettings()
-        closeSettings()
+        if (window.electronAPI?.closeSettings) {
+          await window.electronAPI.closeSettings()
+        }
       }
     } else {
-      closeSettings()
+      if (window.electronAPI?.closeSettings) {
+        await window.electronAPI.closeSettings()
+      }
     }
   }
 
@@ -122,19 +128,28 @@ const SettingsModal: React.FC = () => {
 
     if (!error && validationErrors.length === 0) {
       sendMessage({ type: 'update_settings', settings: updatedSettings })
-      closeSettings()
+      
+      // Notify main window of settings update
+      if (window.electronAPI?.settingsUpdated) {
+        await window.electronAPI.settingsUpdated(updatedSettings)
+      }
+      
+      if (window.electronAPI?.closeSettings) {
+        await window.electronAPI.closeSettings()
+      }
     }
   }
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     resetSettings()
-    closeSettings()
+    if (window.electronAPI?.closeSettings) {
+      await window.electronAPI.closeSettings()
+    }
   }
 
   const handleSystemPromptChange = (value: string) => {
     updateSettings({ system_prompt: value })
   }
-
 
   const handleApprovalTimeoutChange = (value: string) => {
     const numValue = parseFloat(value)
@@ -187,18 +202,13 @@ const SettingsModal: React.FC = () => {
 
   if (!settings) {
     return (
-      <div className="settings-modal-overlay">
-        <div className="settings-modal">
-          <div className="settings-modal-header">
-            <h2 className="settings-modal-title">Settings</h2>
-            <button className="settings-modal-close" onClick={closeSettings}>
-              ×
-            </button>
-          </div>
-          <div className="settings-modal-content">
-            <div className="settings-tab-content">
-              <div>Loading settings...</div>
-            </div>
+      <div className="settings-window">
+        <div className="settings-window-header">
+          <h2 className="settings-window-title">Settings</h2>
+        </div>
+        <div className="settings-window-content">
+          <div className="settings-tab-content">
+            <div>Loading settings...</div>
           </div>
         </div>
       </div>
@@ -206,16 +216,12 @@ const SettingsModal: React.FC = () => {
   }
 
   return (
-    <div className="settings-modal-overlay">
-      <div className="settings-modal">
-        <div className="settings-modal-header">
-          <h2 className="settings-modal-title">Settings</h2>
-          <button className="settings-modal-close" onClick={handleClose}>
-            ×
-          </button>
-        </div>
+    <div className="settings-window">
+      <div className="settings-window-header">
+        <h2 className="settings-window-title">Settings</h2>
+      </div>
 
-        <div className="settings-modal-content">
+      <div className="settings-window-content">
           <div className="settings-tabs">
             <button
               className={`settings-tab ${activeTab === 'general' ? 'active' : ''}`}
@@ -489,9 +495,8 @@ const SettingsModal: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
 
-        <div className="settings-modal-footer">
+        <div className="settings-window-footer">
           <div className="left">
             <span className={`settings-status ${getStatusClass()}`}>
               {getStatusText()}
@@ -519,4 +524,4 @@ const SettingsModal: React.FC = () => {
   )
 }
 
-export default SettingsModal
+export default SettingsWindow

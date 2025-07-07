@@ -1,9 +1,10 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 
-// Keep a global reference of the window object
+// Keep a global reference of the window objects
 let mainWindow;
+let settingsWindow;
 let pythonProcess;
 let serverPort;
 
@@ -72,6 +73,67 @@ function createWindow() {
         mainWindow.webContents.send('server-port', serverPort);
     });
 }
+
+function createSettingsWindow() {
+    // Don't create multiple settings windows
+    if (settingsWindow) {
+        settingsWindow.focus();
+        return;
+    }
+
+    settingsWindow = new BrowserWindow({
+        width: 800,
+        height: 700,
+        parent: mainWindow,
+        modal: false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            enableRemoteModule: false,
+            preload: path.join(__dirname, 'preload.js')
+        },
+        icon: path.join(__dirname, 'icon.png'),
+        title: 'Settings - MCP Chatbot',
+        resizable: true,
+        minimizable: false,
+        maximizable: false
+    });
+
+    // Load the settings page
+    if (process.env.NODE_ENV === 'development') {
+        settingsWindow.loadURL('http://localhost:5173/settings.html');
+        settingsWindow.webContents.openDevTools();
+    } else {
+        settingsWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'settings.html'));
+    }
+
+    settingsWindow.on('closed', () => {
+        settingsWindow = null;
+    });
+
+    // Pass server port to settings window when ready
+    settingsWindow.webContents.once('dom-ready', () => {
+        settingsWindow.webContents.send('server-port', serverPort);
+    });
+}
+
+// IPC handlers for settings window
+ipcMain.handle('open-settings', () => {
+    createSettingsWindow();
+});
+
+ipcMain.handle('close-settings', () => {
+    if (settingsWindow) {
+        settingsWindow.close();
+    }
+});
+
+ipcMain.handle('settings-updated', (event, settings) => {
+    // Notify main window that settings were updated
+    if (mainWindow) {
+        mainWindow.webContents.send('settings-updated', settings);
+    }
+});
 
 app.whenReady().then(async () => {
     try {

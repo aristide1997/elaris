@@ -1,5 +1,5 @@
 stop llm stream when you want during reply
-settings new window
+chat name preview with first message text
 always save user message before llm response, and then save all response
 default MD format all llm text
 add ``` code parsers
