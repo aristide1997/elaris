@@ -4,6 +4,7 @@ MCP Agent Manager - Handles AI agent configuration with global MCP servers
 """
 
 import logging
+import os
 from typing import Any
 
 from pydantic_ai import Agent
@@ -27,7 +28,17 @@ class MCPAgentManager:
         try:
             # Get current configuration
             config = await config_manager.load_config()
-            
+
+            # Inject JSON-based API keys into environment for pydantic-ai default providers
+            llm_config = config["llm_provider"]
+            provider_info = llm_provider_service.get_available_providers().get(llm_config["provider"])
+            if provider_info:
+                for field in provider_info.auth_fields:
+                    env_var = field.get("env_var")
+                    key = field["name"]
+                    if env_var and key in llm_config["config"] and llm_config["config"][key]:
+                        os.environ[env_var] = llm_config["config"][key]
+
             # Get LLM provider configuration
             llm_config = config["llm_provider"]
             provider_config = ProviderConfig(
@@ -64,12 +75,6 @@ class MCPAgentManager:
                 model_arg = GoogleModel(
                     provider_config.model,
                     provider=google_provider
-                )
-            elif provider_config.provider == 'openai':
-                from pydantic_ai.models.openai import OpenAIModel
-                model_arg = OpenAIModel(
-                    provider_config.model,
-                    provider=provider_instance
                 )
             else:
                 # Use model spec string for other providers
