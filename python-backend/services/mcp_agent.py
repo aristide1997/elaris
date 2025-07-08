@@ -65,6 +65,12 @@ class MCPAgentManager:
                     provider_config.model,
                     provider=google_provider
                 )
+            elif provider_config.provider == 'openai':
+                from pydantic_ai.models.openai import OpenAIModel
+                model_arg = OpenAIModel(
+                    provider_config.model,
+                    provider=provider_instance
+                )
             else:
                 # Use model spec string for other providers
                 model_arg = f"{provider_config.provider}:{provider_config.model}"

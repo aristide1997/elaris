@@ -24,25 +24,47 @@ interface CurrentProvider {
   config: Record<string, any>
 }
 
+interface ModelInfo {
+  id: string
+  name: string
+  provider: string
+  context_length?: number
+  pricing?: {
+    prompt: string
+    completion: string
+  }
+  description?: string
+  capabilities?: string[]
+}
+
 interface LLMProviderState {
   availableProviders: Record<string, ProviderInfo>
   currentProvider: CurrentProvider | null
+  availableModels: ModelInfo[]
   isLoading: boolean
+  isLoadingModels: boolean
   error: string | null
+  modelsError: string | null
   
   // Actions
   loadAvailableProviders: () => Promise<void>
   loadCurrentProvider: () => Promise<void>
+  loadModelsForProvider: (provider: string) => Promise<void>
   testProvider: (provider: string, model: string, config: Record<string, any>) => Promise<{ success: boolean; message: string; error?: string }>
   configureProvider: (provider: string, model: string, config: Record<string, any>) => Promise<void>
+  selectModel: (modelId: string) => Promise<void>
   clearError: () => void
+  clearModelsError: () => void
 }
 
 export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
   availableProviders: {},
   currentProvider: null,
+  availableModels: [],
   isLoading: false,
+  isLoadingModels: false,
   error: null,
+  modelsError: null,
 
   loadAvailableProviders: async () => {
     set({ isLoading: true, error: null })
@@ -157,7 +179,61 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
     }
   },
 
+  loadModelsForProvider: async (provider: string) => {
+    set({ isLoadingModels: true, modelsError: null })
+    
+    try {
+      const response = await fetch(`/api/llm-providers/models/${provider}`)
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to load models')
+      }
+      
+      if (data.success) {
+        set({ 
+          availableModels: data.models,
+          isLoadingModels: false 
+        })
+      } else {
+        throw new Error('Failed to load models')
+      }
+    } catch (error) {
+      set({ 
+        modelsError: error instanceof Error ? error.message : 'Failed to load models',
+        isLoadingModels: false 
+      })
+    }
+  },
+
+  selectModel: async (modelId: string) => {
+    const currentProvider = get().currentProvider
+    if (!currentProvider) {
+      throw new Error('No provider configured')
+    }
+
+    // Update the current provider with the new model
+    const updatedProvider = {
+      ...currentProvider,
+      model: modelId
+    }
+
+    try {
+      await get().configureProvider(
+        updatedProvider.provider,
+        updatedProvider.model,
+        updatedProvider.config
+      )
+    } catch (error) {
+      throw error
+    }
+  },
+
   clearError: () => {
     set({ error: null })
+  },
+
+  clearModelsError: () => {
+    set({ modelsError: null })
   },
 }))

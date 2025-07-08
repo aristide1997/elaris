@@ -42,13 +42,18 @@ const SettingsWindow: React.FC = () => {
   const {
     availableProviders,
     currentProvider,
+    availableModels,
     isLoading: isProviderLoading,
+    isLoadingModels,
     error: providerError,
+    modelsError,
     loadAvailableProviders,
     loadCurrentProvider,
+    loadModelsForProvider,
     testProvider,
     configureProvider,
-    clearError: clearProviderError
+    clearError: clearProviderError,
+    clearModelsError
   } = useLLMProviderStore()
 
   // Load settings when window opens
@@ -63,6 +68,13 @@ const SettingsWindow: React.FC = () => {
       loadCurrentProvider()
     }
   }, [activeTab, loadAvailableProviders, loadCurrentProvider])
+
+  // Load models when provider is selected
+  useEffect(() => {
+    if (selectedProvider && activeTab === 'llm') {
+      loadModelsForProvider(selectedProvider)
+    }
+  }, [selectedProvider, activeTab, loadModelsForProvider])
 
   // Initialize LLM form state when current provider loads
   useEffect(() => {
@@ -368,29 +380,72 @@ const SettingsWindow: React.FC = () => {
                     {selectedProvider && availableProviders[selectedProvider] && (
                       <>
                         <div className="settings-form-group">
-                          <label htmlFor="llm-model-input">Model</label>
-                          <input
-                            id="llm-model-input"
-                            type="text"
-                            list="model-suggestions"
-                            value={selectedModel}
-                            onChange={(e) => {
-                              setSelectedModel(e.target.value)
-                              setTestResult(null)
-                              updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
-                            }}
-                            placeholder="Enter model name or select from suggestions..."
-                          />
-                          <datalist id="model-suggestions">
-                            {availableProviders[selectedProvider].default_models.map(model => (
-                              <option key={model} value={model} />
-                            ))}
-                          </datalist>
+                          <label htmlFor="llm-model-select">Model</label>
+                          {isLoadingModels ? (
+                            <div className="loading-indicator">Loading models...</div>
+                          ) : (
+                            <>
+                              <select
+                                id="llm-model-select"
+                                value={selectedModel}
+                                onChange={(e) => {
+                                  setSelectedModel(e.target.value)
+                                  setTestResult(null)
+                                  updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
+                                }}
+                              >
+                                <option value="">Select a model...</option>
+                                {availableModels.map(model => (
+                                  <option key={model.id} value={model.id}>
+                                    {model.name} ({model.id})
+                                  </option>
+                                ))}
+                                <option value="custom">Custom model...</option>
+                              </select>
+                              
+                              {selectedModel === 'custom' && (
+                                <input
+                                  type="text"
+                                  placeholder="Enter custom model name..."
+                                  style={{ marginTop: '8px' }}
+                                  onChange={(e) => {
+                                    setSelectedModel(e.target.value)
+                                    setTestResult(null)
+                                    updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
+                                  }}
+                                />
+                              )}
+                            </>
+                          )}
+                          
+                          {modelsError && (
+                            <div className="form-description" style={{ color: '#dc3545', marginTop: '8px' }}>
+                              {modelsError}
+                            </div>
+                          )}
+                          
+                          {selectedModel && selectedModel !== 'custom' && availableModels.length > 0 && (
+                            (() => {
+                              const modelInfo = availableModels.find(m => m.id === selectedModel)
+                              return modelInfo ? (
+                                <div className="form-description" style={{ marginTop: '8px' }}>
+                                  <strong>{modelInfo.name}</strong>
+                                  {modelInfo.context_length && (
+                                    <span> • Context: {modelInfo.context_length.toLocaleString()} tokens</span>
+                                  )}
+                                  {modelInfo.description && (
+                                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                                      {modelInfo.description}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null
+                            })()
+                          )}
+                          
                           <div className="form-description">
-                            Enter the model name to use with this provider. You can type a custom model name or select from the suggestions above.
-                            <br />
-                            <strong>Common models:</strong> {availableProviders[selectedProvider].default_models.slice(0, 3).join(', ')}
-                            {availableProviders[selectedProvider].default_models.length > 3 && '...'}
+                            Select a model from the available options or choose "Custom model..." to enter a custom model name.
+                            Models are loaded from OpenRouter's comprehensive catalog.
                           </div>
                         </div>
 

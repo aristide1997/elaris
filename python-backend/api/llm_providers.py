@@ -145,3 +145,42 @@ async def configure_provider(request: ProviderConfigRequest):
     except Exception as e:
         logger.error(f"Error configuring provider: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to configure provider: {str(e)}")
+
+@router.get("/models/{provider_name}")
+async def get_models_for_provider(provider_name: str):
+    """Get available models for a specific provider"""
+    try:
+        # Check if provider exists
+        available_providers = llm_provider_service.get_available_providers()
+        if provider_name not in available_providers:
+            raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
+        
+        # Get models for the provider
+        models = await llm_provider_service.get_models_for_provider(provider_name)
+        
+        # Convert to JSON-serializable format
+        models_data = []
+        for model in models:
+            model_data = {
+                "id": model.id,
+                "name": model.name,
+                "provider": model.provider,
+                "context_length": model.context_length,
+                "pricing": model.pricing,
+                "description": model.description,
+                "capabilities": model.capabilities
+            }
+            models_data.append(model_data)
+        
+        return {
+            "success": True,
+            "provider": provider_name,
+            "models": models_data,
+            "count": len(models_data)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting models for provider {provider_name}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get models: {str(e)}")
