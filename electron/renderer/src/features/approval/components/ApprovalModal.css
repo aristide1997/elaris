@@ -18,7 +18,7 @@
   box-shadow: var(--shadow-xl);
   max-width: 480px;
   width: 90%;
-  max-height: 70vh;
+  max-height: 80vh;
   overflow: hidden;
   animation: approvalModalSlideIn 0.3s ease-out;
   border: 1px solid var(--color-border);
@@ -67,7 +67,7 @@
 .approval-modal-body {
   padding: var(--space-6);
   overflow-y: auto;
-  max-height: 60vh;
+  max-height: 65vh;
 }
 
 .approval-modal-field {

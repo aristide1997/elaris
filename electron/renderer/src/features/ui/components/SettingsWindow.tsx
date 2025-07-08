@@ -162,6 +162,10 @@ const SettingsWindow: React.FC = () => {
     updateSettings({ debug_mode: checked })
   }
 
+  const handleAutoApproveToolsChange = (checked: boolean) => {
+    updateSettings({ auto_approve_tools: checked })
+  }
+
   const handleMcpJsonChange = (value: string) => {
     setMcpJsonTouched(true)
     setMcpJsonText(value)
@@ -284,6 +288,23 @@ const SettingsWindow: React.FC = () => {
                   />
                   <div className="form-description">
                     How long to wait for tool approval before timing out.
+                  </div>
+                </div>
+
+                <div className="settings-form-group">
+                  <label htmlFor="auto-approve-tools">
+                    <input
+                      id="auto-approve-tools"
+                      type="checkbox"
+                      checked={settings.auto_approve_tools}
+                      onChange={(e) => handleAutoApproveToolsChange(e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    Auto-approve tool calls
+                  </label>
+                  <div className="form-description">
+                    Automatically approve all tool execution requests without showing approval dialogs. 
+                    <strong style={{ color: '#dc3545' }}> Warning:</strong> This will execute all tool requests without user confirmation.
                   </div>
                 </div>
 

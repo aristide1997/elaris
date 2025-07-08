@@ -10,6 +10,7 @@ interface Settings {
     config: Record<string, any>
   }
   approval_timeout: number
+  auto_approve_tools: boolean
   mcp_servers: Record<string, any>
 }
 

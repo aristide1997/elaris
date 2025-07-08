@@ -22,6 +22,14 @@ class ToolApprovalManager:
     
     async def request_approval(self, tool_name: str, args: dict) -> bool:
         """Request user approval for tool execution"""
+        # Check if auto-approval is enabled
+        from core.config import config_manager
+        auto_approve = await config_manager.get_value("auto_approve_tools", False)
+        
+        if auto_approve:
+            logger.info(f"Auto-approving tool: {tool_name} (auto_approve_tools is enabled)")
+            return True
+        
         approval_id = str(uuid.uuid4())
         
         logger.info(f"Requesting approval for tool: {tool_name} with ID: {approval_id}")

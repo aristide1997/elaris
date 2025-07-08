@@ -27,6 +27,7 @@ DEFAULT_CONFIG = {
         "config": {}  # Provider-specific configuration
     },
     "approval_timeout": 60.0,
+    "auto_approve_tools": False,
     "mcp_servers": {
         "desktop-commander": {
             "command": "npx",
@@ -201,7 +202,7 @@ class ConfigManager:
         errors = []
         
         # Check required fields
-        required_fields = ["system_prompt", "llm_provider", "approval_timeout", "mcp_servers"]
+        required_fields = ["system_prompt", "llm_provider", "approval_timeout", "auto_approve_tools", "mcp_servers"]
         for field in required_fields:
             if field not in config:
                 errors.append(f"Missing required field: {field}")
@@ -224,6 +225,10 @@ class ConfigManager:
                 errors.append("approval_timeout must be a number")
             elif timeout <= 0:
                 errors.append("approval_timeout must be positive")
+        
+        if "auto_approve_tools" in config:
+            if not isinstance(config["auto_approve_tools"], bool):
+                errors.append("auto_approve_tools must be a boolean")
         
         # Validate MCP servers
         if "mcp_servers" in config:

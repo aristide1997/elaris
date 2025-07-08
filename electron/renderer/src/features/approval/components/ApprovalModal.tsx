@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { MCPApprovalRequest } from '../types'
+import { useSettingsStore } from '../../ui/stores/useSettingsStore'
 import './ApprovalModal.css'
 
 interface ApprovalModalProps {
@@ -9,6 +10,8 @@ interface ApprovalModalProps {
 }
 
 function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): React.ReactElement | null {
+  const [alwaysApprove, setAlwaysApprove] = useState(false)
+  const { settings, saveSettings } = useSettingsStore()
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
@@ -49,6 +52,22 @@ function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): Reac
               Do you want to allow this tool to execute?
             </div>
           </div>
+
+          <div className="approval-modal-field" style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #eee' }}>
+            <label htmlFor="always-approve-checkbox" style={{ fontSize: '14px', fontWeight: 'normal' }}>
+              <input
+                id="always-approve-checkbox"
+                type="checkbox"
+                checked={alwaysApprove}
+                onChange={(e) => setAlwaysApprove(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              Always approve tool calls
+            </label>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px', marginLeft: '24px' }}>
+              Enable auto-approval for all future tool requests without showing this dialog.
+            </div>
+          </div>
         </div>
         
         <div className="approval-modal-footer">
@@ -62,7 +81,18 @@ function ApprovalModal({ request, onApprove, onDeny }: ApprovalModalProps): Reac
           </button>
           <button 
             className="approval-btn approval-btn-approve" 
-            onClick={onApprove}
+            onClick={async () => {
+              // If "always approve" is checked, update settings first
+              if (alwaysApprove && settings) {
+                const updatedSettings = { ...settings, auto_approve_tools: true }
+                try {
+                  await saveSettings(updatedSettings)
+                } catch (error) {
+                  console.error('Failed to update auto-approve setting:', error)
+                }
+              }
+              onApprove()
+            }}
             type="button"
           >
             <span className="approval-btn-icon">✓</span>
