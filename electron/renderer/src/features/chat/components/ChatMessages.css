@@ -8,6 +8,7 @@
 
 .messages {
   margin: 0 auto;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

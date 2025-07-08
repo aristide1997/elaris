@@ -17,7 +17,7 @@
 
 .message-input {
   flex: 1;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-5);
   border: 2px solid var(--color-border-subtle);
   border-radius: var(--radius-2xl);
   font-size: var(--font-size-base);
