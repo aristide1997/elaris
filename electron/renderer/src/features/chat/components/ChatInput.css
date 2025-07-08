@@ -75,6 +75,34 @@
   height: 20px;
 }
 
+/* Stop button styling */
+.stop-button {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: #e53e3e;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stop-button:hover:not(:disabled) {
+  background: #c53030;
+}
+
+.stop-button:disabled {
+  background: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+.stop-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

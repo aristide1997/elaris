@@ -14,6 +14,7 @@ interface ChatOrchestratorActions {
   handleRawApprovalRequest: (msg: MCPApprovalRequest) => void
   selectConversation: (id: string) => Promise<void>
   startNewChat: () => Promise<void>
+  stopMessage: () => void
   // Message handling helpers
   handleSystemReady: (message: string) => void
   handleAssistantStart: () => void
@@ -126,6 +127,15 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
         const { resetToWelcome } = useMessagesStore.getState()
         
         await startNewChat(serverPort, get().handleError, resetToWelcome)
+      },
+
+      stopMessage: () => {
+        const conversationId = useConversationStore.getState().conversationId
+        const sendMessage = useConnectionStore.getState().sendMessage
+        if (conversationId) {
+          sendMessage({ type: 'stop_stream', conversation_id: conversationId })
+        }
+        get().handleAssistantComplete()
       },
 
       // Message handling helpers

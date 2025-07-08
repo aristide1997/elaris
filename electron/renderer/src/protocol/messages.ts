@@ -104,7 +104,13 @@ export interface UpdateSettingsMessage {
   settings: Record<string, any>
 }
 
+export interface StopStreamMessage {
+  type: 'stop_stream'
+  conversation_id: string
+}
+
 export type ClientToServerMessage =
   | ChatMessage
   | ApprovalResponseMessage
   | UpdateSettingsMessage
+  | StopStreamMessage

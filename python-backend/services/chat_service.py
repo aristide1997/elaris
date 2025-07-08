@@ -67,6 +67,10 @@ class ChatSession:
                     # After stream completes, save or update the conversation
                     await self._save_conversation(run.result, conversation_id)
                     
+            except asyncio.CancelledError:
+                # Task was cancelled by user stop request - swallow without error
+                logger.info(f"Chat message handling cancelled for conversation {conversation_id}")
+                return
             except Exception as e:
                 logger.error(f"Error handling chat message: {e}", exc_info=True)
                 await self.messenger.send_error(f"Error processing message: {str(e)}")

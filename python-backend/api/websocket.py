@@ -69,7 +69,15 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Handle dynamic settings update mid-session
                     logger.info("Received update_settings via WebSocket - next message will use updated settings automatically")
                     await chat_session.send_system_ready("Settings updated successfully")
-                
+                elif data["type"] == "stop_stream":
+                    # User requested to stop the current stream
+                    logger.info(f"Received stop_stream for conversation: {data.get('conversation_id')}")
+                    for task in chat_session.tasks:
+                        if not task.done():
+                            task.cancel()
+                    # Notify client that assistant has stopped
+                    await websocket.send_json({"type": "assistant_complete"})
+                    continue
                 else:
                     logger.warning(f"Unknown message type: {data['type']}")
                     

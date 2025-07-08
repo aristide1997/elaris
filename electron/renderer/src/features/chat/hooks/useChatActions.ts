@@ -14,17 +14,22 @@ export const useChatActions = () => {
   const conversationId = useConversationStore(state => state.conversationId)
   
   const sendMessage = useChatOrchestratorStore(state => state.sendMessage)
+  const stopMessage = useChatOrchestratorStore(state => state.stopMessage)
   const selectConversation = useChatOrchestratorStore(state => state.selectConversation)
   const startNewChat = useChatOrchestratorStore(state => state.startNewChat)
-  
+
+  const isStreaming = useMessagesStore(state => Boolean(state.currentAssistantId))
+
   return {
     // State
     isConnected,
     serverPort,
     messages,
     conversationId,
+    isStreaming,
     // Actions
     sendMessage,
+    stopMessage,
     selectConversation,
     startNewChat
   }

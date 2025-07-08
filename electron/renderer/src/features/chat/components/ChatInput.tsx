@@ -3,10 +3,12 @@ import './ChatInput.css'
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void
+  onStopMessage: () => void
   disabled: boolean
+  isStreaming: boolean
 }
 
-function ChatInput({ onSendMessage, disabled }: ChatInputProps): React.ReactElement {
+function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: ChatInputProps): React.ReactElement {
   const [message, setMessage] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -54,16 +56,28 @@ function ChatInput({ onSendMessage, disabled }: ChatInputProps): React.ReactElem
           disabled={disabled}
           className="message-input"
         />
-        <button
-          type="submit"
-          disabled={disabled || !message.trim()}
-          className="send-button"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22,2 15,22 11,13 2,9"></polygon>
-          </svg>
-        </button>
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={onStopMessage}
+            className="stop-button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={disabled || !message.trim()}
+            className="send-button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22,2 15,22 11,13 2,9"></polygon>
+            </svg>
+          </button>
+        )}
       </form>
     </div>
   )

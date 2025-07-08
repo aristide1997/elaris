@@ -1,4 +1,4 @@
-stop llm stream when you want during reply
+save partial conversation when user stops mid-stream
 model picker for all current provider models (litellm?) 
 default MD format all llm text
 add ``` code parsers
