@@ -18,7 +18,7 @@
 }
 
 .message-content {
-  max-width: 75%;
+  max-width: 100%;
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-2xl);
   white-space: pre-wrap;
