@@ -10,5 +10,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openSettings: () => ipcRenderer.invoke('open-settings'),
     closeSettings: () => ipcRenderer.invoke('close-settings'),
     settingsUpdated: (settings) => ipcRenderer.invoke('settings-updated', settings),
-    onSettingsUpdated: (callback) => ipcRenderer.on('settings-updated', callback)
+    onSettingsUpdated: (callback) => ipcRenderer.on('settings-updated', callback),
+    
+    // Backend restart event handlers
+    onBackendRestarting: (callback) => ipcRenderer.on('backend-restarting', callback),
+    onBackendRestarted: (callback) => ipcRenderer.on('backend-restarted', callback),
+    onBackendRestartFailed: (callback) => ipcRenderer.on('backend-restart-failed', callback)
 });

@@ -9,6 +9,8 @@ let mainWindow;
 let settingsWindow;
 let pythonProcess;
 let serverPort;
+let healthCheckInterval;
+let isRestarting = false;
 
 // Function to start Python backend
 function startPythonBackend() {
@@ -176,6 +178,127 @@ function waitForBackend(port, retries = 40, interval = 500) {
   });
 }
 
+// Function to check if Python backend is healthy
+function checkBackendHealth() {
+  return new Promise((resolve) => {
+    const req = http.request(
+      { 
+        hostname: '127.0.0.1', 
+        port: serverPort, 
+        path: '/api/conversations?limit=1', 
+        method: 'GET', 
+        timeout: 2000 
+      },
+      (res) => {
+        resolve(true);
+      }
+    );
+    
+    req.on('error', (error) => {
+      console.log('Backend health check failed:', error.message);
+      resolve(false);
+    });
+    
+    req.on('timeout', () => {
+      console.log('Backend health check timed out');
+      req.destroy();
+      resolve(false);
+    });
+    
+    req.end();
+  });
+}
+
+// Function to restart Python backend
+async function restartPythonBackend() {
+  if (isRestarting) {
+    console.log('Backend restart already in progress, skipping...');
+    return;
+  }
+  
+  isRestarting = true;
+  console.log('Restarting Python backend...');
+  
+  // Notify renderer about restart
+  if (mainWindow) {
+    mainWindow.webContents.send('backend-restarting');
+  }
+  if (settingsWindow) {
+    settingsWindow.webContents.send('backend-restarting');
+  }
+  
+  try {
+    // Kill existing process if it exists
+    if (pythonProcess) {
+      pythonProcess.kill('SIGTERM');
+      // Wait a bit for graceful shutdown
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!pythonProcess.killed) {
+        pythonProcess.kill('SIGKILL');
+      }
+    }
+    
+    // Start new backend process
+    startPythonBackend();
+    
+    // Wait for it to be ready
+    await waitForBackend(serverPort);
+    
+    console.log('Python backend restarted successfully');
+    
+    // Notify renderer about successful restart
+    if (mainWindow) {
+      mainWindow.webContents.send('backend-restarted', serverPort);
+    }
+    if (settingsWindow) {
+      settingsWindow.webContents.send('backend-restarted', serverPort);
+    }
+    
+  } catch (error) {
+    console.error('Failed to restart Python backend:', error);
+    
+    // Notify renderer about restart failure
+    if (mainWindow) {
+      mainWindow.webContents.send('backend-restart-failed');
+    }
+    if (settingsWindow) {
+      settingsWindow.webContents.send('backend-restart-failed');
+    }
+  } finally {
+    isRestarting = false;
+  }
+}
+
+// Function to start health monitoring
+function startHealthMonitoring() {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+  }
+  
+  healthCheckInterval = setInterval(async () => {
+    if (isRestarting) {
+      return; // Skip health check during restart
+    }
+    
+    const isHealthy = await checkBackendHealth();
+    if (!isHealthy) {
+      console.log('Backend unhealthy, attempting restart...');
+      await restartPythonBackend();
+    }
+  }, 8000); // Check every 8 seconds
+  
+  console.log('Backend health monitoring started');
+}
+
+// Function to stop health monitoring
+function stopHealthMonitoring() {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+    console.log('Backend health monitoring stopped');
+  }
+}
+
 // IPC handlers for settings window
 ipcMain.handle('open-settings', () => {
     createSettingsWindow();
@@ -203,6 +326,9 @@ app.whenReady().then(async () => {
     // Wait for backend to be ready before opening window
     await waitForBackend(serverPort);
     createWindow();
+    
+    // Start health monitoring after everything is ready
+    startHealthMonitoring();
   } catch (error) {
     console.error('Failed to start application:', error);
     dialog.showErrorBox('Startup Error', 'Failed to start the application backend.');
@@ -211,6 +337,9 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+    // Stop health monitoring
+    stopHealthMonitoring();
+    
     // Terminate Python process
     if (pythonProcess) {
         pythonProcess.kill();
@@ -222,15 +351,41 @@ app.on('window-all-closed', () => {
     }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
     if (mainWindow === null) {
-        createWindow();
+        try {
+            // Immediately restart backend if needed
+            if (!pythonProcess || pythonProcess.killed) {
+                startPythonBackend();
+                await waitForBackend(serverPort);
+            }
+            
+            createWindow();
+            
+            // Restart health monitoring if it was stopped
+            if (!healthCheckInterval) {
+                startHealthMonitoring();
+            }
+        } catch (error) {
+            console.error('Failed to restart on activate:', error);
+            createWindow(); // Create window anyway
+            startHealthMonitoring(); // Let health monitor handle the restart
+        }
     }
 });
 
 app.on('before-quit', () => {
+    // Stop health monitoring
+    stopHealthMonitoring();
+    
     // Ensure Python process is terminated
     if (pythonProcess) {
-        pythonProcess.kill();
+        pythonProcess.kill('SIGTERM');
+        // Give it a moment to shut down gracefully
+        setTimeout(() => {
+            if (pythonProcess && !pythonProcess.killed) {
+                pythonProcess.kill('SIGKILL');
+            }
+        }, 1000);
     }
 });
