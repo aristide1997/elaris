@@ -12,7 +12,7 @@ const ChatWindow: React.FC = () => {
       <ChatInput
         onSendMessage={sendMessage}
         onStopMessage={stopMessage}
-        disabled={!isConnected || !conversationId || isStreaming}
+        disabled={!isConnected || isStreaming}
         isStreaming={isStreaming}
       />
     </>

@@ -9,12 +9,17 @@ import { useMessagesStore } from './useMessagesStore'
 import { useConversationStore } from '../../conversations/stores/useConversationStore'
 
 interface ChatOrchestratorActions {
+  // Idempotent stub creation flags
+  isCreatingConversation: boolean
+  pendingMessages: string[]
   sendMessage: (content: string) => void
   handleServerMessage: (message: MCPServerMessage) => void
   handleRawApprovalRequest: (msg: MCPApprovalRequest) => void
   selectConversation: (id: string) => Promise<void>
   startNewChat: () => Promise<void>
   stopMessage: () => void
+  // Reset to a fresh draft without persisting or loading
+  resetConversation: () => void
   // Message handling helpers
   handleSystemReady: (message: string) => void
   handleAssistantStart: () => void
@@ -35,27 +40,55 @@ type ChatOrchestratorStore = ChatOrchestratorActions
 export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
   devtools(
     (set, get) => ({
+      // Idempotent stub creation state
+      isCreatingConversation: false,
+      pendingMessages: [] as string[],
       sendMessage: (content: string) => {
-        const { conversationId } = useConversationStore.getState()
-        const { sendMessage } = useConnectionStore.getState()
-        const { addMessage } = useMessagesStore.getState()
-        
-        // Add user message to store
+        const convStore = useConversationStore.getState()
+        const connStore = useConnectionStore.getState()
+        const msgStore = useMessagesStore.getState()
+        const handleError = get().handleError
+        const { serverPort, sendMessage: wsSend } = connStore
+        const { conversationId } = convStore
+        const { addMessage } = msgStore
+
+        // Optimistically add user message
         const userMessage = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2,9)}`,
           type: 'user' as const,
           content,
           timestamp: new Date()
         }
-        
         addMessage(userMessage)
 
-        // Send via WebSocket if available
-        sendMessage({
-          type: 'chat_message',
-          content,
-          conversation_id: conversationId!
-        } as MCPClientMessage)
+        // If conversation already exists, send immediately
+        if (conversationId) {
+          wsSend({ type: 'chat_message', content, conversation_id: conversationId } as MCPClientMessage)
+          return
+        }
+
+        // If stub creation in progress, queue this message
+        if (get().isCreatingConversation) {
+          set(state => ({ pendingMessages: [...state.pendingMessages, content] }))
+          return
+        }
+
+        // Start stub creation and queue first message
+        set({ isCreatingConversation: true, pendingMessages: [content] })
+        convStore.startNewChat(serverPort, handleError, () => {})
+          .then(() => {
+            const newCid = useConversationStore.getState().conversationId!
+            // Flush queued messages
+            get().pendingMessages.forEach(msg => {
+              wsSend({ type: 'chat_message', content: msg, conversation_id: newCid } as MCPClientMessage)
+            })
+          })
+          .catch((err: any) => {
+            handleError(`Failed to start conversation: ${err.message}`)
+          })
+          .finally(() => {
+            set({ isCreatingConversation: false, pendingMessages: [] })
+          })
       },
 
       handleRawApprovalRequest: (msg: MCPApprovalRequest) => {
@@ -137,7 +170,11 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
         }
         get().handleAssistantComplete()
       },
-
+      // Reset to a fresh draft without persisting or loading
+      resetConversation: () => {
+        useConversationStore.getState().setConversationId(null)
+        useMessagesStore.getState().resetToWelcome()
+      },
       // Message handling helpers
       handleSystemReady: (message: string) => {
         const { addMessage } = useMessagesStore.getState()
