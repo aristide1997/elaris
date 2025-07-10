@@ -1,7 +1,14 @@
 import React from 'react'
+import { marked } from 'marked'
 import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'
 import './MessageItem.css'
+
+// Configure marked options
+marked.setOptions({
+  breaks: true, // Convert line breaks to <br>
+  gfm: true, // Enable GitHub Flavored Markdown
+})
 
 interface MessageItemProps {
   message: UIMessage
@@ -30,6 +37,26 @@ function MessageItem({ message }: MessageItemProps) {
     return ''
   }
 
+  const renderMessageContent = () => {
+    if (message.type === 'assistant') {
+      // Render assistant messages as markdown
+      const htmlContent = marked(message.content || '')
+      return (
+        <div 
+          className={`message-content ${getSystemMessageClassName()}`}
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+        />
+      )
+    } else {
+      // Render other message types as plain text
+      return (
+        <div className={`message-content ${getSystemMessageClassName()}`}>
+          {message.content}
+        </div>
+      )
+    }
+  }
+
   return (
     <div className={getMessageClassName()}>
       {message.type === 'tool_session' ? (
@@ -51,9 +78,7 @@ function MessageItem({ message }: MessageItemProps) {
           {message.tools && message.tools.length > 0 && (
             <ToolContainer tools={message.tools} />
           )}
-          <div className={`message-content ${getSystemMessageClassName()}`}>
-            {message.content}
-          </div>
+          {renderMessageContent()}
         </>
       )}
     </div>
