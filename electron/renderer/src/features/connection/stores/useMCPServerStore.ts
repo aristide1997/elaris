@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import { getApiBase } from '../../../shared/utils/api'
 
 interface MCPServerState {
   configured: boolean
@@ -38,7 +39,8 @@ export const useMCPServerStore = create<MCPServerStore>()(
         set({ isLoading: true, error: null }, false, 'fetchServerStates/start')
         
         try {
-          const response = await fetch('/api/mcp-servers/states')
+          const base = getApiBase()
+          const response = await fetch(`${base}/api/mcp-servers/states`)
           const data = await response.json()
           
           if (data.status === 'success') {
@@ -64,7 +66,8 @@ export const useMCPServerStore = create<MCPServerStore>()(
         set({ isLoading: true, error: null }, false, 'toggleServer/start')
         
         try {
-          const response = await fetch('/api/mcp-servers/toggle', {
+          const base = getApiBase()
+          const response = await fetch(`${base}/api/mcp-servers/toggle`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

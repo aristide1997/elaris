@@ -349,7 +349,14 @@ class LLMProviderService:
     async def _fetch_openrouter_models(self) -> List[ModelInfo]:
         """Fetch all models from OpenRouter API"""
         try:
-            async with aiohttp.ClientSession() as session:
+            import ssl
+            # Create SSL context that doesn't verify certificates
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.get(
                     'https://openrouter.ai/api/v1/models',
                     timeout=aiohttp.ClientTimeout(total=30)

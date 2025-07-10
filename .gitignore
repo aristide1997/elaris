@@ -22,6 +22,46 @@ python-backend/venv/
 dist/
 build/
 node_modules/
+electron/renderer/dist/
+electron/renderer/node_modules/
+node-dist/
+
+# Build artifacts
+build/
+build/temp/
+*.dmg
+*.app
+*.pkg
+*.exe
+*.msi
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# PyInstaller
+*.spec.bak
+python-backend/dist/
+python-backend/build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Code signing
+.env.signing
+*.keychain
+*.keychain-db
 
 # DB
 *.db

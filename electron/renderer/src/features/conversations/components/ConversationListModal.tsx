@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { useChatActions } from '../../chat/hooks/useChatActions'
+import { getApiBase } from '../../../shared/utils/api'
 import './ConversationListModal.css'
 
 interface ConversationSummary {
@@ -23,9 +24,7 @@ function ConversationListModal({ isOpen, onClose, onSelect }: Omit<ConversationL
 
   useEffect(() => {
     if (isOpen) {
-      const url = serverPort
-        ? `http://localhost:${serverPort}/api/conversations?limit=20`
-        : `/api/conversations?limit=20`
+      const url = `${getApiBase()}/api/conversations?limit=20`;
       fetch(url)
         .then(res => res.json())
         .then(data => setConversations(data.conversations || []))

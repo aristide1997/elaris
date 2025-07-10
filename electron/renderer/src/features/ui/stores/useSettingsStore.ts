@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import { getApiBase } from '../../../shared/utils/api'
 
 interface Settings {
   system_prompt: string
@@ -52,7 +53,8 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ isLoading: true, error: null }, false, 'loadSettings/start')
         
         try {
-          const response = await fetch('/api/settings')
+          const base = getApiBase()
+          const response = await fetch(`${base}/api/settings`)
           const data = await response.json()
           
           if (data.status === 'success') {
@@ -79,7 +81,8 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ isLoading: true, error: null, validationErrors: [] }, false, 'saveSettings/start')
         
         try {
-          const response = await fetch('/api/settings', {
+          const base = getApiBase()
+          const response = await fetch(`${base}/api/settings`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -116,7 +119,8 @@ export const useSettingsStore = create<SettingsStore>()(
 
       validateMcpServers: async (mcpServers: Record<string, any>) => {
         try {
-          const response = await fetch('/api/settings/validate-mcp', {
+          const base = getApiBase()
+          const response = await fetch(`${base}/api/settings/validate-mcp`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

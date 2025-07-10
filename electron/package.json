@@ -10,7 +10,10 @@
     "dev:renderer": "cd renderer && npm run dev",
     "dev:electron": "NODE_ENV=development electron .",
     "pack": "cd renderer && npm run build && cd .. && electron-builder --dir",
-    "dist": "cd renderer && npm run build && cd .. && electron-builder"
+    "dist": "cd renderer && npm run build && cd .. && electron-builder",
+    "build:python": "cd ../python-backend && pip install -r requirements.txt && pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean",
+    "build:dmg": "npm run build:python && npm run build",
+    "build:all": "npm run build:python && cd renderer && npm run build && cd .. && electron-builder"
   },
   "keywords": [
     "mcp",
@@ -36,18 +39,36 @@
       "**/*",
       "!renderer/src/**/*",
       "!renderer/node_modules/**/*",
-      "../python-backend/**/*",
-      "../build/**/*"
+      "!../python-backend/**/*",
+      "!../build/**/*"
     ],
     "extraResources": [
       {
         "from": "../build",
-        "to": "build"
+        "to": "build",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "node_modules/npm",
+        "to": "npm",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../node-dist",
+        "to": "node",
+        "filter": ["**/*"]
       }
     ],
     "mac": {
       "target": "dmg",
-      "icon": "icon.png"
+      "icon": "icon.png",
+      "identity": null,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
     },
     "win": {
       "target": "nsis",
@@ -59,6 +80,7 @@
     }
   },
   "dependencies": {
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "npm": "*"
   }
 }

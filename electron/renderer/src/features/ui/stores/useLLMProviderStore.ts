@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getApiBase } from '../../../shared/utils/api'
 
 interface AuthField {
   name: string
@@ -70,7 +71,8 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      const response = await fetch('/api/llm-providers/available')
+      const base = getApiBase()
+      const response = await fetch(`${base}/api/llm-providers/available`)
       const data = await response.json()
       
       if (!response.ok) {
@@ -97,7 +99,8 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      const response = await fetch('/api/llm-providers/current')
+      const base = getApiBase()
+      const response = await fetch(`${base}/api/llm-providers/current`)
       const data = await response.json()
       
       if (!response.ok) {
@@ -122,7 +125,8 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
 
   testProvider: async (provider: string, model: string, config: Record<string, any>) => {
     try {
-      const response = await fetch('/api/llm-providers/test', {
+      const base = getApiBase()
+      const response = await fetch(`${base}/api/llm-providers/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +153,8 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      const response = await fetch('/api/llm-providers/configure', {
+      const base = getApiBase()
+      const response = await fetch(`${base}/api/llm-providers/configure`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +188,8 @@ export const useLLMProviderStore = create<LLMProviderState>((set, get) => ({
     set({ isLoadingModels: true, modelsError: null })
     
     try {
-      const response = await fetch(`/api/llm-providers/models/${provider}`)
+      const base = getApiBase()
+      const response = await fetch(`${base}/api/llm-providers/models/${provider}`)
       const data = await response.json()
       
       if (!response.ok) {

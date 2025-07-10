@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useChatActions } from '../../chat/hooks/useChatActions'
+import { getApiBase } from '../../../shared/utils/api'
 import './ChatHistoryList.css'
 
 interface ConversationSummary {
@@ -20,9 +21,7 @@ const ChatHistoryList: React.FC = () => {
     const fetchConversations = async () => {
       setIsLoading(true)
       try {
-        const url = serverPort
-          ? `http://localhost:${serverPort}/api/conversations?limit=20`
-          : `/api/conversations?limit=20`
+        const url = `${getApiBase()}/api/conversations?limit=20`
         const res = await fetch(url)
         const data = await res.json()
         setConversations(data.conversations || [])
@@ -45,10 +44,7 @@ const ChatHistoryList: React.FC = () => {
     setDeletingId(targetConversationId)
     
     try {
-      const url = serverPort
-        ? `http://localhost:${serverPort}/api/conversations/${targetConversationId}`
-        : `/api/conversations/${targetConversationId}`
-      
+      const url = `${getApiBase()}/api/conversations/${targetConversationId}`
       const response = await fetch(url, {
         method: 'DELETE'
       })

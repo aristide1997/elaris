@@ -4,6 +4,7 @@ import type { MCPApprovalRequest } from '../../approval/types'
 type MCPServerMessage = ServerToClientMessage
 type MCPClientMessage = ClientToServerMessage
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { getWsUrl } from '../../../shared/utils/api'
 
 interface UseMCPWebSocketParams {
   onMessage: (message: MCPServerMessage) => void
@@ -28,12 +29,10 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocke
         setServerPort(port)
       }
 
-      window.electronAPI.onServerPort(handleServerPort)
+      window.electronAPI?.onServerPort(handleServerPort)
 
       return () => {
-        if (window.electronAPI.removeAllListeners) {
-          window.electronAPI.removeAllListeners('server-port')
-        }
+        window.electronAPI?.removeAllListeners('server-port')
       }
     }
   }, [])
@@ -51,17 +50,7 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocke
       return
     }
 
-    let wsUrl
-    
-    if (serverPort) {
-      // Running in Electron - connect to localhost with dynamic port
-      wsUrl = `ws://localhost:${serverPort}/ws`
-    } else {
-      // Running in browser - use current location
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      wsUrl = `${protocol}//${window.location.host}/ws`
-    }
-    
+    const wsUrl = getWsUrl()
     console.log('Connecting to WebSocket:', wsUrl)
     
     try {

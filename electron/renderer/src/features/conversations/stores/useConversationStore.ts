@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { UIMessage } from '../../chat/types'
 import type { ConversationStore, ConversationState } from '../types'
+import { getApiBase } from '../../../shared/utils/api'
 
 const initialState: ConversationState = {
   conversationId: null
@@ -23,9 +24,7 @@ export const useConversationStore = create<ConversationStore>()(
           return
         }
         set({ conversationId: id }, false, 'selectConversation')
-        const url = serverPort
-          ? `http://localhost:${serverPort}/api/conversations/${id}`
-          : `/api/conversations/${id}`
+        const url = `${getApiBase()}/api/conversations/${id}`
         const resp = await fetch(url)
         const data = await resp.json()
         const conv = data.conversation
@@ -36,9 +35,7 @@ export const useConversationStore = create<ConversationStore>()(
       startNewChat: async (serverPort: number | null, onError: (message: string) => void, onReset: () => void) => {
         try {
           console.log('Starting new chat, serverPort:', serverPort)
-          const url = serverPort
-            ? `http://localhost:${serverPort}/api/conversations`
-            : `/api/conversations`
+          const url = `${getApiBase()}/api/conversations`
           console.log('Making request to:', url)
           const resp = await fetch(url, { method: 'POST' })
           if (!resp.ok) throw new Error(`Status ${resp.status}`)
