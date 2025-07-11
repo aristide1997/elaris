@@ -102,14 +102,6 @@ const ChatHistoryList: React.FC = () => {
                 <div className="chat-preview">
                   {conv.preview || 'New conversation'}
                 </div>
-                <div className="chat-meta">
-                  <span className="chat-date">
-                    {new Date(conv.updated_at).toLocaleDateString()}
-                  </span>
-                  <span className="chat-count">
-                    {conv.message_count} msgs
-                  </span>
-                </div>
               </button>
               <button
                 onClick={(e) => handleDeleteConversation(conv.conversation_id, e)}

@@ -77,7 +77,6 @@
   border-radius: var(--radius-xl);
   padding: var(--space-5);
   position: relative;
-  border-top: 3px solid var(--color-accent);
 }
 
 .tool-session-header {
