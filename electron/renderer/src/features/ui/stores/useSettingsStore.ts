@@ -12,6 +12,7 @@ interface Settings {
   }
   approval_timeout: number
   auto_approve_tools: boolean
+  enable_thinking: boolean
   mcp_servers: Record<string, any>
 }
 

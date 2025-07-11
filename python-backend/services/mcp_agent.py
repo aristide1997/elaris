@@ -52,7 +52,8 @@ class MCPAgentManager:
             provider_instance = llm_provider_service.create_provider_instance(provider_config)
             
             # Get smart model settings based on provider and model
-            smart_model_settings = llm_provider_service.get_smart_model_settings(provider_config)
+            enable_thinking = config.get("enable_thinking", False)
+            smart_model_settings = llm_provider_service.get_smart_model_settings(provider_config, enable_thinking)
             
             # Get only enabled MCP servers
             mcp_manager = await get_mcp_manager()

@@ -179,6 +179,10 @@ const SettingsWindow: React.FC = () => {
     updateSettings({ auto_approve_tools: checked })
   }
 
+  const handleEnableThinkingChange = (checked: boolean) => {
+    updateSettings({ enable_thinking: checked })
+  }
+
   const handleMcpJsonChange = (value: string) => {
     setMcpJsonTouched(true)
     setMcpJsonText(value)
@@ -457,6 +461,22 @@ const SettingsWindow: React.FC = () => {
                           <div className="form-description">
                             Select a model from the available options or choose "Custom model..." to enter a custom model name.
                             Models are loaded from OpenRouter's comprehensive catalog.
+                          </div>
+                        </div>
+
+                        <div className="settings-form-group">
+                          <label htmlFor="enable-thinking">
+                            <input
+                              id="enable-thinking"
+                              type="checkbox"
+                              checked={settings.enable_thinking}
+                              onChange={(e) => handleEnableThinkingChange(e.target.checked)}
+                              style={{ marginRight: '8px' }}
+                            />
+                            Enable Thinking
+                          </label>
+                          <div className="form-description">
+                            Allow models to use thinking/reasoning capabilities when available. When enabled, compatible models can show their internal reasoning process.
                           </div>
                         </div>
 
