@@ -48,7 +48,7 @@ function App() {
         onDebugClick={openDebug}
         onToggleSidebar={toggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
-        debugMode={settings?.debug_mode ?? true}
+        debugMode={settings?.debug_mode ?? false}
       />
       <Layout sidebar={<Sidebar />} isSidebarCollapsed={isSidebarCollapsed}>
         <ChatWindow />

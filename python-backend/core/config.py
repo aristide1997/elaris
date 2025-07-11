@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     },
     "approval_timeout": 60.0,
     "auto_approve_tools": False,
+    "debug_mode": False,
     "mcp_servers": {
         "desktop-commander": {
             "command": "npx",
