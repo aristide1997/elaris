@@ -22,6 +22,7 @@ const SettingsWindow: React.FC = () => {
   const [providerConfig, setProviderConfig] = useState<Record<string, any>>({})
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; error?: string } | null>(null)
   const [isTestingProvider, setIsTestingProvider] = useState(false)
+  const [customModelName, setCustomModelName] = useState('')
 
   const {
     settings,
@@ -389,9 +390,17 @@ const SettingsWindow: React.FC = () => {
                                 id="llm-model-select"
                                 value={selectedModel}
                                 onChange={(e) => {
-                                  setSelectedModel(e.target.value)
+                                  const value = e.target.value
                                   setTestResult(null)
-                                  updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
+                                  if (value === 'custom') {
+                                    setSelectedModel('custom')
+                                    setCustomModelName('')
+                                    updateLLMProviderSettings(selectedProvider, '', providerConfig)
+                                  } else {
+                                    setSelectedModel(value)
+                                    setCustomModelName('')
+                                    updateLLMProviderSettings(selectedProvider, value, providerConfig)
+                                  }
                                 }}
                               >
                                 <option value="">Select a model...</option>
@@ -408,10 +417,12 @@ const SettingsWindow: React.FC = () => {
                                   type="text"
                                   placeholder="Enter custom model name..."
                                   style={{ marginTop: '8px' }}
+                                  value={customModelName}
                                   onChange={(e) => {
-                                    setSelectedModel(e.target.value)
+                                    const value = e.target.value
+                                    setCustomModelName(value)
                                     setTestResult(null)
-                                    updateLLMProviderSettings(selectedProvider, e.target.value, providerConfig)
+                                    updateLLMProviderSettings(selectedProvider, value, providerConfig)
                                   }}
                                 />
                               )}

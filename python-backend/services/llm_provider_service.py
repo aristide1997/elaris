@@ -158,6 +158,9 @@ class LLMProviderService:
                     {'name': 'aws_session_token', 'type': 'password', 'required': False, 'description': 'Your AWS session token (optional)'}
                 ],
                 'default_models': [
+                    'anthropic.claude-opus-4-20250514-v1:0',
+                    'anthropic.claude-sonnet-4-20250514-v1:0',
+                    'anthropic.claude-3-7-sonnet-20250219-v1:0',
                     'anthropic.claude-3-5-sonnet-20241022-v2:0',
                     'anthropic.claude-3-5-sonnet-20240620-v1:0',
                     'anthropic.claude-3-5-haiku-20241022-v1:0',
@@ -312,6 +315,13 @@ class LLMProviderService:
                         'thinking': {'type': 'enabled', 'budget_tokens': 1024}
                     }
                     logger.info(f"Auto-enabled thinking for Bedrock DeepSeek model {provider_config.model}")
+            elif 'anthropic.claude' in provider_config.model:
+                # Claude models on Bedrock support thinking
+                if 'bedrock_additional_model_requests_fields' not in smart_settings:
+                    smart_settings['bedrock_additional_model_requests_fields'] = {
+                        'thinking': {'type': 'enabled', 'budget_tokens': 1024}
+                    }
+                    logger.info(f"Auto-enabled thinking for Bedrock Claude model {provider_config.model}")
         
         return smart_settings
     
