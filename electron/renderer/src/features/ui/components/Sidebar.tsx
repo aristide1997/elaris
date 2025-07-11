@@ -8,7 +8,6 @@ const Sidebar: React.FC = () => {
   return (
     <div className="sidebar-container">
       <div className="sidebar-header">
-        <h2 className="sidebar-title">Conversations</h2>
         <NewChatButton />
       </div>
       

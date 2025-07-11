@@ -1,11 +1,11 @@
 .new-chat-button {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  margin: 0 0 var(--space-2) 0;
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
   background: var(--color-accent);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
@@ -13,9 +13,15 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  transition: background-color 0.2s ease;
+  min-height: 44px;
 }
 
 .new-chat-button:hover {
+  background: var(--color-accent-hover);
+}
+
+.new-chat-button:active {
   background: var(--color-accent-hover);
 }
 
@@ -25,22 +31,24 @@
 }
 
 .new-chat-icon {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-lg);
   line-height: 1;
 }
 
 .new-chat-text {
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .new-chat-button {
-    padding: 6px var(--space-2);
+    padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-xs);
+    min-height: 40px;
   }
   
   .new-chat-icon {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
   }
 }

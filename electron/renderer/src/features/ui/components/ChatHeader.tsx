@@ -11,18 +11,23 @@ interface ChatHeaderProps {
   debugMode?: boolean
 }
 
-function ChatHeader({ isConnected, onDebugClick, onToggleSidebar, debugMode = true }: ChatHeaderProps): ReactElement {
+function ChatHeader({ isConnected, onDebugClick, onToggleSidebar, isSidebarCollapsed, debugMode = true }: ChatHeaderProps): ReactElement {
   return (
     <header className="header">
       <div className="header-left">
-        <button className="sidebar-toggle-header" onClick={onToggleSidebar} title="Toggle Sidebar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
+        <button 
+          className={`sidebar-toggle-header ${!isSidebarCollapsed ? 'open' : ''}`} 
+          onClick={onToggleSidebar} 
+          title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+          aria-label={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+        >
+          <div className="toggle-icon">
+            <span className="toggle-bar"></span>
+            <span className="toggle-bar"></span>
+            <span className="toggle-bar"></span>
+          </div>
         </button>
-        <h1>🚀 MCP Chat Client</h1>
+        <h1>MCP Chat Client</h1>
       </div>
       <div className="header-controls">
         {debugMode && (
