@@ -40,6 +40,19 @@ class WebSocketMessenger:
         """Send streaming text content"""
         await self.send_message("text_delta", content=content)
     
+    # Thinking events
+    async def send_thinking_start(self):
+        """Signal start of thinking phase"""
+        await self.send_message("thinking_start")
+    
+    async def send_thinking_delta(self, content: str):
+        """Send streaming thinking content"""
+        await self.send_message("thinking_delta", content=content)
+    
+    async def send_thinking_complete(self):
+        """Signal completion of thinking phase"""
+        await self.send_message("thinking_complete")
+    
     # Tool execution phase events (new graph-aligned events)
     async def send_tool_session_start(self):
         """Signal start of tool execution phase (CallToolsNode)"""

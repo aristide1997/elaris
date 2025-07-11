@@ -26,13 +26,20 @@ export interface AssistantMessage extends BaseMessage {
   content: string
 }
 
+export interface ThinkingMessage extends BaseMessage {
+  type: 'thinking'
+  content: string
+  isStreaming: boolean
+  isCollapsed: boolean
+}
+
 export interface ToolSessionMessage extends BaseMessage {
   type: 'tool_session'
   tools: ToolInstance[]
   status: 'executing' | 'completed' | 'blocked'
 }
 
-export type UIMessage = SystemMessage | UserMessage | AssistantMessage | ToolSessionMessage
+export type UIMessage = SystemMessage | UserMessage | AssistantMessage | ThinkingMessage | ToolSessionMessage
 
 export type MCPServerMessage = ServerToClientMessage
 export type MCPClientMessage = ClientToServerMessage
@@ -41,6 +48,7 @@ export type MCPClientMessage = ClientToServerMessage
 export interface MessagesState {
   messages: UIMessage[]
   currentAssistantId: string | null
+  currentThinkingId: string | null
   currentToolSessionId: string | null
 }
 
@@ -49,9 +57,10 @@ export interface MessagesActions {
   updateMessage: (id: string, updates: Partial<UIMessage>) => void
   setMessages: (messages: UIMessage[]) => void
   setCurrentAssistantId: (id: string | null) => void
+  setCurrentThinkingId: (id: string | null) => void
   setCurrentToolSessionId: (id: string | null) => void
   initMessages: (messages: UIMessage[]) => void
   resetToWelcome: () => void
 }
 
-export type MessagesStore = MessagesState & MessagesActions 
+export type MessagesStore = MessagesState & MessagesActions

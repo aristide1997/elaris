@@ -14,6 +14,8 @@ from pydantic_ai.messages import (
     PartDeltaEvent,
     PartStartEvent,
     TextPartDelta,
+    ThinkingPart,
+    ThinkingPartDelta,
     ToolCallPartDelta,
 )
 
@@ -69,26 +71,60 @@ class MessageStreamProcessor:
     async def _process_model_request(self, node, run):
         """Process model request node and stream text responses"""
         started = False
+        thinking_started = False
         async with node.stream(run.ctx) as request_stream:
             async for event in request_stream:
-                # Only open a bubble when actual text arrives
-                if isinstance(event, PartDeltaEvent) and isinstance(event.delta, TextPartDelta):
+                # Handle thinking events
+                if isinstance(event, PartStartEvent) and isinstance(event.part, ThinkingPart):
+                    logger.info(f"Thinking part start: {event.part.content[:100]}...")
+                    await self.messenger.send_thinking_start()
+                    thinking_started = True
+                    # Send initial thinking content if available
+                    if event.part.content:
+                        await self.messenger.send_thinking_delta(event.part.content)
+                
+                elif isinstance(event, PartDeltaEvent) and isinstance(event.delta, ThinkingPartDelta):
+                    # Stream thinking content to client
+                    if event.delta.content_delta:
+                        await self.messenger.send_thinking_delta(event.delta.content_delta)
+                
+                # Handle text events
+                elif isinstance(event, PartDeltaEvent) and isinstance(event.delta, TextPartDelta):
+                    # If we were thinking and now getting text, complete thinking first
+                    if thinking_started:
+                        await self.messenger.send_thinking_complete()
+                        thinking_started = False
+                    
                     if not started:
                         await self.messenger.send_assistant_start()
                         started = True
                     # Stream text to client
                     await self.messenger.send_text_delta(event.delta.content_delta)
+                
                 elif isinstance(event, PartStartEvent):
                     logger.info(f"Part start event: {event}")
-                    # Handle PartStartEvent by sending text to client
-                    if hasattr(event.part, 'content'):
+                    # Handle PartStartEvent - check if it's text content
+                    if hasattr(event.part, 'content') and not isinstance(event.part, ThinkingPart):
+                        # If we were thinking and now getting text, complete thinking first
+                        if thinking_started:
+                            await self.messenger.send_thinking_complete()
+                            thinking_started = False
+                        
                         if not started:
                             await self.messenger.send_assistant_start()
                             started = True
                         await self.messenger.send_text_delta(event.part.content)
+                
                 elif isinstance(event, FinalResultEvent):
                     logger.info(f"Final result event: {event}")
-        # Close the bubble if we opened one
+                    # Complete thinking if it was in progress
+                    if thinking_started:
+                        await self.messenger.send_thinking_complete()
+                        thinking_started = False
+        
+        # Close any open bubbles
+        if thinking_started:
+            await self.messenger.send_thinking_complete()
         if started:
             await self.messenger.send_assistant_complete()
             # Mark that we've sent a completion for this run

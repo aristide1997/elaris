@@ -1,4 +1,4 @@
-import type { SystemMessage, UserMessage, AssistantMessage, ToolSessionMessage } from '../types'
+import type { SystemMessage, UserMessage, AssistantMessage, ThinkingMessage, ToolSessionMessage } from '../types'
 import type { ToolInstance } from '../../approval/types'
 
 export class MessageService {
@@ -57,6 +57,17 @@ export class MessageService {
     }
   }
 
+  static thinkingStart(): ThinkingMessage {
+    return {
+      id: this.generateId(),
+      type: 'thinking',
+      content: '',
+      isStreaming: true,
+      isCollapsed: false,
+      timestamp: this.now()
+    }
+  }
+
   static toolSessionMessage(): ToolSessionMessage {
     return {
       id: this.generateId(),
@@ -78,4 +89,4 @@ export class MessageService {
       timestamp: this.now()
     }
   }
-} 
+}

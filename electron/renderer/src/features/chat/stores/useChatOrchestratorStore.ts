@@ -25,6 +25,9 @@ interface ChatOrchestratorActions {
   handleAssistantStart: () => void
   handleTextDelta: (content: string) => void
   handleAssistantComplete: () => void
+  handleThinkingStart: () => void
+  handleThinkingDelta: (content: string) => void
+  handleThinkingComplete: () => void
   handleToolSessionStart: () => void
   handleToolStart: (toolId: string, toolName: string) => void
   handleToolComplete: (toolId: string, content: string) => void
@@ -118,6 +121,15 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
             break
           case 'assistant_complete':
             get().handleAssistantComplete()
+            break
+          case 'thinking_start':
+            get().handleThinkingStart()
+            break
+          case 'thinking_delta':
+            get().handleThinkingDelta(message.content)
+            break
+          case 'thinking_complete':
+            get().handleThinkingComplete()
             break
           case 'tool_session_start':
             get().handleToolSessionStart()
@@ -222,6 +234,41 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       handleAssistantComplete: () => {
         const { setCurrentAssistantId } = useMessagesStore.getState()
         setCurrentAssistantId(null)
+      },
+
+      handleThinkingStart: () => {
+        const { addMessage, setCurrentThinkingId } = useMessagesStore.getState()
+        
+        // Create a new thinking message
+        const thinkingMessage = MessageService.thinkingStart()
+        addMessage(thinkingMessage)
+        setCurrentThinkingId(thinkingMessage.id)
+      },
+
+      handleThinkingDelta: (content: string) => {
+        const { currentThinkingId, messages, updateMessage } = useMessagesStore.getState()
+        
+        if (!currentThinkingId) return
+        
+        const thinkingMessage = messages.find(m => m.id === currentThinkingId && m.type === 'thinking')
+        if (thinkingMessage && thinkingMessage.type === 'thinking') {
+          updateMessage(currentThinkingId, {
+            content: thinkingMessage.content + content
+          })
+        }
+      },
+
+      handleThinkingComplete: () => {
+        const { currentThinkingId, updateMessage, setCurrentThinkingId } = useMessagesStore.getState()
+        
+        if (!currentThinkingId) return
+        
+        updateMessage(currentThinkingId, {
+          isStreaming: false,
+          isCollapsed: true
+        })
+        
+        setCurrentThinkingId(null)
       },
 
       handleToolSessionStart: () => {
@@ -329,4 +376,4 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       name: 'chat-orchestrator-store'
     }
   )
-) 
+)

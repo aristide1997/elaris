@@ -19,6 +19,19 @@ export interface AssistantCompleteEvent {
   type: 'assistant_complete'
 }
 
+export interface ThinkingStartEvent {
+  type: 'thinking_start'
+}
+
+export interface ThinkingDeltaEvent {
+  type: 'thinking_delta'
+  content: string
+}
+
+export interface ThinkingCompleteEvent {
+  type: 'thinking_complete'
+}
+
 export interface ToolSessionStartEvent {
   type: 'tool_session_start'
 }
@@ -76,6 +89,9 @@ export type ServerToClientMessage =
   | AssistantStartEvent
   | TextDeltaEvent
   | AssistantCompleteEvent
+  | ThinkingStartEvent
+  | ThinkingDeltaEvent
+  | ThinkingCompleteEvent
   | ToolSessionStartEvent
   | ToolStartEvent
   | ToolCompleteEvent

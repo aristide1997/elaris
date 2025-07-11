@@ -32,6 +32,7 @@ class ProviderConfig:
     provider: str
     model: str
     config: Dict[str, Any] = field(default_factory=dict)
+    model_settings: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class ModelInfo:
@@ -273,6 +274,46 @@ class LLMProviderService:
             errors.append("Model name is required")
         
         return errors
+    
+    def get_smart_model_settings(self, provider_config: ProviderConfig) -> Dict[str, Any]:
+        """Get smart default model settings based on provider and model"""
+        smart_settings = {}
+        
+        # Start with user-provided model settings
+        smart_settings.update(provider_config.model_settings)
+        
+        # Add provider-specific thinking configurations if not already set
+        if provider_config.provider == 'google-gla':
+            # Google models need google_thinking_config to enable thinking
+            if 'google_thinking_config' not in smart_settings:
+                smart_settings['google_thinking_config'] = {'include_thoughts': True}
+                logger.info(f"Auto-enabled thinking for Google model {provider_config.model}")
+        
+        elif provider_config.provider == 'anthropic':
+            # Anthropic models need anthropic_thinking configuration
+            if 'anthropic_thinking' not in smart_settings:
+                smart_settings['anthropic_thinking'] = {'type': 'enabled', 'budget_tokens': 1024}
+                logger.info(f"Auto-enabled thinking for Anthropic model {provider_config.model}")
+        
+        elif provider_config.provider == 'openai':
+            # OpenAI thinking models (o1, o4-mini, etc.) might need special settings
+            model_lower = provider_config.model.lower()
+            if any(thinking_model in model_lower for thinking_model in ['o1', 'o4-mini', 'o3']):
+                # OpenAI thinking models might need specific settings in the future
+                # For now, no special settings are required as thinking is enabled by default
+                logger.info(f"Using OpenAI thinking model {provider_config.model}")
+        
+        elif provider_config.provider == 'bedrock':
+            # Bedrock models might need thinking configuration
+            if provider_config.model.startswith('us.deepseek.r1'):
+                # DeepSeek R1 models on Bedrock support thinking
+                if 'bedrock_additional_model_requests_fields' not in smart_settings:
+                    smart_settings['bedrock_additional_model_requests_fields'] = {
+                        'thinking': {'type': 'enabled', 'budget_tokens': 1024}
+                    }
+                    logger.info(f"Auto-enabled thinking for Bedrock DeepSeek model {provider_config.model}")
+        
+        return smart_settings
     
     def create_provider_instance(self, provider_config: ProviderConfig) -> Provider:
         """Create a provider instance from configuration"""

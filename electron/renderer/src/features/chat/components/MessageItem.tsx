@@ -2,6 +2,7 @@ import React from 'react'
 import { marked } from 'marked'
 import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'
+import ThinkingBubble from './ThinkingBubble'
 import './MessageItem.css'
 
 // Configure marked options
@@ -23,6 +24,8 @@ function MessageItem({ message }: MessageItemProps) {
         return 'message assistant-message'
       case 'system':
         return 'message system-message'
+      case 'thinking':
+        return 'message thinking-message'
       case 'tool_session':
         return 'message tool-session-message'
       default:
@@ -59,7 +62,10 @@ function MessageItem({ message }: MessageItemProps) {
 
   return (
     <div className={getMessageClassName()}>
-      {message.type === 'tool_session' ? (
+      {message.type === 'thinking' ? (
+        // Thinking message - render as thinking bubble
+        <ThinkingBubble thinking={message} />
+      ) : message.type === 'tool_session' ? (
         // Tool session message - render tools with status
         <div className="tool-session-container">
           <div className="tool-session-header">

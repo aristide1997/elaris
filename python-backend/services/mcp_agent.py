@@ -44,11 +44,15 @@ class MCPAgentManager:
             provider_config = ProviderConfig(
                 provider=llm_config["provider"],
                 model=llm_config["model"],
-                config=llm_config["config"]
+                config=llm_config["config"],
+                model_settings=llm_config.get("model_settings", {})
             )
             
             # Create provider instance using pydantic-ai
             provider_instance = llm_provider_service.create_provider_instance(provider_config)
+            
+            # Get smart model settings based on provider and model
+            smart_model_settings = llm_provider_service.get_smart_model_settings(provider_config)
             
             # Get only enabled MCP servers
             mcp_manager = await get_mcp_manager()
@@ -80,12 +84,19 @@ class MCPAgentManager:
                 # Use model spec string for other providers
                 model_arg = f"{provider_config.provider}:{provider_config.model}"
 
-            # Create agent with configured model and enabled servers
-            agent = Agent(
-                model_arg,
-                mcp_servers=servers,
-                system_prompt=config["system_prompt"]
-            )
+            # Create agent with configured model, smart model settings, and enabled servers
+            agent_kwargs = {
+                "model": model_arg,
+                "mcp_servers": servers,
+                "system_prompt": config["system_prompt"]
+            }
+            
+            # Add model settings if any are configured
+            if smart_model_settings:
+                agent_kwargs["model_settings"] = smart_model_settings
+                logger.info(f"Applied model settings: {smart_model_settings}")
+            
+            agent = Agent(**agent_kwargs)
             
             logger.info(f"Created MCP Agent with provider '{provider_config.provider}', model '{provider_config.model}', and {len(servers)} enabled servers")
             return agent

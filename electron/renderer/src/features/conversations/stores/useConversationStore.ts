@@ -81,6 +81,13 @@ export const useConversationStore = create<ConversationStore>()(
                 subtype: 'info',
                 content: `Tool result: ${part.tool_name} => ${typeof part.content === 'string' ? part.content : JSON.stringify(part.content)}`
               }
+            case 'thinking':
+              return {
+                ...base,
+                type: 'thinking' as const,
+                isStreaming: false,  // Historical thinking is not streaming
+                isCollapsed: true    // Default to collapsed for historical content
+              }
             case 'retry-prompt':
               return {
                 ...base,

@@ -1,0 +1,195 @@
+.thinking-bubble {
+  background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+  border: 1px solid #b3d9ff;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.thinking-bubble.streaming {
+  border-color: #66b3ff;
+  box-shadow: 0 0 8px rgba(102, 179, 255, 0.3);
+}
+
+.thinking-bubble.complete {
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  border-color: #dee2e6;
+}
+
+/* Placeholder state - "Thinking..." with animated dots */
+.thinking-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.thinking-dots span {
+  width: 4px;
+  height: 4px;
+  background-color: #6c757d;
+  border-radius: 50%;
+  animation: thinking-pulse 1.4s infinite ease-in-out both;
+}
+
+.thinking-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes thinking-pulse {
+  0%, 80%, 100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.thinking-text {
+  font-size: 14px;
+}
+
+/* Collapsed state - single line with expand button */
+.thinking-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.thinking-collapsed:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.thinking-icon {
+  font-size: 16px;
+}
+
+.thinking-summary {
+  color: #495057;
+  font-size: 14px;
+  flex: 1;
+}
+
+.expand-icon {
+  color: #6c757d;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.thinking-collapsed:hover .expand-icon {
+  transform: translateX(2px);
+}
+
+/* Expanded state - full thinking content */
+.thinking-expanded {
+  /* No additional styles needed, inherits from bubble */
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+}
+
+.thinking-header:hover {
+  opacity: 0.8;
+}
+
+.thinking-title {
+  font-weight: 600;
+  color: #343a40;
+  font-size: 14px;
+  flex: 1;
+}
+
+.collapse-icon {
+  color: #6c757d;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.thinking-content {
+  color: #495057;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.thinking-cursor {
+  color: #007bff;
+  font-weight: bold;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Scrollbar styling for thinking content */
+.thinking-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.thinking-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.thinking-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.thinking-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .thinking-bubble {
+    padding: 10px;
+  }
+  
+  .thinking-content {
+    font-size: 13px;
+    padding: 10px;
+    max-height: 200px;
+  }
+}

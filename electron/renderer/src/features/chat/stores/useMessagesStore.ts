@@ -9,6 +9,7 @@ const createWelcomeMessage = (): UIMessage =>
 const initialState: MessagesState = {
   messages: [createWelcomeMessage()],
   currentAssistantId: null,
+  currentThinkingId: null,
   currentToolSessionId: null
 }
 
@@ -43,6 +44,10 @@ export const useMessagesStore = create<MessagesStore>()(
         set({ currentAssistantId: id }, false, 'setCurrentAssistantId')
       },
 
+      setCurrentThinkingId: (id: string | null) => {
+        set({ currentThinkingId: id }, false, 'setCurrentThinkingId')
+      },
+
       setCurrentToolSessionId: (id: string | null) => {
         set({ currentToolSessionId: id }, false, 'setCurrentToolSessionId')
       },
@@ -51,6 +56,7 @@ export const useMessagesStore = create<MessagesStore>()(
         set({
           messages,
           currentAssistantId: null,
+          currentThinkingId: null,
           currentToolSessionId: null
         }, false, 'initMessages')
       },
@@ -59,6 +65,7 @@ export const useMessagesStore = create<MessagesStore>()(
         set({
           messages: [createWelcomeMessage()],
           currentAssistantId: null,
+          currentThinkingId: null,
           currentToolSessionId: null
         }, false, 'resetToWelcome')
       }
@@ -67,4 +74,4 @@ export const useMessagesStore = create<MessagesStore>()(
       name: 'messages-store'
     }
   )
-) 
+)

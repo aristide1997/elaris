@@ -24,7 +24,8 @@ DEFAULT_CONFIG = {
     "llm_provider": {
         "provider": "openai",
         "model": "gpt-4o-mini",
-        "config": {}  # Provider-specific configuration
+        "config": {},  # Provider-specific configuration
+        "model_settings": {}  # Model-specific settings (e.g., thinking configurations)
     },
     "approval_timeout": 60.0,
     "auto_approve_tools": False,
@@ -251,6 +252,11 @@ class ConfigManager:
         for field in required_fields:
             if field not in llm_provider:
                 errors.append(f"llm_provider missing required field: {field}")
+        
+        # model_settings is optional, but if present should be a dict
+        if "model_settings" in llm_provider:
+            if not isinstance(llm_provider["model_settings"], dict):
+                errors.append("llm_provider.model_settings must be an object")
         
         # Validate provider field
         if "provider" in llm_provider:
