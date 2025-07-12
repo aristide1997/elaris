@@ -5,15 +5,15 @@
   "main": "main.js",
   "scripts": {
     "start": "NODE_ENV=development electron .",
-    "build": "cd renderer && npm run build && cd .. && electron-builder",
-    "dev": "concurrently \"cd renderer && npm run dev\" \"wait-on http://localhost:5173 && NODE_ENV=development electron .\"",
-    "dev:renderer": "cd renderer && npm run dev",
+    "build": "cd ../frontend && npm run build && cd ../electron && electron-builder",
+    "dev": "concurrently \"cd ../frontend && npm run dev\" \"wait-on http://localhost:5173 && NODE_ENV=development electron .\"",
+    "dev:frontend": "cd ../frontend && npm run dev",
     "dev:electron": "NODE_ENV=development electron .",
-    "pack": "cd renderer && npm run build && cd .. && electron-builder --dir",
-    "dist": "cd renderer && npm run build && cd .. && electron-builder",
-    "build:python": "cd ../python-backend && pip install -r requirements.txt && pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean",
+    "pack": "cd ../frontend && npm run build && cd ../electron && electron-builder --dir",
+    "dist": "cd ../frontend && npm run build && cd ../electron && electron-builder",
+    "build:python": "cd ../server && pip install -r requirements.txt && pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean",
     "build:dmg": "npm run build:python && npm run build",
-    "build:all": "npm run build:python && cd renderer && npm run build && cd .. && electron-builder"
+    "build:all": "npm run build:python && cd ../frontend && npm run build && cd ../electron && electron-builder"
   },
   "keywords": [
     "mcp",
@@ -37,9 +37,9 @@
     },
     "files": [
       "**/*",
-      "!renderer/src/**/*",
-      "!renderer/node_modules/**/*",
-      "!../python-backend/**/*",
+      "!../frontend/src/**/*",
+      "!../frontend/node_modules/**/*",
+      "!../server/**/*",
       "!../build/**/*"
     ],
     "extraResources": [

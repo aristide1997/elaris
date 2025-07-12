@@ -24,8 +24,8 @@ function startPythonBackend() {
     if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
         // Development mode - use python directly
         pythonExecutable = 'python';
-        pythonArgs = [path.join(__dirname, '..', 'python-backend', 'main.py')];
-        workingDirectory = path.join(__dirname, '..', 'python-backend');
+        pythonArgs = [path.join(__dirname, '..', 'server', 'main.py')];
+        workingDirectory = path.join(__dirname, '..', 'server');
     } else {
         // Production mode - use bundled executable (one-dir mode)
         const resourcesPath = process.resourcesPath;
@@ -58,7 +58,7 @@ function startPythonBackend() {
     pythonProcess = spawn(pythonExecutable, pythonArgs, { env: spawnEnv, cwd: workingDirectory });
 
     // Pipe Python backend logs to file
-    const logFile = path.join(app.getPath('userData'), 'python-backend.log');
+    const logFile = path.join(app.getPath('userData'), 'server.log');
     const logStream = fs.createWriteStream(logFile, { flags: 'a' });
     pythonProcess.stdout.pipe(logStream);
     pythonProcess.stderr.pipe(logStream);
@@ -99,7 +99,7 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'index.html'));
+        mainWindow.loadFile(path.join(__dirname, '..', 'frontend', 'dist', 'index.html'));
     }
 
     mainWindow.on('closed', () => {
@@ -142,7 +142,7 @@ function createSettingsWindow() {
         settingsWindow.loadURL('http://localhost:5173/settings.html');
         settingsWindow.webContents.openDevTools();
     } else {
-        settingsWindow.loadFile(path.join(__dirname, 'renderer', 'dist', 'settings.html'));
+        settingsWindow.loadFile(path.join(__dirname, '..', 'frontend', 'dist', 'settings.html'));
     }
 
     settingsWindow.on('closed', () => {

@@ -90,7 +90,7 @@ fi
 print_step "Cleaning previous builds..."
 rm -rf build/
 rm -rf dist/
-rm -rf electron/renderer/dist/
+rm -rf frontend/dist/
 print_success "Cleaned previous builds"
 
 # Step 0: Download Node.js runtime for embedded npx
@@ -105,7 +105,7 @@ print_success "Embedded Node.js ${NODE_VERSION} downloaded into node-dist/"
 
 # Step 1: Install Python dependencies and build Python executable
 print_step "Building Python backend with PyInstaller..."
-cd python-backend
+cd server
 
 # Check if virtual environment exists, create if not
 if [ ! -d "venv" ]; then
@@ -133,13 +133,13 @@ cd electron
 npm install
 print_success "Electron dependencies installed"
 
-# Step 3: Install and build React renderer
-print_step "Building React renderer..."
-cd renderer
+# Step 3: Install and build React frontend
+print_step "Building React frontend..."
+cd frontend
 npm install
 npm run build
 cd ..
-print_success "React renderer built successfully"
+print_success "React frontend built successfully"
 
 # Step 4: Build Electron app and create DMG
 print_step "Building Electron app and creating DMG..."
@@ -190,7 +190,7 @@ echo ""
 print_step "Build artifacts:"
 echo "  📱 DMG file: dist/"
 echo "  🐍 Python executable: build/mcp-chatbot-backend"
-echo "  ⚛️  React build: electron/renderer/dist/"
+echo "  ⚛️  React build: frontend/dist/"
 if [ "$SIGN_APP" = true ]; then
     echo "  🔐 Code signing: Enabled (Self-signed)"
 else

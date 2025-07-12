@@ -12,18 +12,19 @@ __pycache__/
 # Pydantic AI
 pydantic-ai/
 
-# Python backend
-python-backend/__pycache__/
-python-backend/.env
-python-backend/.venv/
-python-backend/venv/
+# Server backend
+server/__pycache__/
+server/.env
+server/.venv/
+server/venv/
+server/settings.json
 
 # Electron
 dist/
 build/
 node_modules/
-electron/renderer/dist/
-electron/renderer/node_modules/
+frontend/dist/
+frontend/node_modules/
 node-dist/
 
 # Build artifacts
@@ -41,8 +42,8 @@ build/temp/
 
 # PyInstaller
 *.spec.bak
-python-backend/dist/
-python-backend/build/
+server/dist/
+server/build/
 
 # macOS
 .DS_Store
