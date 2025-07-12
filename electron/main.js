@@ -27,11 +27,11 @@ function startPythonBackend() {
         pythonArgs = [path.join(__dirname, '..', 'python-backend', 'main.py')];
         workingDirectory = path.join(__dirname, '..', 'python-backend');
     } else {
-        // Production mode - use bundled executable
+        // Production mode - use bundled executable (one-dir mode)
         const resourcesPath = process.resourcesPath;
-        pythonExecutable = path.join(resourcesPath, 'build', 'mcp-chatbot-backend');
+        pythonExecutable = path.join(resourcesPath, 'build', 'mcp-chatbot-backend', 'mcp-chatbot-backend');
         pythonArgs = []; // No arguments needed for the bundled executable
-        workingDirectory = path.join(resourcesPath, 'build');
+        workingDirectory = path.join(resourcesPath, 'build', 'mcp-chatbot-backend');
     }
 
     console.log(`Using Python executable: ${pythonExecutable}`);

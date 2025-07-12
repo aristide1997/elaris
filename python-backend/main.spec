@@ -55,13 +55,12 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
+# One-dir mode: Create executable without bundling all files
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
+    [],  # No binaries in EXE for one-dir mode
+    exclude_binaries=True,  # Exclude binaries from EXE
     name='mcp-chatbot-backend',
     debug=False,
     bootloader_ignore_signals=False,
@@ -75,4 +74,16 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+# One-dir mode: Collect all files into a directory
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='mcp-chatbot-backend',
 )
