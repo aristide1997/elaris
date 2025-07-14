@@ -66,3 +66,6 @@ Icon?
 
 # DB
 *.db
+
+# Cursor
+.cursorignore
