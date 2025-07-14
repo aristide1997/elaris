@@ -16,7 +16,6 @@ a = Analysis(
     pathex=[str(current_dir)],
     binaries=binaries_pai,
     datas=[
-        ('settings.json', '.'),
         ('api', 'api'),
         ('core', 'core'),
         ('models', 'models'),
