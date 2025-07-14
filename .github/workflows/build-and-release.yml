@@ -1,0 +1,105 @@
+name: Build and Release
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            electron/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Node.js dependencies
+        run: |
+          cd frontend && npm ci
+          cd ../electron && npm ci
+
+      - name: Install Python dependencies
+        run: |
+          cd server
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Python backend
+        run: |
+          cd server
+          pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Package Electron App
+        run: |
+          cd electron
+          npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: elaris-${{ matrix.os }}
+          path: |
+            dist/
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Release Tag
+        id: tag
+        run: |
+          VERSION=$(node -p "require('./electron/package.json').version")
+          TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "tag=v${VERSION}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${VERSION}-beta-${TIMESTAMP}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: ${{ github.ref_name != 'main' }}
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+            artifacts/**/*.AppImage
+            artifacts/**/*.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

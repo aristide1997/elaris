@@ -15,5 +15,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Backend restart event handlers
     onBackendRestarting: (callback) => ipcRenderer.on('backend-restarting', callback),
     onBackendRestarted: (callback) => ipcRenderer.on('backend-restarted', callback),
-    onBackendRestartFailed: (callback) => ipcRenderer.on('backend-restart-failed', callback)
+    onBackendRestartFailed: (callback) => ipcRenderer.on('backend-restart-failed', callback),
+    
+    // Auto-updater IPC methods
+    downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    installUpdate: () => ipcRenderer.invoke('install-update'),
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    
+    // Auto-updater event handlers
+    onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+    onUpdateError: (callback) => ipcRenderer.on('update-error', callback),
+    onUpdateDownloadProgress: (callback) => ipcRenderer.on('update-download-progress', callback),
+    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback)
 });

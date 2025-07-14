@@ -1,4 +1,5 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -299,6 +300,82 @@ function stopHealthMonitoring() {
   }
 }
 
+// Auto-updater configuration and event handlers
+function setupAutoUpdater() {
+  // Configure auto-updater
+  autoUpdater.autoDownload = false; // Don't auto-download, ask user first
+  autoUpdater.autoInstallOnAppQuit = true;
+  
+  // Allow prereleases if current version is beta or in development
+  const currentVersion = app.getVersion();
+  const isBetaVersion = currentVersion.includes('beta') || process.env.NODE_ENV === 'development';
+  autoUpdater.allowPrerelease = isBetaVersion;
+  
+  console.log(`Auto-updater configured - Version: ${currentVersion}, Beta channel: ${isBetaVersion}`);
+
+  // Check for updates on startup
+  autoUpdater.checkForUpdatesAndNotify();
+
+  // Auto-updater event handlers
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info);
+    
+    // Notify renderer about available update
+    if (mainWindow) {
+      mainWindow.webContents.send('update-available', {
+        version: info.version,
+        releaseNotes: info.releaseNotes,
+        releaseName: info.releaseName,
+        releaseDate: info.releaseDate
+      });
+    }
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available:', info);
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Update error:', err);
+    if (mainWindow) {
+      mainWindow.webContents.send('update-error', err.message);
+    }
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = `Download speed: ${progressObj.bytesPerSecond}`;
+    log_message = log_message + ` - Downloaded ${progressObj.percent}%`;
+    log_message = log_message + ` (${progressObj.transferred}/${progressObj.total})`;
+    console.log(log_message);
+    
+    // Notify renderer about download progress
+    if (mainWindow) {
+      mainWindow.webContents.send('update-download-progress', {
+        percent: Math.round(progressObj.percent),
+        transferred: progressObj.transferred,
+        total: progressObj.total,
+        bytesPerSecond: progressObj.bytesPerSecond
+      });
+    }
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info);
+    
+    // Notify renderer that update is ready to install
+    if (mainWindow) {
+      mainWindow.webContents.send('update-downloaded', {
+        version: info.version,
+        releaseNotes: info.releaseNotes
+      });
+    }
+  });
+}
+
 // IPC handlers for settings window
 ipcMain.handle('open-settings', () => {
     createSettingsWindow();
@@ -317,6 +394,22 @@ ipcMain.handle('settings-updated', (event, settings) => {
     }
 });
 
+// IPC handlers for updater functionality
+ipcMain.handle('download-update', () => {
+    console.log('Starting update download...');
+    autoUpdater.downloadUpdate();
+});
+
+ipcMain.handle('install-update', () => {
+    console.log('Installing update and restarting...');
+    autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('check-for-updates', () => {
+    console.log('Manual update check requested...');
+    autoUpdater.checkForUpdatesAndNotify();
+});
+
 app.whenReady().then(async () => {
   try {
     // Start Python backend on fixed port
@@ -326,6 +419,9 @@ app.whenReady().then(async () => {
     // Wait for backend to be ready before opening window
     await waitForBackend(serverPort);
     createWindow();
+    
+    // Setup auto-updater
+    setupAutoUpdater();
     
     // Start health monitoring after everything is ready
     startHealthMonitoring();

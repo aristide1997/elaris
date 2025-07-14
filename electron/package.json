@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -34,6 +34,11 @@
     "productName": "Elaris",
     "directories": {
       "output": "../dist"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "aristide1997",
+      "repo": "elaris"
     },
     "files": [
       "**/*",
@@ -85,6 +90,7 @@
     }
   },
   "dependencies": {
+    "electron-updater": "^6.1.7",
     "zustand": "^5.0.6",
     "npm": "*"
   }
