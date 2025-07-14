@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Build script for MCP Chatbot DMG with optional code signing
+# Build script for Elaris DMG with optional code signing
 set -e  # Exit on any error
 
-echo "🚀 Starting MCP Chatbot DMG build process..."
+echo "🚀 Starting Elaris DMG build process..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -132,6 +132,7 @@ print_step "Installing Electron dependencies..."
 cd electron
 npm install
 print_success "Electron dependencies installed"
+cd ..
 
 # Step 3: Install and build React frontend
 print_step "Building React frontend..."
@@ -141,6 +142,7 @@ npm run build
 cd ..
 print_success "React frontend built successfully"
 
+cd electron
 # Step 4: Build Electron app and create DMG
 print_step "Building Electron app and creating DMG..."
 
@@ -172,13 +174,13 @@ echo ""
 echo "🎉 Build completed!"
 echo ""
 print_success "Your DMG file is located in: dist/"
-if [ -f "dist/MCP Chatbot-1.0.0.dmg" ]; then
-    ls -la "dist/MCP Chatbot-1.0.0.dmg"
+if [ -f "dist/Elaris-1.0.0.dmg" ]; then
+    ls -la "dist/Elaris-1.0.0.dmg"
     
     # Check if the app is signed
     if [ "$SIGN_APP" = true ]; then
         print_step "Verifying code signature..."
-        if codesign -dv --verbose=4 "dist/mac/MCP Chatbot.app" 2>/dev/null; then
+        if codesign -dv --verbose=4 "dist/mac/Elaris.app" 2>/dev/null; then
             print_success "App is properly code signed"
         else
             print_warning "App signature verification failed"
@@ -189,7 +191,7 @@ fi
 echo ""
 print_step "Build artifacts:"
 echo "  📱 DMG file: dist/"
-echo "  🐍 Python executable: build/mcp-chatbot-backend"
+echo "  🐍 Python executable: build/elaris-backend"
 echo "  ⚛️  React build: frontend/dist/"
 if [ "$SIGN_APP" = true ]; then
     echo "  🔐 Code signing: Enabled (Self-signed)"

@@ -1,4 +1,4 @@
-# MCP Chatbot
+# Elaris
 
 A desktop application for interacting with AI models through the Model Context Protocol (MCP), built with Electron, React, and FastAPI.
 
@@ -14,7 +14,7 @@ A desktop application for interacting with AI models through the Model Context P
 ## Architecture
 
 ```
-mcp-chatbot/
+elaris/
 ├── frontend/          # React frontend (Vite + TypeScript)
 ├── server/           # FastAPI backend (Python)
 ├── electron/         # Electron main process
@@ -35,7 +35,7 @@ mcp-chatbot/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd mcp-chatbot
+   cd elaris
    ```
 
 2. **Install Python dependencies**
@@ -100,9 +100,9 @@ npm run build:all
 ## Configuration
 
 The application stores configuration in:
-- **macOS**: `~/Library/Application Support/MCP Chatbot/`
-- **Windows**: `%APPDATA%/MCP Chatbot/`
-- **Linux**: `~/.config/MCP Chatbot/`
+- **macOS**: `~/Library/Application Support/Elaris/`
+- **Windows**: `%APPDATA%/Elaris/`
+- **Linux**: `~/.config/Elaris/`
 
 ## Contributing
 

@@ -61,7 +61,7 @@ exe = EXE(
     a.scripts,
     [],  # No binaries in EXE for one-dir mode
     exclude_binaries=True,  # Exclude binaries from EXE
-    name='mcp-chatbot-backend',
+    name='elaris-backend',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -85,5 +85,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='mcp-chatbot-backend',
+    name='elaris-backend',
 )

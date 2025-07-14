@@ -1,7 +1,7 @@
 {
-  "name": "mcp-chatbot",
+  "name": "elaris",
   "version": "1.0.0",
-  "description": "MCP Chatbot Desktop Application",
+  "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "NODE_ENV=development electron .",
@@ -21,7 +21,7 @@
     "ai",
     "electron"
   ],
-  "author": "Your Name",
+  "author": "Aristide Fumagalli",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^9.1.2",
@@ -30,8 +30,8 @@
     "wait-on": "^8.0.3"
   },
   "build": {
-    "appId": "com.yourname.mcp-chatbot",
-    "productName": "MCP Chatbot",
+    "appId": "com.aristidefumagalli.elaris",
+    "productName": "Elaris",
     "directories": {
       "output": "../dist"
     },
@@ -58,6 +58,11 @@
       {
         "from": "../node-dist",
         "to": "node",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../frontend/dist",
+        "to": "frontend/dist",
         "filter": ["**/*"]
       }
     ],

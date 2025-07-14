@@ -29,9 +29,9 @@ function startPythonBackend() {
     } else {
         // Production mode - use bundled executable (one-dir mode)
         const resourcesPath = process.resourcesPath;
-        pythonExecutable = path.join(resourcesPath, 'build', 'mcp-chatbot-backend', 'mcp-chatbot-backend');
+        pythonExecutable = path.join(resourcesPath, 'build', 'elaris-backend', 'elaris-backend');
         pythonArgs = []; // No arguments needed for the bundled executable
-        workingDirectory = path.join(resourcesPath, 'build', 'mcp-chatbot-backend');
+        workingDirectory = path.join(resourcesPath, 'build', 'elaris-backend');
     }
 
     console.log(`Using Python executable: ${pythonExecutable}`);
@@ -91,7 +91,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js')
         },
         icon: path.join(__dirname, 'icon.png'), // We'll create this later
-        title: 'MCP Chatbot'
+        title: 'Elaris'
     });
 
     // Load the renderer - use Vite dev server in development, built files in production
@@ -131,7 +131,7 @@ function createSettingsWindow() {
             preload: path.join(__dirname, 'preload.js')
         },
         icon: path.join(__dirname, 'icon.png'),
-        title: 'Settings - MCP Chatbot',
+        title: 'Settings - Elaris',
         resizable: true,
         minimizable: false,
         maximizable: false
