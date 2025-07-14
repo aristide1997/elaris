@@ -18,7 +18,6 @@ a = Analysis(
     datas=[
         ('api', 'api'),
         ('core', 'core'),
-        ('models', 'models'),
         ('services', 'services'),
         ('tests', 'tests'),
     ] + datas_pai,
