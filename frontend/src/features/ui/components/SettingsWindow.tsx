@@ -281,6 +281,23 @@ const SettingsWindow: React.FC = () => {
             {activeTab === 'general' && (
               <div>
                 <div className="settings-form-group">
+                  <label>Updates</label>
+                  <button
+                    type="button"
+                    className="settings-btn secondary"
+                    onClick={async () => {
+                      console.log('Manual update check requested from settings')
+                      await window.electronAPI?.checkForUpdates()
+                    }}
+                  >
+                    Check for Updates
+                  </button>
+                  <div className="form-description">
+                    Check for application updates and download them if available.
+                  </div>
+                </div>
+
+                <div className="settings-form-group">
                   <label htmlFor="system-prompt">System Prompt</label>
                   <textarea
                     id="system-prompt"

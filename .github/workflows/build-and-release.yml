@@ -83,11 +83,20 @@ jobs:
         id: tag
         run: |
           VERSION=$(node -p "require('./electron/package.json').version")
-          TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+          # Get the run number to create unique beta versions
+          RUN_NUMBER=${{ github.run_number }}
+          
           if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "tag=v${VERSION}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+            # For main branch, create release versions like v0.0.1, v0.0.2, etc.
+            MAJOR=$(echo $VERSION | cut -d. -f1)
+            MINOR=$(echo $VERSION | cut -d. -f2)
+            PATCH=$(echo $VERSION | cut -d. -f3 | cut -d- -f1)
+            NEW_PATCH=$((PATCH + RUN_NUMBER))
+            echo "tag=v${MAJOR}.${MINOR}.${NEW_PATCH}" >> $GITHUB_OUTPUT
           else
-            echo "tag=v${VERSION}-beta-${TIMESTAMP}" >> $GITHUB_OUTPUT
+            # For other branches, create beta versions like v0.0.1-beta.1, v0.0.1-beta.2, etc.
+            BASE_VERSION=$(echo $VERSION | cut -d- -f1)
+            echo "tag=v${BASE_VERSION}-beta.${RUN_NUMBER}" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release

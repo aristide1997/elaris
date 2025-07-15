@@ -27,18 +27,22 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ classNam
     if (!window.electronAPI) return
 
     const handleUpdateAvailable = (_event: any, info: any) => {
+      console.log('Update available event received:', info)
       setUpdateAvailable(info)
     }
 
     const handleUpdateError = (_event: any, errorMessage: string) => {
+      console.error('Update error event received:', errorMessage)
       setError(errorMessage)
     }
 
     const handleDownloadProgress = (_event: any, progress: any) => {
+      console.log('Update download progress:', progress)
       setDownloadProgress(progress)
     }
 
     const handleUpdateDownloaded = (_event: any, info: any) => {
+      console.log('Update downloaded event received:', info)
       setDownloaded(info)
     }
 

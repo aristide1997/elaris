@@ -311,10 +311,17 @@ function setupAutoUpdater() {
   const isBetaVersion = currentVersion.includes('beta') || process.env.NODE_ENV === 'development';
   autoUpdater.allowPrerelease = isBetaVersion;
   
-  console.log(`Auto-updater configured - Version: ${currentVersion}, Beta channel: ${isBetaVersion}`);
+  console.log(`Auto-updater configured:`);
+  console.log(`  - Current version: ${currentVersion}`);
+  console.log(`  - Beta channel enabled: ${isBetaVersion}`);
+  console.log(`  - App is packaged: ${app.isPackaged}`);
+  console.log(`  - Update feed URL: ${autoUpdater.getFeedURL()}`);
 
-  // Check for updates on startup
-  autoUpdater.checkForUpdatesAndNotify();
+  // Check for updates on startup (but wait a bit for app to fully initialize)
+  setTimeout(() => {
+    console.log('Checking for updates...');
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 5000);
 
   // Auto-updater event handlers
   autoUpdater.on('checking-for-update', () => {
