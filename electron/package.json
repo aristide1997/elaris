@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "0.0.1-beta.0",
+  "version": "0.0.1-beta.8",
   "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -58,17 +58,23 @@
       {
         "from": "node_modules/npm",
         "to": "npm",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../node-dist",
         "to": "node",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../frontend/dist",
         "to": "frontend/dist",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {

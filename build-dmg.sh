@@ -96,7 +96,7 @@ print_success "Cleaned previous builds"
 # Step 0: Download Node.js runtime for embedded npx
 print_step "Downloading embedded Node.js runtime..."
 NODE_VERSION="v20.10.0"
-NODE_DIST="node-${NODE_VERSION}-darwin-arm64"
+NODE_DIST="node-${NODE_VERSION}-darwin-x64"
 rm -rf node-dist
 mkdir -p node-dist
 curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" \
@@ -152,13 +152,13 @@ if [ "$SIGN_APP" = true ]; then
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
     export CSC_KEYCHAIN="$KEYCHAIN_NAME"
-    npx electron-builder --mac dmg -c.mac.identity="$CODESIGN_IDENTITY"
+    npx electron-builder --mac dmg --x64 -c.mac.identity="$CODESIGN_IDENTITY"
 else
     print_step "Building UNSIGNED DMG..."
     # Disable automatic code-signing discovery so the app remains unsigned
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     # Build unsigned DMG by overriding mac.identity to null
-    npx electron-builder --mac dmg -c.mac.identity=null
+    npx electron-builder --mac dmg --x64 -c.mac.identity=null
 fi
 
 cd ..

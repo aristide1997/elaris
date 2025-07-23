@@ -22,14 +22,15 @@ CONFIG_FILE = "settings.json"
 DEFAULT_CONFIG = {
     "system_prompt": "You are a helpful AI assistant.",
     "llm_provider": {
-        "provider": "openai",
-        "model": "gpt-4o-mini",
+        "provider": "google-gla",
+        "model": "gemini-2.5-flash",
         "config": {},  # Provider-specific configuration
         "model_settings": {}  # Model-specific settings (e.g., thinking configurations)
     },
     "approval_timeout": 60.0,
     "auto_approve_tools": False,
     "debug_mode": False,
+    "enable_thinking": True,
     "mcp_servers": {
         "desktop-commander": {
             "command": "npx",

@@ -311,25 +311,48 @@ function setupAutoUpdater() {
   const isBetaVersion = currentVersion.includes('beta') || process.env.NODE_ENV === 'development';
   autoUpdater.allowPrerelease = isBetaVersion;
   
+  // Enable detailed logging
+  autoUpdater.logger = {
+    info: (message) => console.log(`[AUTO-UPDATER] ${message}`),
+    warn: (message) => console.warn(`[AUTO-UPDATER] ${message}`),
+    error: (message) => console.error(`[AUTO-UPDATER] ${message}`)
+  };
+  
   console.log(`Auto-updater configured:`);
   console.log(`  - Current version: ${currentVersion}`);
   console.log(`  - Beta channel enabled: ${isBetaVersion}`);
   console.log(`  - App is packaged: ${app.isPackaged}`);
-  console.log(`  - Update feed URL: ${autoUpdater.getFeedURL()}`);
+  console.log(`  - Platform: ${process.platform}`);
+  console.log(`  - Arch: ${process.arch}`);
+  
+  // Log the update feed URL
+  try {
+    const feedURL = autoUpdater.getFeedURL();
+    console.log(`  - Update feed URL: ${feedURL}`);
+  } catch (error) {
+    console.error(`  - Failed to get update feed URL: ${error.message}`);
+  }
 
   // Check for updates on startup (but wait a bit for app to fully initialize)
   setTimeout(() => {
-    console.log('Checking for updates...');
+    console.log('=== Starting automatic update check ===');
     autoUpdater.checkForUpdatesAndNotify();
   }, 5000);
 
   // Auto-updater event handlers
   autoUpdater.on('checking-for-update', () => {
-    console.log('Checking for update...');
+    console.log('=== CHECKING FOR UPDATE ===');
+    console.log(`Current app version: ${app.getVersion()}`);
+    console.log('Fetching update information from GitHub...');
   });
 
   autoUpdater.on('update-available', (info) => {
-    console.log('Update available:', info);
+    console.log('=== UPDATE AVAILABLE ===');
+    console.log(`Available version: ${info.version}`);
+    console.log(`Release date: ${info.releaseDate}`);
+    console.log(`Release name: ${info.releaseName || 'N/A'}`);
+    console.log(`Files:`, info.files);
+    console.log(`Full update info:`, JSON.stringify(info, null, 2));
     
     // Notify renderer about available update
     if (mainWindow) {
@@ -343,11 +366,20 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-not-available', (info) => {
-    console.log('Update not available:', info);
+    console.log('=== UPDATE NOT AVAILABLE ===');
+    console.log(`Current version: ${app.getVersion()}`);
+    console.log(`Latest version found: ${info.version}`);
+    console.log(`Release date: ${info.releaseDate}`);
+    console.log(`Full info:`, JSON.stringify(info, null, 2));
+    console.log('No newer version available.');
   });
 
   autoUpdater.on('error', (err) => {
-    console.error('Update error:', err);
+    console.error('=== UPDATE ERROR ===');
+    console.error(`Error message: ${err.message}`);
+    console.error(`Error stack: ${err.stack}`);
+    console.error(`Full error:`, err);
+    
     if (mainWindow) {
       mainWindow.webContents.send('update-error', err.message);
     }
