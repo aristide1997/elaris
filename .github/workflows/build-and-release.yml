@@ -3,8 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'  # Only trigger on version tags like v0.0.1-beta.7
-  workflow_dispatch:
+      - 'v*'
 
 jobs:
   build:
