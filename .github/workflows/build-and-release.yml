@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20.10.0'
           cache: 'npm'
           cache-dependency-path: |
             frontend/package-lock.json
@@ -32,32 +32,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Node.js dependencies
-        run: |
-          cd frontend && npm ci
-          cd ../electron && npm ci
+      - name: Make build script executable
+        run: chmod +x build-dmg.sh
 
-      - name: Install Python dependencies
-        run: |
-          cd server
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build Python backend
-        run: |
-          cd server
-          pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean
-
-      - name: Build Frontend
-        run: |
-          cd frontend
-          npm run build
-
-      - name: Package Electron App
-        run: |
-          cd electron
-          npm run build
+      - name: Build DMG using build script
+        run: ./build-dmg.sh --unsigned
         env:
+          # GitHub token for electron-builder publishing
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Artifacts
