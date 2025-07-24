@@ -99,6 +99,7 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/**/*.dmg
+            artifacts/**/*.zip
             artifacts/**/latest*.yml
             artifacts/**/app-update.yml
             # Commented out for now - can re-enable when building other platforms:
