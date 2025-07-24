@@ -147,50 +147,48 @@ cd electron
 print_step "Building Electron app and creating DMG..."
 
 if [ "$SIGN_APP" = true ]; then
-    print_step "Building SIGNED DMG with certificate: $CODESIGN_IDENTITY"
+    print_step "Building SIGNED DMG and ZIP with certificate: $CODESIGN_IDENTITY"
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
     export CSC_KEYCHAIN="$KEYCHAIN_NAME"
-    npx electron-builder --mac dmg --x64 -c.mac.identity="$CODESIGN_IDENTITY"
+    npx electron-builder --mac --x64 -c.mac.identity="$CODESIGN_IDENTITY"
 else
-    print_step "Building UNSIGNED DMG..."
+    print_step "Building UNSIGNED DMG and ZIP..."
     # Disable automatic code-signing discovery so the app remains unsigned
     export CSC_IDENTITY_AUTO_DISCOVERY=false
-    # Build unsigned DMG by overriding mac.identity to null
-    npx electron-builder --mac dmg --x64 -c.mac.identity=null
+    # Build unsigned DMG and ZIP by overriding mac.identity to null
+    npx electron-builder --mac --x64 -c.mac.identity=null
 fi
 
 cd ..
 
 if [ "$SIGN_APP" = true ]; then
-    print_success "Signed DMG created successfully!"
+    print_success "Signed DMG and ZIP created successfully!"
 else
-    print_success "Unsigned DMG created successfully!"
+    print_success "Unsigned DMG and ZIP created successfully!"
 fi
 
 # Display results
 echo ""
 echo "🎉 Build completed!"
 echo ""
-print_success "Your DMG file is located in: dist/"
-if [ -f "dist/Elaris-1.0.0.dmg" ]; then
-    ls -la "dist/Elaris-1.0.0.dmg"
-    
-    # Check if the app is signed
-    if [ "$SIGN_APP" = true ]; then
-        print_step "Verifying code signature..."
-        if codesign -dv --verbose=4 "dist/mac/Elaris.app" 2>/dev/null; then
-            print_success "App is properly code signed"
-        else
-            print_warning "App signature verification failed"
-        fi
+print_success "Your build files are located in: dist/"
+
+# Check if the app is signed
+if [ "$SIGN_APP" = true ]; then
+    print_step "Verifying code signature..."
+    if codesign -dv --verbose=4 "dist/mac/Elaris.app" 2>/dev/null; then
+        print_success "App is properly code signed"
+    else
+        print_warning "App signature verification failed"
     fi
 fi
 
 echo ""
 print_step "Build artifacts:"
-echo "  📱 DMG file: dist/"
+echo "  📱 DMG file: dist/ (for initial installation)"
+echo "  📦 ZIP file: dist/ (for auto-updates)"
 echo "  🐍 Python executable: build/elaris-backend"
 echo "  ⚛️  React build: frontend/dist/"
 if [ "$SIGN_APP" = true ]; then
@@ -201,15 +199,15 @@ fi
 echo ""
 
 if [ "$SIGN_APP" = true ]; then
-    print_success "You can now distribute the signed DMG file!"
+    print_success "You can now distribute the signed DMG and ZIP files!"
     print_warning "Note: Self-signed apps will show security warnings to users"
     echo "       Users need to right-click and 'Open' to bypass Gatekeeper"
 else
-    print_success "You can now distribute the unsigned DMG file!"
+    print_success "You can now distribute the unsigned DMG and ZIP files!"
     print_warning "Note: Unsigned apps will show security warnings to users"
 fi
 
 echo ""
 print_step "Usage:"
 echo "  • Unsigned build: ./build-dmg.sh --unsigned"
-echo "  • Signed build:   ./build-dmg.sh --sign" 
+echo "  • Signed build:   ./build-dmg.sh --sign"

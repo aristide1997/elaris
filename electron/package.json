@@ -78,7 +78,7 @@
       }
     ],
     "mac": {
-      "target": "dmg",
+      "target": ["dmg", "zip"],
       "icon": "icon.png",
       "identity": null,
       "hardenedRuntime": true,
