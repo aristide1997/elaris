@@ -77,6 +77,11 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          # Ensure the WWDR intermediate is imported/trusted too:
+          apple-cert-file-base64: ${{ secrets.APPLE_WWDR_CERTIFICATE_BASE64 }}
+          # Use the same keychain name your build script expects:
+          keychain-name: signing_temp.keychain
+          keychain-password:   ${{ secrets.KEYCHAIN_PASSWORD }}
 
       - name: Make build script executable
         run: chmod +x build-dmg.sh
