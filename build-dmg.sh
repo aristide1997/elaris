@@ -164,7 +164,15 @@ if [ "$SIGN_APP" = true ]; then
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
-    export CSC_KEYCHAIN="$KEYCHAIN_NAME"
+    
+    # Set keychain for CI environment
+    if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        export CSC_KEYCHAIN="signing_temp.keychain"
+        export CSC_ALLOW_UNTRUSTED_CERTS=true
+    else
+        export CSC_KEYCHAIN="$KEYCHAIN_NAME"
+    fi
+    
     npx electron-builder --mac --x64 -c.mac.identity="$CODESIGN_IDENTITY"
 else
     print_step "Building UNSIGNED DMG and ZIP..."
