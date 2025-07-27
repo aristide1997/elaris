@@ -77,12 +77,12 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          # Ensure the WWDR intermediate is imported/trusted too:
-          apple-cert-file-base64: ${{ secrets.APPLE_WWDR_CERTIFICATE_BASE64 }}
-          # Use the same keychain name your build script expects:
-          keychain-name: signing_temp.keychain
-          keychain-password:   ${{ secrets.KEYCHAIN_PASSWORD }}
-
+          keychain: signing_temp
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: Install Apple WWDR Intermediate Certificate
+        run: |
+          echo "${{ secrets.APPLE_WWDR_CERTIFICATE_BASE64 }}" | base64 --decode > AppleWWDRCA.cer
+          security import AppleWWDRCA.cer -k ~/Library/Keychains/signing_temp.keychain-db -T /usr/bin/codesign -T /usr/bin/security
       - name: Make build script executable
         run: chmod +x build-dmg.sh
 
