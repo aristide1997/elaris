@@ -55,34 +55,47 @@ fi
 
 # Load signing environment if available and signing is requested
 if [ "$SIGN_APP" = true ]; then
-    if [ -f ".env.signing" ]; then
-        print_step "Loading signing configuration..."
-        source .env.signing
-        print_success "Signing configuration loaded"
-        
-        # Verify certificate exists
-        if [ -n "$KEYCHAIN_NAME" ]; then
-            if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$CODESIGN_IDENTITY"; then
-                print_error "Certificate '$CODESIGN_IDENTITY' not found in keychain '$KEYCHAIN_NAME'"
-                print_warning "Run './create-certificate.sh' first to create the certificate"
-                exit 1
-            fi
-            # Unlock keychain
-            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-            print_success "Keychain unlocked"
-        else
-            # Check in default keychains
-            if ! security find-identity -v -p codesigning | grep -q "$CODESIGN_IDENTITY"; then
-                print_error "Certificate '$CODESIGN_IDENTITY' not found in default keychains"
-                print_warning "Please check that the certificate exists and is trusted for code signing"
-                exit 1
-            fi
-            print_success "Certificate found in default keychain"
+    # Check if running in CI (GitHub Actions) or locally
+    if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        print_step "Running in CI environment - using imported certificate"
+        # In CI, the certificate is already imported by the import-codesign-certs action
+        # CODESIGN_IDENTITY should be set as an environment variable
+        if [ -z "$CODESIGN_IDENTITY" ]; then
+            print_error "CODESIGN_IDENTITY environment variable not set in CI"
+            exit 1
         fi
+        print_success "Using certificate: $CODESIGN_IDENTITY"
     else
-        print_error "Signing requested but .env.signing file not found"
-        print_warning "Run './create-certificate.sh' first to create the certificate"
-        exit 1
+        # Local development - load from .env.signing
+        if [ -f ".env.signing" ]; then
+            print_step "Loading signing configuration..."
+            source .env.signing
+            print_success "Signing configuration loaded"
+            
+            # Verify certificate exists
+            if [ -n "$KEYCHAIN_NAME" ]; then
+                if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$CODESIGN_IDENTITY"; then
+                    print_error "Certificate '$CODESIGN_IDENTITY' not found in keychain '$KEYCHAIN_NAME'"
+                    print_warning "Run './create-certificate.sh' first to create the certificate"
+                    exit 1
+                fi
+                # Unlock keychain
+                security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+                print_success "Keychain unlocked"
+            else
+                # Check in default keychains
+                if ! security find-identity -v -p codesigning | grep -q "$CODESIGN_IDENTITY"; then
+                    print_error "Certificate '$CODESIGN_IDENTITY' not found in default keychains"
+                    print_warning "Please check that the certificate exists and is trusted for code signing"
+                    exit 1
+                fi
+                print_success "Certificate found in default keychain"
+            fi
+        else
+            print_error "Signing requested but .env.signing file not found"
+            print_warning "Run './create-certificate.sh' first to create the certificate"
+            exit 1
+        fi
     fi
 fi
 
