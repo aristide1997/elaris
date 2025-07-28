@@ -96,6 +96,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ classNam
         {error && (
           <div className="update-error">
             <div className="update-header">
+              <div className="update-icon">⚠</div>
               <h3>Update Error</h3>
             </div>
             <p>Failed to check for updates: {error}</p>
@@ -110,6 +111,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ classNam
         {updateAvailable && !isDownloading && !isDownloaded && !error && (
           <div className="update-available">
             <div className="update-header">
+              <div className="update-icon">↓</div>
               <h3>Update Available</h3>
             </div>
             <p>
@@ -136,6 +138,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ classNam
         {isDownloading && (
           <div className="update-downloading">
             <div className="update-header">
+              <div className="update-icon">⬇</div>
               <h3>Downloading Update</h3>
             </div>
             <p>Downloading version {updateInfo?.version}...</p>
@@ -162,6 +165,7 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ classNam
         {isDownloaded && (
           <div className="update-downloaded">
             <div className="update-header">
+              <div className="update-icon">✓</div>
               <h3>Update Ready</h3>
             </div>
             <p>

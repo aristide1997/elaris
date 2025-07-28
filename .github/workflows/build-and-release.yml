@@ -86,16 +86,30 @@ jobs:
           security import AppleWWDRCA.cer -k ~/Library/Keychains/signing_temp.keychain-db -T /usr/bin/codesign -T /usr/bin/security
       - name: Trust Apple WWDR Certificate
         run: |
+          set +e
+          echo "[1] Unlocking keychain"
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" \
             ~/Library/Keychains/signing_temp.keychain-db
+          echo "[2] Decoding WWDR cert"
           echo "${{ secrets.APPLE_WWDR_CERTIFICATE_BASE64 }}" | base64 --decode > AppleWWDRCA.cer
+          echo "[3] Adding trusted cert"
           security add-trusted-cert -d -r trustRoot \
             -k ~/Library/Keychains/signing_temp.keychain-db \
             AppleWWDRCA.cer
-          security set-key-partition-list \
-            -S apple-tool:,apple: \
+          T_ADD=$?
+          echo "[3] add-trusted-cert exit code: $T_ADD"
+          echo "[4] Setting key partition list"
+          security set-key-partition-list -S apple-tool:,apple: \
             -k "${{ secrets.KEYCHAIN_PASSWORD }}" \
             ~/Library/Keychains/signing_temp.keychain-db
+          T_PART=$?
+          echo "[4] set-key-partition-list exit code: $T_PART"
+          set -e
+          # Fail if any step failed
+          if [ $T_ADD -ne 0 ] || [ $T_PART -ne 0 ]; then
+            echo "Trust step failed: add-trusted-cert=$T_ADD, partition-list=$T_PART"
+            exit 1
+          fi
 
       - name: Debug code-sign setup
         run: |

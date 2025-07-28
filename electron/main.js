@@ -311,6 +311,12 @@ function setupAutoUpdater() {
   const isBetaVersion = currentVersion.includes('beta') || process.env.NODE_ENV === 'development';
   autoUpdater.allowPrerelease = isBetaVersion;
   
+  // Enable development mode update checking
+  if (process.env.NODE_ENV === 'development' && !app.isPackaged) {
+    autoUpdater.forceDevUpdateConfig = true;
+    console.log('=== DEVELOPMENT MODE: Force enabling update checking ===');
+  }
+  
   // Enable detailed logging
   autoUpdater.logger = {
     info: (message) => console.log(`[AUTO-UPDATER] ${message}`),
@@ -322,6 +328,7 @@ function setupAutoUpdater() {
   console.log(`  - Current version: ${currentVersion}`);
   console.log(`  - Beta channel enabled: ${isBetaVersion}`);
   console.log(`  - App is packaged: ${app.isPackaged}`);
+  console.log(`  - Force dev config: ${autoUpdater.forceDevUpdateConfig || false}`);
   console.log(`  - Platform: ${process.platform}`);
   console.log(`  - Arch: ${process.arch}`);
   
