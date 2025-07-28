@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useConnectionStore } from '../../connection/stores/useConnectionStore'
 import { useLLMProviderStore } from '../stores/useLLMProviderStore'

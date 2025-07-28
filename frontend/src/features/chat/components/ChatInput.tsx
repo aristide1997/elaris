@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ChangeEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ChangeEvent } from 'react'
 import './ChatInput.css'
 
 interface ChatInputProps {
@@ -83,4 +83,4 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
   )
 }
 
-export default ChatInput 
+export default ChatInput

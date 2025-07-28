@@ -1,4 +1,3 @@
-import React from 'react'
 import NewChatButton from '../../conversations/components/NewChatButton'
 import ChatHistoryList from '../../conversations/components/ChatHistoryList'
 import SettingsButton from './SettingsButton'
