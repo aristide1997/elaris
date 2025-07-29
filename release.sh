@@ -37,14 +37,12 @@ fi
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
     print_error "GitHub CLI (gh) is not installed"
-    echo "Install it with: brew install gh"
     exit 1
 fi
 
 # Check if user is authenticated with gh
 if ! gh auth status &> /dev/null; then
     print_error "Not authenticated with GitHub CLI"
-    echo "Run: gh auth login"
     exit 1
 fi
 
@@ -57,9 +55,6 @@ echo "Package version: $PKG_VERSION"
 print_step "Checking if release already exists..."
 if gh release view "v$PKG_VERSION" &> /dev/null; then
     print_error "Release v$PKG_VERSION already exists on GitHub"
-    echo "Either:"
-    echo "  1. Update the version in electron/package.json"
-    echo "  2. Delete the existing release: gh release delete v$PKG_VERSION"
     exit 1
 else
     print_success "Version v$PKG_VERSION has not been released yet"
@@ -78,7 +73,6 @@ fi
 print_step "Checking for build artifacts..."
 if [ ! -d "dist" ]; then
     print_error "No dist/ directory found"
-    print_warning "Run './build-dmg.sh --sign' or './build-dmg.sh --unsigned' first"
     exit 1
 fi
 
@@ -89,7 +83,6 @@ YML_FILES=$(find dist -maxdepth 1 -name "latest-mac.yml" -o -maxdepth 1 -name "a
 
 if [ -z "$DMG_FILES" ] && [ -z "$ZIP_FILES" ]; then
     print_error "No DMG or ZIP files found in dist/"
-    print_warning "Run './build-dmg.sh --sign' or './build-dmg.sh --unsigned' first"
     exit 1
 fi
 
@@ -151,14 +144,8 @@ if [ $? -eq 0 ]; then
     fi
     echo "  🔗 URL: https://github.com/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/releases/tag/v$PKG_VERSION"
     echo ""
-    print_success "Your release is now live on GitHub!"
+    print_success "Release is now live on GitHub"
 else
     print_error "Failed to create release"
     exit 1
 fi
-
-echo ""
-print_step "Next steps:"
-echo "  • Users can now download the new version"
-echo "  • Auto-updater will detect the new release"
-echo "  • Consider announcing the release to your users"

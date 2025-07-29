@@ -55,47 +55,32 @@ fi
 
 # Load signing environment if available and signing is requested
 if [ "$SIGN_APP" = true ]; then
-    # Check if running in CI (GitHub Actions) or locally
-    if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
-        print_step "Running in CI environment - using imported certificate"
-        # In CI, the certificate is already imported by the import-codesign-certs action
-        # CODESIGN_IDENTITY should be set as an environment variable
-        if [ -z "$CODESIGN_IDENTITY" ]; then
-            print_error "CODESIGN_IDENTITY environment variable not set in CI"
-            exit 1
-        fi
-        print_success "Using certificate: $CODESIGN_IDENTITY"
-    else
-        # Local development - load from .env.signing
-        if [ -f ".env.signing" ]; then
-            print_step "Loading signing configuration..."
-            source .env.signing
-            print_success "Signing configuration loaded"
-            
-            # Verify certificate exists
-            if [ -n "$KEYCHAIN_NAME" ]; then
-                if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$CODESIGN_IDENTITY"; then
-                    print_error "Certificate '$CODESIGN_IDENTITY' not found in keychain '$KEYCHAIN_NAME'"
-                    print_warning "Run './create-certificate.sh' first to create the certificate"
-                    exit 1
-                fi
-                # Unlock keychain
-                security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-                print_success "Keychain unlocked"
-            else
-                # Check in default keychains
-                if ! security find-identity -v -p codesigning | grep -q "$CODESIGN_IDENTITY"; then
-                    print_error "Certificate '$CODESIGN_IDENTITY' not found in default keychains"
-                    print_warning "Please check that the certificate exists and is trusted for code signing"
-                    exit 1
-                fi
-                print_success "Certificate found in default keychain"
+    # Load from .env.signing
+    if [ -f ".env.signing" ]; then
+        print_step "Loading signing configuration..."
+        source .env.signing
+        print_success "Signing configuration loaded"
+        
+        # Verify certificate exists
+        if [ -n "$KEYCHAIN_NAME" ]; then
+            if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$CODESIGN_IDENTITY"; then
+                print_error "Certificate '$CODESIGN_IDENTITY' not found in keychain '$KEYCHAIN_NAME'"
+                exit 1
             fi
+            # Unlock keychain
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+            print_success "Keychain unlocked"
         else
-            print_error "Signing requested but .env.signing file not found"
-            print_warning "Run './create-certificate.sh' first to create the certificate"
-            exit 1
+            # Check in default keychains
+            if ! security find-identity -v -p codesigning | grep -q "$CODESIGN_IDENTITY"; then
+                print_error "Certificate '$CODESIGN_IDENTITY' not found in default keychains"
+                exit 1
+            fi
+            print_success "Certificate found in default keychain"
         fi
+    else
+        print_error "Signing requested but .env.signing file not found"
+        exit 1
     fi
 fi
 
@@ -164,14 +149,7 @@ if [ "$SIGN_APP" = true ]; then
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
-    
-    # Set keychain for CI environment
-    if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
-        export CSC_KEYCHAIN="signing_temp.keychain"
-        export CSC_ALLOW_UNTRUSTED_CERTS=true
-    else
-        export CSC_KEYCHAIN="$KEYCHAIN_NAME"
-    fi
+    export CSC_KEYCHAIN="$KEYCHAIN_NAME"
     
     npx electron-builder --mac --x64 -c.mac.identity="$CODESIGN_IDENTITY"
 else
@@ -220,15 +198,7 @@ fi
 echo ""
 
 if [ "$SIGN_APP" = true ]; then
-    print_success "You can now distribute the signed DMG and ZIP files!"
-    print_warning "Note: Self-signed apps will show security warnings to users"
-    echo "       Users need to right-click and 'Open' to bypass Gatekeeper"
+    print_success "Signed DMG and ZIP files ready for distribution"
 else
-    print_success "You can now distribute the unsigned DMG and ZIP files!"
-    print_warning "Note: Unsigned apps will show security warnings to users"
+    print_success "Unsigned DMG and ZIP files ready for distribution"
 fi
-
-echo ""
-print_step "Usage:"
-echo "  • Unsigned build: ./build-dmg.sh --unsigned"
-echo "  • Signed build:   ./build-dmg.sh --sign"
