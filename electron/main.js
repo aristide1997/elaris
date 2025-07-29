@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -300,6 +300,39 @@ function stopHealthMonitoring() {
   }
 }
 
+// Function to create application menu
+function createApplicationMenu() {
+  const template = [
+    ...(process.platform === 'darwin' ? [{
+      label: app.getName(),
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        {
+          label: 'Preferences...',
+          accelerator: 'Cmd+,',
+          click: () => createSettingsWindow()
+        },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideothers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] : []),
+    { role: 'fileMenu' },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 // Auto-updater configuration and event handlers
 function setupAutoUpdater() {
   // Configure auto-updater
@@ -458,6 +491,9 @@ ipcMain.handle('check-for-updates', () => {
 
 app.whenReady().then(async () => {
   try {
+    // Create application menu
+    createApplicationMenu();
+    
     // Start Python backend on fixed port
     serverPort = 8000;
     startPythonBackend();
