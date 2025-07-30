@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.5",
   "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -78,7 +78,6 @@
       }
     ],
     "mac": {
-      "target": ["dmg", "zip"],
       "icon": "icon.png",
       "identity": null,
       "hardenedRuntime": true,

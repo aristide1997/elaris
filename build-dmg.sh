@@ -30,6 +30,7 @@ print_error() {
 
 # Parse command line arguments
 SIGN_APP=false
+BUILD_ARCH=""
 for arg in "$@"
 do
     case $arg in
@@ -41,6 +42,14 @@ do
         SIGN_APP=false
         shift
         ;;
+        --x64)
+        BUILD_ARCH="--x64"
+        shift
+        ;;
+        --arm64)
+        BUILD_ARCH="--arm64"
+        shift
+        ;;
         *)
         # unknown option
         ;;
@@ -50,6 +59,13 @@ done
 # Check if we're in the right directory
 if [ ! -f "electron/package.json" ]; then
     print_error "Please run this script from the project root directory"
+    exit 1
+fi
+
+# Check if architecture is specified
+if [ -z "$BUILD_ARCH" ]; then
+    print_error "Architecture must be specified: --x64 or --arm64"
+    print_step "Usage: $0 [--x64|--arm64] [--sign|--unsigned]"
     exit 1
 fi
 
@@ -94,12 +110,18 @@ print_success "Cleaned previous builds"
 # Step 0: Download Node.js runtime for embedded npx
 print_step "Downloading embedded Node.js runtime..."
 NODE_VERSION="v20.10.0"
-NODE_DIST="node-${NODE_VERSION}-darwin-x64"
+# Set Node.js architecture based on build target
+if [ "$BUILD_ARCH" = "--arm64" ]; then
+    NODE_ARCH="arm64"
+else
+    NODE_ARCH="x64"
+fi
+NODE_DIST="node-${NODE_VERSION}-darwin-${NODE_ARCH}"
 rm -rf node-dist
 mkdir -p node-dist
 curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" \
     | tar -xz --strip-components=1 -C node-dist
-print_success "Embedded Node.js ${NODE_VERSION} downloaded into node-dist/"
+print_success "Embedded Node.js ${NODE_VERSION} (${NODE_ARCH}) downloaded into node-dist/"
 
 # Step 1: Install Python dependencies and build Python executable
 print_step "Building Python backend with PyInstaller..."
@@ -144,20 +166,27 @@ cd electron
 # Step 4: Build Electron app and create DMG
 print_step "Building Electron app and creating DMG..."
 
+# Set the target architecture for electron-builder
+if [ "$BUILD_ARCH" = "--arm64" ]; then
+    ELECTRON_ARCH="arm64"
+else
+    ELECTRON_ARCH="x64"
+fi
+
 if [ "$SIGN_APP" = true ]; then
-    print_step "Building SIGNED DMG and ZIP with certificate: $CODESIGN_IDENTITY"
+    print_step "Building SIGNED DMG and ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
     export CSC_KEYCHAIN="$KEYCHAIN_NAME"
     
-    npx electron-builder --mac --x64 -c.mac.identity="$CODESIGN_IDENTITY"
+    npx electron-builder --mac $BUILD_ARCH -c.mac.identity="$CODESIGN_IDENTITY"
 else
-    print_step "Building UNSIGNED DMG and ZIP..."
+    print_step "Building UNSIGNED DMG and ZIP for ${ELECTRON_ARCH}..."
     # Disable automatic code-signing discovery so the app remains unsigned
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     # Build unsigned DMG and ZIP by overriding mac.identity to null
-    npx electron-builder --mac --x64 -c.mac.identity=null
+    npx electron-builder --mac $BUILD_ARCH -c.mac.identity=null
 fi
 
 cd ..
