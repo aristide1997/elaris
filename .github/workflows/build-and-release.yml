@@ -49,7 +49,18 @@ jobs:
   build:
     needs: check-version
     if: needs.check-version.outputs.should_release == 'true'
-    runs-on: macos-14  # macOS ARM runner
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14       # ARM64 runner
+            arch: arm64
+            build_flag: --arm64
+            artifact_suffix: -arm64
+          - runner: macos-13       # Intel runner
+            arch: x64  
+            build_flag: --x64
+            artifact_suffix: ""    # No suffix for Intel (default)
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,21 +125,41 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x build-dmg.sh
-          echo "Building with code signing..."
-          ./build-dmg.sh --arm64 --sign
+          echo "Building ${{ matrix.arch }} with code signing..."
+          ./build-dmg.sh ${{ matrix.build_flag }} --sign
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: elaris-macos-arm64-v${{ needs.check-version.outputs.version }}
+          name: elaris-macos-${{ matrix.arch }}-v${{ needs.check-version.outputs.version }}
           path: |
             dist/*.dmg
             dist/*.zip
             dist/*.yml
           retention-days: 30
 
+      - name: Cleanup keychain
+        if: always() && env.KEYCHAIN_NAME != ''
+        run: |
+          security delete-keychain "$KEYCHAIN_NAME" || true
+
+  collect-and-release:
+    needs: [check-version, build]
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -name "*.dmg" -o -name "*.zip" -o -name "*.yml" | sort
+
       - name: Create Release
-        if: success()
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
@@ -136,43 +167,12 @@ jobs:
           draft: false
           prerelease: ${{ contains(needs.check-version.outputs.version, 'beta') || contains(needs.check-version.outputs.version, 'alpha') || contains(needs.check-version.outputs.version, 'rc') }}
           files: |
-            dist/*.dmg
-            dist/*.zip
-            dist/*.yml
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/*.yml
           body: |
-            ## Elaris v${{ needs.check-version.outputs.version }}
+            Download the appropriate DMG for your Mac architecture. Auto-updates will detect your system automatically.
             
-            ### 📦 Downloads
-            - **DMG**: For initial installation on macOS (ARM64)
-            - **ZIP**: For auto-updates
-            
-            ### 🔧 Build Information
-            - Built on: macOS ARM64 runner
-            - Node.js: ${{ env.NODE_VERSION }}
-            - Python: ${{ env.PYTHON_VERSION }}
-            - Code Signing: Enabled
-            
-            ### 📋 Installation
-            1. Download the DMG file
-            2. Open the DMG and drag Elaris to Applications
-            3. Launch Elaris from Applications folder
-            
-            ---
-            Built automatically from commit ${{ github.sha }}
+            Built from commit ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cleanup keychain
-        if: always() && env.KEYCHAIN_NAME != ''
-        run: |
-          security delete-keychain "$KEYCHAIN_NAME" || true
-
-  skip-build:
-    needs: check-version
-    if: needs.check-version.outputs.should_release == 'false'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Skip build message
-        run: |
-          echo "⏭️ Skipping build - version ${{ needs.check-version.outputs.version }} already exists as a release"
-          echo "To trigger a new build, bump the version in electron/package.json" 

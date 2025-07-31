@@ -174,19 +174,29 @@ else
 fi
 
 if [ "$SIGN_APP" = true ]; then
-    print_step "Building SIGNED DMG and ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
     export CSC_KEYCHAIN="$KEYCHAIN_NAME"
     
-    npx electron-builder --mac $BUILD_ARCH -c.mac.identity="$CODESIGN_IDENTITY"
+    if [ "$BUILD_ARCH" = "--x64" ]; then
+        print_step "Building SIGNED ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
+        npx electron-builder --mac $BUILD_ARCH -c.mac.target=zip -c.mac.identity="$CODESIGN_IDENTITY"
+    else
+        print_step "Building SIGNED DMG and ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
+        npx electron-builder --mac $BUILD_ARCH -c.mac.identity="$CODESIGN_IDENTITY"
+    fi
 else
-    print_step "Building UNSIGNED DMG and ZIP for ${ELECTRON_ARCH}..."
     # Disable automatic code-signing discovery so the app remains unsigned
     export CSC_IDENTITY_AUTO_DISCOVERY=false
-    # Build unsigned DMG and ZIP by overriding mac.identity to null
-    npx electron-builder --mac $BUILD_ARCH -c.mac.identity=null
+    
+    if [ "$BUILD_ARCH" = "--x64" ]; then
+        print_step "Building UNSIGNED ZIP for ${ELECTRON_ARCH}..."
+        npx electron-builder --mac $BUILD_ARCH -c.mac.target=zip -c.mac.identity=null
+    else
+        print_step "Building UNSIGNED DMG and ZIP for ${ELECTRON_ARCH}..."
+        npx electron-builder --mac $BUILD_ARCH -c.mac.identity=null
+    fi
 fi
 
 cd ..
@@ -215,8 +225,12 @@ fi
 
 echo ""
 print_step "Build artifacts:"
-echo "  📱 DMG file: dist/ (for initial installation)"
-echo "  📦 ZIP file: dist/ (for auto-updates)"
+if [ "$BUILD_ARCH" = "--x64" ]; then
+    echo "  📦 ZIP file: dist/ (Intel - for distribution and auto-updates)"
+else
+    echo "  📱 DMG file: dist/ (ARM - for initial installation)"
+    echo "  📦 ZIP file: dist/ (ARM - for auto-updates)"
+fi
 echo "  🐍 Python executable: build/elaris-backend"
 echo "  ⚛️  React build: frontend/dist/"
 if [ "$SIGN_APP" = true ]; then
@@ -226,8 +240,16 @@ else
 fi
 echo ""
 
-if [ "$SIGN_APP" = true ]; then
-    print_success "Signed DMG and ZIP files ready for distribution"
+if [ "$BUILD_ARCH" = "--x64" ]; then
+    if [ "$SIGN_APP" = true ]; then
+        print_success "Signed ZIP file ready for Intel distribution"
+    else
+        print_success "Unsigned ZIP file ready for Intel distribution"
+    fi
 else
-    print_success "Unsigned DMG and ZIP files ready for distribution"
+    if [ "$SIGN_APP" = true ]; then
+        print_success "Signed DMG and ZIP files ready for ARM distribution"
+    else
+        print_success "Unsigned DMG and ZIP files ready for ARM distribution"
+    fi
 fi
