@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { UIMessage } from '../types'
 import MessageItem from './MessageItem'
 import './ChatMessages.css'
@@ -30,4 +30,4 @@ function ChatMessages({ messages }: ChatMessagesProps) {
   )
 }
 
-export default ChatMessages 
+export default ChatMessages

@@ -26,4 +26,4 @@ export const useApprovalFlow = (): UseApprovalFlowReturn => {
     processPendingTool,
     clearQueue
   }
-} 
+}

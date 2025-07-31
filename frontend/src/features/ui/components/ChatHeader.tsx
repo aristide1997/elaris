@@ -1,4 +1,4 @@
-import React, { type ReactElement } from 'react'
+import { type ReactElement } from 'react'
 import { MCPServerDropdown } from '../../connection'
 import ModelPicker from './ModelPicker'
 import './ChatHeader.css'
