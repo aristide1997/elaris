@@ -75,11 +75,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      # - name: Install system dependencies
-      #   run: |
-      #     # Update certificates and install any required tools
-      #     brew update
-      #     brew install jq
 
       - name: Import Code-Signing Certificates
         env:
@@ -124,9 +119,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x build-dmg.sh
+          chmod +x scripts/build-dmg.sh
           echo "Building ${{ matrix.arch }} with code signing..."
-          ./build-dmg.sh ${{ matrix.build_flag }} --sign
+          ./scripts/build-dmg.sh ${{ matrix.build_flag }} --sign
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

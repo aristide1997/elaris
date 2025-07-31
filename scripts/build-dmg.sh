@@ -56,9 +56,12 @@ do
     esac
 done
 
+# Change to project root directory (one level up from scripts/)
+cd "$(dirname "$0")/.."
+
 # Check if we're in the right directory
 if [ ! -f "electron/package.json" ]; then
-    print_error "Please run this script from the project root directory"
+    print_error "Could not find electron/package.json. Please ensure the script is in the scripts/ directory of the project."
     exit 1
 fi
 

@@ -18,8 +18,10 @@ elaris/
 ├── frontend/          # React frontend (Vite + TypeScript)
 ├── server/           # FastAPI backend (Python)
 ├── electron/         # Electron main process
-├── examples/         # Example scripts and usage
-└── build-dmg.sh     # Build script for macOS
+├── scripts/          # Build and deployment scripts
+│   ├── build-dmg.sh  # Build script for macOS
+│   └── release.sh    # Release script for GitHub
+└── examples/         # Example scripts and usage
 ```
 
 ## Development Setup
@@ -82,17 +84,34 @@ This will start:
 
 ## Building for Production
 
-### macOS
+### Using Makefile (Recommended)
 
 ```bash
-./build-dmg.sh
+# Build signed DMG for your architecture
+make build-dmg-arm64    # For Apple Silicon Macs
+make build-dmg-x64      # For Intel Macs
+
+# Build unsigned DMG for development
+make build-dmg-arm64-dev
+make build-dmg-x64-dev
+
+# Other useful commands
+make install            # Install all dependencies
+make dev               # Start development environment
+make clean             # Clean build artifacts
+make release           # Create GitHub release
+make version           # Show current version
+make help              # Show all available commands
 ```
 
-This creates a DMG file in the `dist/` directory.
-
-### Manual Build
+### Manual Build (Alternative)
 
 ```bash
+# Direct script usage
+./scripts/build-dmg.sh --arm64 --sign
+./scripts/build-dmg.sh --x64 --sign
+
+# Or via npm
 cd electron
 npm run build:all
 ```
@@ -121,4 +140,4 @@ This project is licensed under the GNU General Public License v3 - see the [LICE
 - Built with [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk)
 - Powered by [FastAPI](https://fastapi.tiangolo.com/)
 - Frontend built with [React](https://reactjs.org/) and [Vite](https://vitejs.dev/)
-- Desktop app powered by [Electron](https://electronjs.org/) 
+- Desktop app powered by [Electron](https://electronjs.org/)
