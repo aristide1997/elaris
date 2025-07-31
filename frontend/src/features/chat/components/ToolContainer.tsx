@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import type { ToolInstance } from '../../approval/types'
 import './ToolContainer.css'
 

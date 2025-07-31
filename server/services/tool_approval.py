@@ -9,7 +9,7 @@ import logging
 from typing import Dict
 
 from core.messaging import WebSocketMessenger
-from core.config import config_manager
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,7 @@ class ToolApprovalManager:
         
         try:
             # Wait for approval response with timeout
-            timeout = await config_manager.get_value("approval_timeout", 60.0)
-            approved = await asyncio.wait_for(approval_future, timeout=timeout)  # configurable timeout
+            approved = await asyncio.wait_for(approval_future, timeout=settings.approval_timeout)  # configurable timeout
             logger.info(f"Approval received for {approval_id}: {approved}")
             return approved
         except asyncio.TimeoutError:

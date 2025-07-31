@@ -1,3 +1,4 @@
+import React from 'react'
 import { useChatActions } from '../hooks/useChatActions'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'

@@ -1,9 +1,8 @@
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore, useLLMProviderStore } from './features/ui'
 import { ChatWindow } from './features/chat'
 import { useConnectionStore } from './features/connection'
 import { useWebSocketConnection } from './features/connection'
-import { UpdateNotification } from './features/updater'
 import { Modals } from './shared/components/Modals'
 import './App.css'
 
@@ -55,7 +54,6 @@ function App() {
         <ChatWindow />
       </Layout>
       <Modals />
-      <UpdateNotification />
     </div>
   )
 }

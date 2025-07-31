@@ -22,15 +22,14 @@ CONFIG_FILE = "settings.json"
 DEFAULT_CONFIG = {
     "system_prompt": "You are a helpful AI assistant.",
     "llm_provider": {
-        "provider": "google-gla",
-        "model": "gemini-2.5-flash",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
         "config": {},  # Provider-specific configuration
         "model_settings": {}  # Model-specific settings (e.g., thinking configurations)
     },
     "approval_timeout": 60.0,
     "auto_approve_tools": False,
     "debug_mode": False,
-    "enable_thinking": True,
     "mcp_servers": {
         "desktop-commander": {
             "command": "npx",
@@ -358,3 +357,34 @@ class ConfigManager:
 
 # Global configuration manager instance
 config_manager = ConfigManager()
+
+# Legacy compatibility wrapper for existing code
+class LegacySettings:
+    """Legacy compatibility wrapper - provides dot notation access to config"""
+    
+    def __init__(self, config_manager: ConfigManager):
+        self._config_manager = config_manager
+        self._config = None
+    
+    async def load_from_settings_file(self):
+        """Load configuration from the unified configuration manager"""
+        self._config = await self._config_manager.load_config()
+    
+    @property
+    def model_name(self) -> str:
+        return self._config.get("model_name", DEFAULT_CONFIG["model_name"]) if self._config else DEFAULT_CONFIG["model_name"]
+    
+    @property
+    def approval_timeout(self) -> float:
+        return self._config.get("approval_timeout", DEFAULT_CONFIG["approval_timeout"]) if self._config else DEFAULT_CONFIG["approval_timeout"]
+    
+    @property
+    def mcp_servers(self) -> Dict[str, Dict[str, Any]]:
+        return self._config.get("mcp_servers", DEFAULT_CONFIG["mcp_servers"]) if self._config else DEFAULT_CONFIG["mcp_servers"]
+    
+    @property
+    def system_prompt(self) -> str:
+        return self._config.get("system_prompt", DEFAULT_CONFIG["system_prompt"]) if self._config else DEFAULT_CONFIG["system_prompt"]
+
+# Legacy compatibility instance
+settings = LegacySettings(config_manager)

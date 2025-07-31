@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { MCPApprovalRequest } from '../types'
 import { useSettingsStore } from '../../ui/stores/useSettingsStore'
 import './ApprovalModal.css'

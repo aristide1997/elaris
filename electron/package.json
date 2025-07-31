@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "0.0.1-beta.6",
+  "version": "1.0.0",
   "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -35,11 +35,6 @@
     "directories": {
       "output": "../dist"
     },
-    "publish": {
-      "provider": "github",
-      "owner": "aristide1997",
-      "repo": "elaris"
-    },
     "files": [
       "**/*",
       "!../frontend/src/**/*",
@@ -58,26 +53,21 @@
       {
         "from": "node_modules/npm",
         "to": "npm",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       },
       {
         "from": "../node-dist",
         "to": "node",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       },
       {
         "from": "../frontend/dist",
         "to": "frontend/dist",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
     "mac": {
+      "target": "dmg",
       "icon": "icon.png",
       "identity": null,
       "hardenedRuntime": true,
@@ -95,7 +85,6 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.1.7",
     "zustand": "^5.0.6",
     "npm": "*"
   }

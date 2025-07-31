@@ -1,3 +1,4 @@
+import React from 'react'
 import { useChatActions } from '../../chat/hooks/useChatActions'
 import './NewChatButton.css'
 

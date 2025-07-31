@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useChatActions } from '../../chat/hooks/useChatActions'
 import { getApiBase } from '../../../shared/utils/api'
 import './ChatHistoryList.css'

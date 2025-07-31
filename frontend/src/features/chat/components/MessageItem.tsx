@@ -1,3 +1,4 @@
+import React from 'react'
 import { marked } from 'marked'
 import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'

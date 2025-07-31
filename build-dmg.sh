@@ -30,7 +30,6 @@ print_error() {
 
 # Parse command line arguments
 SIGN_APP=false
-BUILD_ARCH=""
 for arg in "$@"
 do
     case $arg in
@@ -40,14 +39,6 @@ do
         ;;
         --unsigned)
         SIGN_APP=false
-        shift
-        ;;
-        --x64)
-        BUILD_ARCH="--x64"
-        shift
-        ;;
-        --arm64)
-        BUILD_ARCH="--arm64"
         shift
         ;;
         *)
@@ -62,16 +53,8 @@ if [ ! -f "electron/package.json" ]; then
     exit 1
 fi
 
-# Check if architecture is specified
-if [ -z "$BUILD_ARCH" ]; then
-    print_error "Architecture must be specified: --x64 or --arm64"
-    print_step "Usage: $0 [--x64|--arm64] [--sign|--unsigned]"
-    exit 1
-fi
-
 # Load signing environment if available and signing is requested
 if [ "$SIGN_APP" = true ]; then
-    # Load from .env.signing
     if [ -f ".env.signing" ]; then
         print_step "Loading signing configuration..."
         source .env.signing
@@ -81,6 +64,7 @@ if [ "$SIGN_APP" = true ]; then
         if [ -n "$KEYCHAIN_NAME" ]; then
             if ! security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep -q "$CODESIGN_IDENTITY"; then
                 print_error "Certificate '$CODESIGN_IDENTITY' not found in keychain '$KEYCHAIN_NAME'"
+                print_warning "Run './create-certificate.sh' first to create the certificate"
                 exit 1
             fi
             # Unlock keychain
@@ -90,12 +74,14 @@ if [ "$SIGN_APP" = true ]; then
             # Check in default keychains
             if ! security find-identity -v -p codesigning | grep -q "$CODESIGN_IDENTITY"; then
                 print_error "Certificate '$CODESIGN_IDENTITY' not found in default keychains"
+                print_warning "Please check that the certificate exists and is trusted for code signing"
                 exit 1
             fi
             print_success "Certificate found in default keychain"
         fi
     else
         print_error "Signing requested but .env.signing file not found"
+        print_warning "Run './create-certificate.sh' first to create the certificate"
         exit 1
     fi
 fi
@@ -110,18 +96,12 @@ print_success "Cleaned previous builds"
 # Step 0: Download Node.js runtime for embedded npx
 print_step "Downloading embedded Node.js runtime..."
 NODE_VERSION="v20.10.0"
-# Set Node.js architecture based on build target
-if [ "$BUILD_ARCH" = "--arm64" ]; then
-    NODE_ARCH="arm64"
-else
-    NODE_ARCH="x64"
-fi
-NODE_DIST="node-${NODE_VERSION}-darwin-${NODE_ARCH}"
+NODE_DIST="node-${NODE_VERSION}-darwin-arm64"
 rm -rf node-dist
 mkdir -p node-dist
 curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" \
     | tar -xz --strip-components=1 -C node-dist
-print_success "Embedded Node.js ${NODE_VERSION} (${NODE_ARCH}) downloaded into node-dist/"
+print_success "Embedded Node.js ${NODE_VERSION} downloaded into node-dist/"
 
 # Step 1: Install Python dependencies and build Python executable
 print_step "Building Python backend with PyInstaller..."
@@ -166,71 +146,51 @@ cd electron
 # Step 4: Build Electron app and create DMG
 print_step "Building Electron app and creating DMG..."
 
-# Set the target architecture for electron-builder
-if [ "$BUILD_ARCH" = "--arm64" ]; then
-    ELECTRON_ARCH="arm64"
-else
-    ELECTRON_ARCH="x64"
-fi
-
 if [ "$SIGN_APP" = true ]; then
+    print_step "Building SIGNED DMG with certificate: $CODESIGN_IDENTITY"
     # Enable code signing with our certificate
     export CSC_IDENTITY_AUTO_DISCOVERY=false
     export CSC_NAME="$CODESIGN_IDENTITY"
     export CSC_KEYCHAIN="$KEYCHAIN_NAME"
-    
-    if [ "$BUILD_ARCH" = "--x64" ]; then
-        print_step "Building SIGNED ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
-        npx electron-builder --mac $BUILD_ARCH -c.mac.target=zip -c.mac.identity="$CODESIGN_IDENTITY"
-    else
-        print_step "Building SIGNED DMG and ZIP for ${ELECTRON_ARCH} with certificate: $CODESIGN_IDENTITY"
-        npx electron-builder --mac $BUILD_ARCH -c.mac.identity="$CODESIGN_IDENTITY"
-    fi
+    npx electron-builder --mac dmg -c.mac.identity="$CODESIGN_IDENTITY"
 else
+    print_step "Building UNSIGNED DMG..."
     # Disable automatic code-signing discovery so the app remains unsigned
     export CSC_IDENTITY_AUTO_DISCOVERY=false
-    
-    if [ "$BUILD_ARCH" = "--x64" ]; then
-        print_step "Building UNSIGNED ZIP for ${ELECTRON_ARCH}..."
-        npx electron-builder --mac $BUILD_ARCH -c.mac.target=zip -c.mac.identity=null
-    else
-        print_step "Building UNSIGNED DMG and ZIP for ${ELECTRON_ARCH}..."
-        npx electron-builder --mac $BUILD_ARCH -c.mac.identity=null
-    fi
+    # Build unsigned DMG by overriding mac.identity to null
+    npx electron-builder --mac dmg -c.mac.identity=null
 fi
 
 cd ..
 
 if [ "$SIGN_APP" = true ]; then
-    print_success "Signed DMG and ZIP created successfully!"
+    print_success "Signed DMG created successfully!"
 else
-    print_success "Unsigned DMG and ZIP created successfully!"
+    print_success "Unsigned DMG created successfully!"
 fi
 
 # Display results
 echo ""
 echo "🎉 Build completed!"
 echo ""
-print_success "Your build files are located in: dist/"
-
-# Check if the app is signed
-if [ "$SIGN_APP" = true ]; then
-    print_step "Verifying code signature..."
-    if codesign -dv --verbose=4 "dist/mac/Elaris.app" 2>/dev/null; then
-        print_success "App is properly code signed"
-    else
-        print_warning "App signature verification failed"
+print_success "Your DMG file is located in: dist/"
+if [ -f "dist/Elaris-1.0.0.dmg" ]; then
+    ls -la "dist/Elaris-1.0.0.dmg"
+    
+    # Check if the app is signed
+    if [ "$SIGN_APP" = true ]; then
+        print_step "Verifying code signature..."
+        if codesign -dv --verbose=4 "dist/mac/Elaris.app" 2>/dev/null; then
+            print_success "App is properly code signed"
+        else
+            print_warning "App signature verification failed"
+        fi
     fi
 fi
 
 echo ""
 print_step "Build artifacts:"
-if [ "$BUILD_ARCH" = "--x64" ]; then
-    echo "  📦 ZIP file: dist/ (Intel - for distribution and auto-updates)"
-else
-    echo "  📱 DMG file: dist/ (ARM - for initial installation)"
-    echo "  📦 ZIP file: dist/ (ARM - for auto-updates)"
-fi
+echo "  📱 DMG file: dist/"
 echo "  🐍 Python executable: build/elaris-backend"
 echo "  ⚛️  React build: frontend/dist/"
 if [ "$SIGN_APP" = true ]; then
@@ -240,16 +200,16 @@ else
 fi
 echo ""
 
-if [ "$BUILD_ARCH" = "--x64" ]; then
-    if [ "$SIGN_APP" = true ]; then
-        print_success "Signed ZIP file ready for Intel distribution"
-    else
-        print_success "Unsigned ZIP file ready for Intel distribution"
-    fi
+if [ "$SIGN_APP" = true ]; then
+    print_success "You can now distribute the signed DMG file!"
+    print_warning "Note: Self-signed apps will show security warnings to users"
+    echo "       Users need to right-click and 'Open' to bypass Gatekeeper"
 else
-    if [ "$SIGN_APP" = true ]; then
-        print_success "Signed DMG and ZIP files ready for ARM distribution"
-    else
-        print_success "Unsigned DMG and ZIP files ready for ARM distribution"
-    fi
+    print_success "You can now distribute the unsigned DMG file!"
+    print_warning "Note: Unsigned apps will show security warnings to users"
 fi
+
+echo ""
+print_step "Usage:"
+echo "  • Unsigned build: ./build-dmg.sh --unsigned"
+echo "  • Signed build:   ./build-dmg.sh --sign" 

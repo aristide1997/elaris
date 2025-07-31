@@ -1,3 +1,4 @@
+import React from 'react'
 import { useUIStore } from '../stores/useUIStore'
 import './SettingsButton.css'
 
