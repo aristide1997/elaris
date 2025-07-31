@@ -1,0 +1,178 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - '**'  # Trigger on any branch
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  NODE_VERSION: '20.10.0'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version_check.outputs.should_release }}
+      version: ${{ steps.version_check.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for version checking
+
+      - name: Get current version
+        id: get_version
+        run: |
+          VERSION=$(cat electron/package.json | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Check if version exists as release
+        id: version_check
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          echo "Checking if version $VERSION exists as a release..."
+          
+          # Check if tag exists
+          if git tag -l | grep -q "^v$VERSION$"; then
+            echo "Version $VERSION already exists as a tag"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION does not exist as a tag"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  build:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14       # ARM64 runner
+            arch: arm64
+            build_flag: --arm64
+            artifact_suffix: -arm64
+          - runner: macos-13       # Intel runner
+            arch: x64  
+            build_flag: --x64
+            artifact_suffix: ""    # No suffix for Intel (default)
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # - name: Install system dependencies
+      #   run: |
+      #     # Update certificates and install any required tools
+      #     brew update
+      #     brew install jq
+
+      - name: Import Code-Signing Certificates
+        env:
+          CODESIGN_CERTIFICATE: ${{ secrets.CODESIGN_CERTIFICATE }}
+          CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.CODESIGN_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Decode and import the certificate into the System keychain for automatic trust
+          echo "$CODESIGN_CERTIFICATE" | base64 --decode > cert.p12
+          # Import P12 (certificate + private key)
+          sudo security import cert.p12 \
+            -k /Library/Keychains/System.keychain \
+            -P "$CODESIGN_CERTIFICATE_PASSWORD" \
+            -f pkcs12 \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          # Extract and trust the certificate for code signing
+          openssl pkcs12 -in cert.p12 -clcerts -nokeys -out cert.cer -passin pass:"$CODESIGN_CERTIFICATE_PASSWORD"
+          sudo security add-trusted-cert \
+            -d -r trustRoot \
+            -k /Library/Keychains/System.keychain \
+            cert.cer
+          # Cleanup
+          rm cert.p12 cert.cer
+          # Verify identity
+          security find-identity -v -p codesigning
+          CODESIGN_IDENTITY=$(security find-identity -v -p codesigning | head -1 | awk '{print $2}')
+          if [ -z "$CODESIGN_IDENTITY" ]; then
+            echo "ERROR: No code signing identity found after import"
+            exit 1
+          fi
+          echo "Found identity: $CODESIGN_IDENTITY"
+          echo "CODESIGN_IDENTITY=$CODESIGN_IDENTITY" >> $GITHUB_ENV
+
+      - name: Create signing configuration
+        run: |
+          cat > .env.signing << EOF
+          CODESIGN_IDENTITY="$CODESIGN_IDENTITY"
+          EOF
+
+      - name: Build application
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x build-dmg.sh
+          echo "Building ${{ matrix.arch }} with code signing..."
+          ./build-dmg.sh ${{ matrix.build_flag }} --sign
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: elaris-macos-${{ matrix.arch }}-v${{ needs.check-version.outputs.version }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.yml
+          retention-days: 30
+
+      - name: Cleanup keychain
+        if: always() && env.KEYCHAIN_NAME != ''
+        run: |
+          security delete-keychain "$KEYCHAIN_NAME" || true
+
+  collect-and-release:
+    needs: [check-version, build]
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -name "*.dmg" -o -name "*.zip" -o -name "*.yml" | sort
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: Elaris v${{ needs.check-version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(needs.check-version.outputs.version, 'beta') || contains(needs.check-version.outputs.version, 'alpha') || contains(needs.check-version.outputs.version, 'rc') }}
+          files: |
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/*.yml
+          body: |
+            Download the appropriate DMG for your Mac architecture. Auto-updates will detect your system automatically.
+            
+            Built from commit ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

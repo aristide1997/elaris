@@ -1,4 +1,3 @@
-import React from 'react'
 import { useMessagesStore } from '../../features/chat'
 import { useConnectionStore } from '../../features/connection'
 import { useApprovalFlow, ApprovalModal } from '../../features/approval'

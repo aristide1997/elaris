@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMCPServerStore } from '../stores/useMCPServerStore'
 import './MCPServerDropdown.css'
 
