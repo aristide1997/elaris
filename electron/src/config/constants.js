@@ -1,7 +1,7 @@
 // Application configuration constants
 module.exports = {
   // Server configuration
-  SERVER_PORT: 8000,
+  SERVER_PORT: 43759,
   
   // Health check configuration
   HEALTH_CHECK_INTERVAL: 8000, // 8 seconds
