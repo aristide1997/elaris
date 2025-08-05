@@ -15,6 +15,84 @@
   position: relative;
 }
 
+.input-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.attached-images {
+  max-width: 900px;
+  margin: 0 auto var(--space-3) auto;
+}
+
+.image-button {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.image-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.image-button:disabled {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  border-color: var(--color-border-subtle);
+}
+
+.drag-active {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+}
+
+.drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.drag-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.drag-message svg {
+  opacity: 0.7;
+}
+
+.drag-message p {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
 .message-input {
   flex: 1;
   padding: var(--space-3) var(--space-5);

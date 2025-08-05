@@ -64,7 +64,69 @@ export const useConversationStore = create<ConversationStore>()(
             case 'system-prompt':
               return null // Skip system prompts - don't show in chat history
             case 'user-prompt':
-              return { ...base, type: 'user' }
+              // Handle user prompts with potential image content
+              if (Array.isArray(part.content)) {
+                // Extract text and images from content array
+                let textContent = ''
+                const attachments: any[] = []
+                
+                part.content.forEach((item: any) => {
+                  if (typeof item === 'string') {
+                    textContent += item
+                  } else if (item.kind === 'binary' && item.media_type?.startsWith('image/')) {
+                    // Convert pydantic-ai BinaryContent to frontend ImageAttachment format
+                    // Clean the base64 data - remove any whitespace and ensure it's valid
+                    // Normalize and clean incoming base64 string
+                    const rawData = item.data
+                    const cleanData = rawData.replace(/\s/g, '')
+                    // Strip any data URL prefix if present
+                    let base64Payload = cleanData.startsWith('data:')
+                      ? cleanData.substring(cleanData.indexOf(',') + 1)
+                      : cleanData
+                    // Convert URL-safe base64 to standard alphabet
+                    base64Payload = base64Payload.replace(/-/g, '+').replace(/_/g, '/')
+                    // Pad with '=' if needed
+                    const rem = base64Payload.length % 4
+                    if (rem > 0) base64Payload += '='.repeat(4 - rem)
+                    console.log('Processing image:', {
+                      mediaType: item.media_type,
+                      rawLength: rawData.length,
+                      payloadLength: base64Payload.length,
+                      dataPreview: base64Payload.substring(0, 50) + '...'
+                    })
+                    // Attempt to decode base64 for blob conversion
+                    let byteChars: string
+
+                    byteChars = atob(base64Payload)
+
+                    const byteNumbers = new Array(byteChars.length)
+                    for (let i = 0; i < byteChars.length; i++) {
+                      byteNumbers[i] = byteChars.charCodeAt(i)
+                    }
+                    const byteArray = new Uint8Array(byteNumbers)
+                    const blob = new Blob([byteArray], { type: item.media_type })
+                    const blobUrl = URL.createObjectURL(blob)
+
+                    attachments.push({
+                      id: generateId(),
+                      file: null, // Not available for loaded conversations
+                      url: blobUrl,
+                      mediaType: item.media_type,
+                      size: blob.size, // Use blob size
+                      name: `image.${item.media_type.split('/')[1]}`
+                    })
+                  }
+                })
+                
+                return {
+                  ...base,
+                  type: 'user',
+                  content: textContent,
+                  attachments: attachments.length > 0 ? attachments : undefined
+                }
+              } else {
+                return { ...base, type: 'user' }
+              }
             case 'text':
               return { ...base, type: 'assistant' }
             case 'tool-call':

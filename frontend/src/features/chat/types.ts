@@ -16,9 +16,19 @@ export interface SystemMessage extends BaseMessage {
   subtype?: 'info' | 'error'
 }
 
+export interface ImageAttachment {
+  id: string
+  file: File
+  url: string // blob URL for preview
+  mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+  size: number
+  name: string
+}
+
 export interface UserMessage extends BaseMessage {
   type: 'user'
   content: string
+  attachments?: ImageAttachment[]
 }
 
 export interface AssistantMessage extends BaseMessage {

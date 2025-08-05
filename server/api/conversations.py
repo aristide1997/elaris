@@ -4,11 +4,16 @@ Conversation API Router - REST endpoints for conversation management
 """
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from uuid import uuid4
 from types import SimpleNamespace
 import logging
+import json
+import base64
+from uuid import uuid4 as generate_uuid
 
 from core.database import get_conversation_history, get_conversation_by_id, delete_conversation, save_conversation
+from pydantic_ai.messages import ModelMessagesTypeAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -74,10 +79,20 @@ async def get_conversation(conversation_id: str):
     conversation = await get_conversation_by_id(conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail=f"Conversation {conversation_id} not found")
-    return {
+    
+    # Serialize messages using pydantic-ai's adapter to handle binary data properly
+    messages_json = ModelMessagesTypeAdapter.dump_json(conversation["messages"]).decode('utf-8')
+    
+    # Create response with serialized messages
+    response_data = {
         "status": "success",
-        "conversation": conversation
+        "conversation": {
+            **conversation,
+            "messages": json.loads(messages_json)  # Parse back to dict for JSON response
+        }
     }
+    
+    return JSONResponse(content=response_data)
 
 @router.delete("/{conversation_id}")
 async def delete_conversation_by_id(conversation_id: str):

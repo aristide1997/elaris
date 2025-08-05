@@ -5,6 +5,7 @@ Chat Session - Main orchestrator for chat conversations with AI agents
 
 import asyncio
 import logging
+import base64
 from fastapi import WebSocket
 
 from core.messaging import WebSocketMessenger
@@ -12,7 +13,7 @@ from services.tool_approval import ToolApprovalManager
 from services.mcp_agent import MCPAgentManager
 from services.message_processor import MessageStreamProcessor
 from core.database import get_conversation_by_id, save_conversation, update_conversation
-from pydantic_ai.messages import ModelRequest, Usage
+from pydantic_ai.messages import ModelRequest, Usage, UserPromptPart, BinaryContent
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class ChatSession:
         # Ensure messages are processed sequentially per session
         self._message_lock = asyncio.Lock()
     
-    async def handle_chat_message(self, user_input: str, conversation_id: str):
+    async def handle_chat_message(self, user_input: str, conversation_id: str, images=None):
         """Handle a chat message from the user with streaming response"""
         async with self._message_lock:
             try:
@@ -47,12 +48,34 @@ class ChatSession:
                     existing_messages = []
                     logger.info(f"Starting new conversation {conversation_id}")
                 
-                # Always save user message before streaming response
-                user_request = ModelRequest.user_text_prompt(user_input)
-                if conversation:
-                    await update_conversation(conversation_id, existing_messages + [user_request], Usage())
+                # Prepare content for agent iteration
+                if images and len(images) > 0:
+                    # Process images into pydantic-ai format
+                    content_parts = []
+                    
+                    if user_input.strip():
+                        content_parts.append(user_input)
+                    
+                    # Convert images to BinaryContent
+                    for img_data in images:
+                        try:
+                            image_bytes = base64.b64decode(img_data['data'])
+                            binary_content = BinaryContent(
+                                data=image_bytes,
+                                media_type=img_data['mediaType']
+                            )
+                            content_parts.append(binary_content)
+                            logger.info(f"Added image: {img_data['name']} ({img_data['mediaType']}, {len(image_bytes)} bytes)")
+                        except Exception as e:
+                            logger.error(f"Error processing image {img_data.get('name', 'unknown')}: {e}")
+                            await self.messenger.send_error(f"Error processing image: {str(e)}")
+                            return
+                    
+                    # Use content_parts directly for agent.iter()
+                    user_content = content_parts
                 else:
-                    await save_conversation(conversation_id, [user_request], Usage())
+                    # Text-only message
+                    user_content = user_input
                 
                 # Prepare message history for agent iteration
                 message_history = existing_messages if existing_messages else None
@@ -61,12 +84,23 @@ class ChatSession:
                 agent = await self.agent_manager.create_agent()
                 
                 # Begin streaming iteration with the AI agent
-                async with agent.iter(user_input, message_history=message_history) as run:
+                async with agent.iter(user_content, message_history=message_history) as run:
                     await self.message_processor.process_agent_stream(run)
                     
                     # After stream completes, save or update the conversation
                     await self._save_conversation(run.result, conversation_id)
                     
+            except RuntimeError as e:
+                # Handle model capability errors (e.g., images not supported)
+                if "support" in str(e).lower():
+                    logger.warning(f"Model capability error: {e}")
+                    await self.messenger.send_error(f"This model doesn't support images: {str(e)}")
+                else:
+                    logger.error(f"Runtime error handling chat message: {e}", exc_info=True)
+                    await self.messenger.send_error(f"Error processing message: {str(e)}")
+            except NotImplementedError as e:
+                logger.warning(f"Feature not implemented: {e}")
+                await self.messenger.send_error(f"Image type not supported: {str(e)}")
             except asyncio.CancelledError:
                 # Task was cancelled by user stop request - swallow without error
                 logger.info(f"Chat message handling cancelled for conversation {conversation_id}")

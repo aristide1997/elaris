@@ -1,0 +1,91 @@
+.image-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.image-preview-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+}
+
+.image-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e1e5e9);
+  background: var(--background-secondary, #f8f9fa);
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.remove-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+}
+
+.remove-button:hover {
+  background: rgba(220, 53, 69, 0.8);
+}
+
+.image-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.image-name {
+  color: var(--text-primary, #333);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.image-size {
+  color: var(--text-secondary, #666);
+  font-size: 11px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .image-wrapper {
+    border-color: var(--border-color, #404040);
+    background: var(--background-secondary, #2a2a2a);
+  }
+  
+  .image-name {
+    color: var(--text-primary, #e0e0e0);
+  }
+  
+  .image-size {
+    color: var(--text-secondary, #a0a0a0);
+  }
+}
