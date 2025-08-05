@@ -107,6 +107,12 @@ export interface ChatMessage {
   type: 'chat_message'
   content: string
   conversation_id: string
+  images?: Array<{
+    id: string
+    data: string // base64 encoded
+    mediaType: string
+    name: string
+  }>
 }
 
 export interface ApprovalResponseMessage {

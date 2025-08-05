@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { MCPServerMessage, MCPClientMessage } from '../types'
+import type { MCPServerMessage, MCPClientMessage, ImageAttachment } from '../types'
 import type { MCPApprovalRequest } from '../../approval/types'
 import { MessageService } from '../services/MessageService'
 import { useApprovalStore } from '../../approval/stores/useApprovalStore'
@@ -11,8 +11,8 @@ import { useConversationStore } from '../../conversations/stores/useConversation
 interface ChatOrchestratorActions {
   // Idempotent stub creation flags
   isCreatingConversation: boolean
-  pendingMessages: string[]
-  sendMessage: (content: string) => void
+  pendingMessages: Array<{ content: string; images?: ImageAttachment[] }>
+  sendMessage: (content: string, images?: ImageAttachment[]) => void
   editMessage: (messageId: string, newContent: string) => void
   handleServerMessage: (message: MCPServerMessage) => void
   handleRawApprovalRequest: (msg: MCPApprovalRequest) => void
@@ -46,8 +46,8 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
     (set, get) => ({
       // Idempotent stub creation state
       isCreatingConversation: false,
-      pendingMessages: [] as string[],
-      sendMessage: (content: string) => {
+      pendingMessages: [],
+      sendMessage: (content: string, images?: ImageAttachment[]) => {
         const convStore = useConversationStore.getState()
         const connStore = useConnectionStore.getState()
         const msgStore = useMessagesStore.getState()
@@ -56,35 +56,80 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
         const { conversationId } = convStore
         const { addMessage } = msgStore
 
+        // Helper function to convert images to base64
+        const convertImagesToBase64 = async (images: ImageAttachment[]): Promise<Array<{id: string, data: string, mediaType: string, name: string}>> => {
+          const promises = images.map(async (img) => {
+            return new Promise<{id: string, data: string, mediaType: string, name: string}>((resolve) => {
+              const reader = new FileReader()
+              reader.onload = () => {
+                const base64 = (reader.result as string).split(',')[1] // Remove data:image/...;base64, prefix
+                resolve({
+                  id: img.id,
+                  data: base64,
+                  mediaType: img.mediaType,
+                  name: img.name
+                })
+              }
+              reader.readAsDataURL(img.file)
+            })
+          })
+          return Promise.all(promises)
+        }
+
         // Optimistically add user message
         const userMessage = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2,9)}`,
           type: 'user' as const,
           content,
-          timestamp: new Date()
+          timestamp: new Date(),
+          attachments: images
         }
         addMessage(userMessage)
 
+        // Prepare message data
+        const messageData = { content, images }
+
         // If conversation already exists, send immediately
         if (conversationId) {
-          wsSend({ type: 'chat_message', content, conversation_id: conversationId } as MCPClientMessage)
+          if (images && images.length > 0) {
+            convertImagesToBase64(images).then(base64Images => {
+              wsSend({ 
+                type: 'chat_message', 
+                content, 
+                conversation_id: conversationId,
+                images: base64Images
+              } as MCPClientMessage)
+            })
+          } else {
+            wsSend({ type: 'chat_message', content, conversation_id: conversationId } as MCPClientMessage)
+          }
           return
         }
 
         // If stub creation in progress, queue this message
         if (get().isCreatingConversation) {
-          set(state => ({ pendingMessages: [...state.pendingMessages, content] }))
+          set(state => ({ pendingMessages: [...state.pendingMessages, messageData] }))
           return
         }
 
         // Start stub creation and queue first message
-        set({ isCreatingConversation: true, pendingMessages: [content] })
+        set({ isCreatingConversation: true, pendingMessages: [messageData] })
         convStore.startNewChat(serverPort, handleError, () => {})
           .then(() => {
             const newCid = useConversationStore.getState().conversationId!
             // Flush queued messages
-            get().pendingMessages.forEach(msg => {
-              wsSend({ type: 'chat_message', content: msg, conversation_id: newCid } as MCPClientMessage)
+            get().pendingMessages.forEach(async (msg) => {
+              if (msg.images && msg.images.length > 0) {
+                const base64Images = await convertImagesToBase64(msg.images)
+                wsSend({ 
+                  type: 'chat_message', 
+                  content: msg.content, 
+                  conversation_id: newCid,
+                  images: base64Images
+                } as MCPClientMessage)
+              } else {
+                wsSend({ type: 'chat_message', content: msg.content, conversation_id: newCid } as MCPClientMessage)
+              }
             })
           })
           .catch((err: any) => {

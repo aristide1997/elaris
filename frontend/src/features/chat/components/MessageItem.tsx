@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'
 import ThinkingBubble from './ThinkingBubble'
+import ImagePreview from './ImagePreview'
 import { useChatActions } from '../hooks/useChatActions'
 import './MessageItem.css'
 
@@ -116,6 +117,9 @@ function MessageItem({ message }: MessageItemProps) {
       // Render other message types as plain text
       return (
         <div className={`message-content ${getSystemMessageClassName()}`}>
+          {message.type === 'user' && message.attachments && message.attachments.length > 0 && (
+            <ImagePreview images={message.attachments} readonly />
+          )}
           {message.content}
           {message.type === 'user' && !isStreaming && (
             <button 

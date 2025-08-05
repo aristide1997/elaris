@@ -42,6 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if data["type"] == "chat_message":
                     # Handle chat message
                     user_input = data["content"].strip()
+                    images = data.get("images", [])
                     # Require conversation_id (provided by frontend)
                     conversation_id = data.get("conversation_id")
                     if not conversation_id:
@@ -49,12 +50,12 @@ async def websocket_endpoint(websocket: WebSocket):
                         await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
                         continue
                     
-                    if user_input:
-                        logger.info(f"Received chat message: {user_input} for conversation: {conversation_id}")
+                    if user_input or images:
+                        logger.info(f"Received chat message: {user_input} with {len(images)} images for conversation: {conversation_id}")
                         # Prune any completed tasks to avoid memory growth
                         chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
                         # Schedule handling chat message in background to allow processing approval responses
-                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id))
+                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id, images))
                         task.add_done_callback(_log_task_result)
                         chat_session.tasks.append(task)
                 
