@@ -14,6 +14,7 @@ export const useChatActions = () => {
   const conversationId = useConversationStore(state => state.conversationId)
   
   const sendMessage = useChatOrchestratorStore(state => state.sendMessage)
+  const editMessage = useChatOrchestratorStore(state => state.editMessage)
   const stopMessage = useChatOrchestratorStore(state => state.stopMessage)
   const selectConversation = useChatOrchestratorStore(state => state.selectConversation)
   const startNewChat = useChatOrchestratorStore(state => state.startNewChat)
@@ -30,9 +31,10 @@ export const useChatActions = () => {
     isStreaming,
     // Actions
     sendMessage,
+    editMessage,
     stopMessage,
     selectConversation,
     startNewChat,
     resetConversation
   }
-} 
+}

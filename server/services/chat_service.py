@@ -107,6 +107,63 @@ class ChatSession:
             logger.error(f"Error saving conversation: {e}", exc_info=True)
             return None
     
+    async def handle_edit_user_message(self, conversation_id: str, user_message_index: int, new_content: str):
+        """Handle editing a user message and re-running the conversation from that point"""
+        async with self._message_lock:
+            try:
+                # Load the existing conversation
+                conversation = await get_conversation_by_id(conversation_id)
+                if not conversation:
+                    logger.error(f"Conversation {conversation_id} not found for editing")
+                    await self.messenger.send_error("Conversation not found")
+                    return
+                
+                messages = conversation['messages']
+                logger.info(f"Editing conversation {conversation_id} with {len(messages)} messages")
+                
+                # Find the user message at the specified index
+                user_count = 0
+                edit_position = None
+                
+                for i, message in enumerate(messages):
+                    if message.kind == 'request':  # User message in pydantic-ai
+                        if user_count == user_message_index:
+                            edit_position = i
+                            break
+                        user_count += 1
+                
+                if edit_position is None:
+                    logger.error(f"User message at index {user_message_index} not found")
+                    await self.messenger.send_error(f"User message at index {user_message_index} not found")
+                    return
+                
+                # Truncate conversation history up to (but not including) the edit position
+                messages_up_to_edit = messages[:edit_position]
+                logger.info(f"Truncating conversation to {len(messages_up_to_edit)} messages before edit point")
+                
+                # Prepare message history for agent iteration (None if empty)
+                message_history = messages_up_to_edit if messages_up_to_edit else None
+                
+                # Create a fresh agent for this edited message
+                agent = await self.agent_manager.create_agent()
+                
+                # Begin streaming iteration with the AI agent using the new content
+                async with agent.iter(new_content, message_history=message_history) as run:
+                    await self.message_processor.process_agent_stream(run)
+                    
+                    # After stream completes, save the updated conversation
+                    await self._save_conversation(run.result, conversation_id)
+                    
+                logger.info(f"Successfully processed edit for conversation {conversation_id}")
+                    
+            except asyncio.CancelledError:
+                # Task was cancelled by user stop request - swallow without error
+                logger.info(f"Edit message handling cancelled for conversation {conversation_id}")
+                return
+            except Exception as e:
+                logger.error(f"Error handling edit message: {e}", exc_info=True)
+                await self.messenger.send_error(f"Error processing edit: {str(e)}")
+    
     async def handle_approval_response(self, approval_id: str, approved: bool):
         """Handle approval response from the client"""
         await self.approval_manager.handle_approval_response(approval_id, approved)

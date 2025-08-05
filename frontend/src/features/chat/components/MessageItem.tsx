@@ -1,7 +1,9 @@
 import { marked } from 'marked'
+import { useState } from 'react'
 import type { UIMessage } from '../types'
 import ToolContainer from './ToolContainer'
 import ThinkingBubble from './ThinkingBubble'
+import { useChatActions } from '../hooks/useChatActions'
 import './MessageItem.css'
 
 // Configure marked options
@@ -15,6 +17,36 @@ interface MessageItemProps {
 }
 
 function MessageItem({ message }: MessageItemProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(message.content || '')
+  const { editMessage, isStreaming } = useChatActions()
+
+  const handleEditClick = () => {
+    setEditContent(message.content || '')
+    setIsEditing(true)
+  }
+
+  const handleEditSave = () => {
+    if (editContent.trim() && editContent !== message.content) {
+      editMessage(message.id, editContent.trim())
+    }
+    setIsEditing(false)
+  }
+
+  const handleEditCancel = () => {
+    setEditContent(message.content || '')
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleEditSave()
+    } else if (e.key === 'Escape') {
+      handleEditCancel()
+    }
+  }
+
   const getMessageClassName = () => {
     switch (message.type) {
       case 'user':
@@ -40,6 +72,37 @@ function MessageItem({ message }: MessageItemProps) {
   }
 
   const renderMessageContent = () => {
+    // Handle editing mode for user messages
+    if (message.type === 'user' && isEditing) {
+      return (
+        <div className="message-edit-container">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="message-edit-textarea"
+            autoFocus
+            rows={3}
+          />
+          <div className="message-edit-buttons">
+            <button 
+              onClick={handleEditSave}
+              className="edit-save-btn"
+              disabled={!editContent.trim() || editContent === message.content}
+            >
+              Save
+            </button>
+            <button 
+              onClick={handleEditCancel}
+              className="edit-cancel-btn"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     if (message.type === 'assistant') {
       // Render assistant messages as markdown
       const htmlContent = marked(message.content || '')
@@ -54,6 +117,15 @@ function MessageItem({ message }: MessageItemProps) {
       return (
         <div className={`message-content ${getSystemMessageClassName()}`}>
           {message.content}
+          {message.type === 'user' && !isStreaming && (
+            <button 
+              onClick={handleEditClick}
+              className="message-edit-btn"
+              title="Edit message"
+            >
+              ✏️
+            </button>
+          )}
         </div>
       )
     }
