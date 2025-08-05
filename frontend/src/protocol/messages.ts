@@ -125,8 +125,16 @@ export interface StopStreamMessage {
   conversation_id: string
 }
 
+export interface EditUserMessageMessage {
+  type: 'edit_user_message'
+  conversation_id: string
+  user_message_index: number
+  new_content: string
+}
+
 export type ClientToServerMessage =
   | ChatMessage
   | ApprovalResponseMessage
   | UpdateSettingsMessage
   | StopStreamMessage
+  | EditUserMessageMessage

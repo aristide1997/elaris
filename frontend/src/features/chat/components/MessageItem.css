@@ -308,3 +308,93 @@
     border-bottom-left-radius: var(--radius-sm);
   }
 }
+
+/* Message editing styles */
+.message-edit-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 12px;
+}
+
+.user-message .message-content:hover .message-edit-btn {
+  opacity: 1;
+}
+
+.message-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.message-edit-container {
+  width: 100%;
+}
+
+.message-edit-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.message-edit-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.message-edit-buttons {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  justify-content: flex-end;
+}
+
+.edit-save-btn,
+.edit-cancel-btn {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-save-btn {
+  background: var(--color-accent);
+  color: white;
+}
+
+.edit-save-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.edit-save-btn:disabled {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.edit-cancel-btn {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.edit-cancel-btn:hover {
+  background: var(--color-surface-tertiary);
+}

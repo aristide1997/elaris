@@ -15,7 +15,7 @@ const initialState: MessagesState = {
 
 export const useMessagesStore = create<MessagesStore>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       // Initial state
       ...initialState,
 
@@ -68,6 +68,51 @@ export const useMessagesStore = create<MessagesStore>()(
           currentThinkingId: null,
           currentToolSessionId: null
         }, false, 'resetToWelcome')
+      },
+
+      getUserMessageIndex: (messageId: string) => {
+        const state = get()
+        let userCount = 0
+        
+        for (const message of state.messages) {
+          if (message.type === 'user') {
+            if (message.id === messageId) {
+              return userCount
+            }
+            userCount++
+          }
+        }
+        
+        return -1 // Message not found
+      },
+
+      truncateFromUserMessage: (messageId: string) => {
+        set((state) => {
+          let truncateIndex = -1
+          
+          // Find the position of the message to edit
+          for (let i = 0; i < state.messages.length; i++) {
+            if (state.messages[i].id === messageId) {
+              truncateIndex = i
+              break
+            }
+          }
+          
+          if (truncateIndex === -1) {
+            return state // Message not found, no change
+          }
+          
+          // Truncate messages from this point forward
+          const truncatedMessages = state.messages.slice(0, truncateIndex + 1)
+          
+          return {
+            ...state,
+            messages: truncatedMessages,
+            currentAssistantId: null,
+            currentThinkingId: null,
+            currentToolSessionId: null
+          }
+        }, false, 'truncateFromUserMessage')
       }
     }),
     {

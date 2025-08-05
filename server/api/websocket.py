@@ -65,6 +65,35 @@ async def websocket_endpoint(websocket: WebSocket):
                     logger.info(f"Received approval response: {approval_id} = {approved}")
                     await chat_session.handle_approval_response(approval_id, approved)
                 
+                elif data["type"] == "edit_user_message":
+                    # Handle user message editing
+                    conversation_id = data.get("conversation_id")
+                    user_message_index = data.get("user_message_index")
+                    new_content = data.get("new_content", "").strip()
+                    
+                    if not conversation_id:
+                        logger.error("Missing conversation_id from edit message")
+                        await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
+                        continue
+                    
+                    if user_message_index is None:
+                        logger.error("Missing user_message_index from edit message")
+                        await websocket.send_json({"type": "error", "message": "Missing user_message_index"})
+                        continue
+                    
+                    if not new_content:
+                        logger.error("Missing new_content from edit message")
+                        await websocket.send_json({"type": "error", "message": "Missing new_content"})
+                        continue
+                    
+                    logger.info(f"Received edit request: conversation {conversation_id}, user message {user_message_index}")
+                    # Prune any completed tasks to avoid memory growth
+                    chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
+                    # Schedule handling edit message in background
+                    task = asyncio.create_task(chat_session.handle_edit_user_message(conversation_id, user_message_index, new_content))
+                    task.add_done_callback(_log_task_result)
+                    chat_session.tasks.append(task)
+                
                 elif data["type"] == "update_settings":
                     # Handle dynamic settings update mid-session
                     logger.info("Received update_settings via WebSocket - next message will use updated settings automatically")

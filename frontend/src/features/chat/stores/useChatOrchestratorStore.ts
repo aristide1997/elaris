@@ -13,6 +13,7 @@ interface ChatOrchestratorActions {
   isCreatingConversation: boolean
   pendingMessages: string[]
   sendMessage: (content: string) => void
+  editMessage: (messageId: string, newContent: string) => void
   handleServerMessage: (message: MCPServerMessage) => void
   handleRawApprovalRequest: (msg: MCPApprovalRequest) => void
   selectConversation: (id: string) => Promise<void>
@@ -92,6 +93,42 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
           .finally(() => {
             set({ isCreatingConversation: false, pendingMessages: [] })
           })
+      },
+
+      editMessage: (messageId: string, newContent: string) => {
+        const convStore = useConversationStore.getState()
+        const connStore = useConnectionStore.getState()
+        const msgStore = useMessagesStore.getState()
+        const handleError = get().handleError
+        const { sendMessage: wsSend } = connStore
+        const { conversationId } = convStore
+        const { getUserMessageIndex, truncateFromUserMessage, updateMessage } = msgStore
+
+        if (!conversationId) {
+          handleError("No active conversation to edit")
+          return
+        }
+
+        // Get the user message index for this message
+        const userMessageIndex = getUserMessageIndex(messageId)
+        if (userMessageIndex === -1) {
+          handleError("Message not found or not a user message")
+          return
+        }
+
+        // Update local state with edited message before truncating history
+        updateMessage(messageId, { content: newContent })
+
+        // Truncate the conversation from this message forward
+        truncateFromUserMessage(messageId)
+
+        // Send the edit request to the backend
+        wsSend({
+          type: 'edit_user_message',
+          conversation_id: conversationId,
+          user_message_index: userMessageIndex,
+          new_content: newContent
+        } as MCPClientMessage)
       },
 
       handleRawApprovalRequest: (msg: MCPApprovalRequest) => {

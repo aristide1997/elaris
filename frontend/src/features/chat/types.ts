@@ -61,6 +61,8 @@ export interface MessagesActions {
   setCurrentToolSessionId: (id: string | null) => void
   initMessages: (messages: UIMessage[]) => void
   resetToWelcome: () => void
+  getUserMessageIndex: (messageId: string) => number
+  truncateFromUserMessage: (messageId: string) => void
 }
 
 export type MessagesStore = MessagesState & MessagesActions
