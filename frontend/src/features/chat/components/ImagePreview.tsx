@@ -1,5 +1,6 @@
 import { type ImageAttachment } from '../types'
 import './ImagePreview.css'
+import { getApiBase } from '../../../shared/utils/api'
 
 interface ImagePreviewProps {
   images: ImageAttachment[]
@@ -25,7 +26,7 @@ function ImagePreview({ images, onRemove, readonly = false }: ImagePreviewProps)
       {images.map(img => (
         <div key={img.id} className="image-preview-item">
           <div className="image-wrapper">
-            <img src={img.url} alt={img.name} className="preview-image" />
+            <img src={img.url.startsWith('/') ? `${getApiBase()}${img.url}` : img.url} alt={img.name} className="preview-image" />
             {!readonly && onRemove && (
               <button 
                 onClick={() => onRemove(img.id)}
