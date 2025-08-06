@@ -62,10 +62,10 @@ class ChatSession:
                             image_bytes = base64.b64decode(img_data['data'])
                             binary_content = BinaryContent(
                                 data=image_bytes,
-                                media_type=img_data['mediaType']
+                                media_type=img_data['media_type']
                             )
                             content_parts.append(binary_content)
-                            logger.info(f"Added image: {img_data['name']} ({img_data['mediaType']}, {len(image_bytes)} bytes)")
+                            logger.info(f"Added image: {img_data['name']} ({img_data['media_type']}, {len(image_bytes)} bytes)")
                         except Exception as e:
                             logger.error(f"Error processing image {img_data.get('name', 'unknown')}: {e}")
                             await self.messenger.send_error(f"Error processing image: {str(e)}")

@@ -18,9 +18,9 @@ export interface SystemMessage extends BaseMessage {
 
 export interface ImageAttachment {
   id: string
-  file: File
-  url: string // blob URL for preview
-  mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+  file?: File // Optional for loaded conversations
+  url: string // API endpoint URL or blob URL for preview
+  media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
   size: number
   name: string
 }
