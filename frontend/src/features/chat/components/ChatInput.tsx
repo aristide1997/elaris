@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback, type FormEvent, type KeyboardEvent, type ChangeEvent, type DragEvent } from 'react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { PlusIcon, ImageIcon } from '@radix-ui/react-icons'
 import { type ImageAttachment } from '../types'
 import ImagePreview from './ImagePreview'
 import './ChatInput.css'
@@ -153,20 +155,32 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
       )}
       
       <form className="input-wrapper" onSubmit={handleSubmit}>
-        <div className="input-controls">
-          <button
-            type="button"
-            onClick={handleImageButtonClick}
-            disabled={disabled}
-            className="image-button"
-            title="Attach image"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21,15 16,10 5,21"/>
-            </svg>
-          </button>
+        <div className="input-with-attachments">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                className="attachment-button"
+                title="Add attachments"
+              >
+                <PlusIcon width={16} height={16} />
+              </button>
+            </DropdownMenu.Trigger>
+            
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content className="dropdown-content" sideOffset={8}>
+                <DropdownMenu.Item 
+                  className="dropdown-item"
+                  onSelect={handleImageButtonClick}
+                >
+                  <ImageIcon width={16} height={16} />
+                  <span>Attach Images</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Arrow className="dropdown-arrow" />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
           
           <textarea
             ref={textareaRef}
