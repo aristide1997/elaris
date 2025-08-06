@@ -15,11 +15,11 @@
   position: relative;
 }
 
-.input-controls {
+.input-with-attachments {
   display: flex;
   align-items: flex-end;
-  gap: var(--space-2);
   flex: 1;
+  position: relative;
 }
 
 .attached-images {
@@ -27,32 +27,69 @@
   margin: 0 auto var(--space-3) auto;
 }
 
-.image-button {
-  width: 40px;
-  height: 40px;
-  border: 2px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+.attachment-button {
+  position: absolute;
+  left: var(--space-3);
+  bottom: 50%;
+  transform: translateY(50%);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  margin-bottom: 8px;
 }
 
-.image-button:hover:not(:disabled) {
-  border-color: var(--color-accent);
+.attachment-button:hover:not(:disabled) {
   color: var(--color-accent);
   background: var(--color-accent-subtle);
 }
 
-.image-button:disabled {
-  background: var(--color-surface-secondary);
+.attachment-button:disabled {
   color: var(--color-text-tertiary);
   cursor: not-allowed;
-  border-color: var(--color-border-subtle);
+}
+
+/* Radix Dropdown Menu Styles */
+.dropdown-content {
+  min-width: 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item[data-highlighted] {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.dropdown-arrow {
+  fill: var(--color-surface);
+  stroke: var(--color-border-subtle);
+  stroke-width: 1px;
 }
 
 .drag-active {
@@ -95,7 +132,7 @@
 
 .message-input {
   flex: 1;
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-5) var(--space-3) 48px;
   border: 2px solid var(--color-border-subtle);
   border-radius: var(--radius-2xl);
   font-size: var(--font-size-base);
@@ -193,8 +230,14 @@
     max-width: 100%;
   }
   
+  .attachment-button {
+    width: 28px;
+    height: 28px;
+    left: var(--space-2);
+  }
+  
   .message-input {
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-3) 40px;
     font-size: var(--font-size-sm);
     min-height: 48px;
   }
@@ -215,8 +258,14 @@
     padding: var(--space-3);
   }
   
+  .attachment-button {
+    width: 24px;
+    height: 24px;
+    left: var(--space-2);
+  }
+  
   .message-input {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-2) 36px;
     border-radius: var(--radius-xl);
     min-height: 44px;
     max-height: 120px;
