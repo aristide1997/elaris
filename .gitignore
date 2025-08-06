@@ -18,6 +18,7 @@ server/.env
 server/.venv/
 server/venv/
 server/settings.json
+server/uploads/
 
 # Electron
 dist/

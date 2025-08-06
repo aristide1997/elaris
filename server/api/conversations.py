@@ -4,51 +4,18 @@ Conversation API Router - REST endpoints for conversation management
 """
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
 from uuid import uuid4
 from types import SimpleNamespace
 import logging
-import json
-import base64
-from uuid import uuid4 as generate_uuid
+from pathlib import Path
 
 from core.database import get_conversation_history, get_conversation_by_id, delete_conversation, save_conversation
-from pydantic_ai.messages import ModelMessagesTypeAdapter
+from adapters.conversation_adapter import ConversationAdapter
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/conversations", tags=["conversations"])
-
-def _truncate_preview(text: str, max_words: int = 4) -> str:
-    words = text.split()
-    if len(words) <= max_words:
-        return text
-    return " ".join(words[:max_words]) + "..."
-
-def _get_first_user_message(messages: list) -> str:
-    for msg in messages:
-        # Handle objects with parts attribute (ModelRequest, ModelResponse)
-        parts = getattr(msg, "parts", None)
-        if parts:
-            for part in parts:
-                if getattr(part, "part_kind", None) == "user-prompt":
-                    content = getattr(part, "content", "")
-                    # Return string content directly
-                    if isinstance(content, str):
-                        return content
-                    # Flatten list content if necessary
-                    if isinstance(content, (list, tuple)):
-                        fragments: list[str] = []
-                        for item in content:
-                            if isinstance(item, str):
-                                fragments.append(item)
-                            elif isinstance(item, dict) and "content" in item:
-                                fragments.append(str(item["content"]))
-                        return " ".join(fragments)
-        # Fallback for raw dict messages
-        if isinstance(msg, dict) and msg.get("type") == "user_prompt":
-            return msg.get("content", "")
-    return ""
 
 @router.get("")
 async def list_conversations(limit: int = 10):
@@ -63,8 +30,8 @@ async def list_conversations(limit: int = 10):
                     "created_at": conv["created_at"],
                     "updated_at": conv["updated_at"],
                     "message_count": len(conv["messages"]),
-                    # Include first user message as preview
-                    "preview": _truncate_preview(_get_first_user_message(conv["messages"]))
+                    # Use adapter for preview generation
+                    "preview": ConversationAdapter.get_conversation_preview(conv["messages"])
                 }
                 for conv in conversations
             ]
@@ -75,24 +42,26 @@ async def list_conversations(limit: int = 10):
 
 @router.get("/{conversation_id}")
 async def get_conversation(conversation_id: str):
-    """Get a specific conversation by ID"""
+    """Get a specific conversation by ID with UI-ready message format"""
     conversation = await get_conversation_by_id(conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail=f"Conversation {conversation_id} not found")
     
-    # Serialize messages using pydantic-ai's adapter to handle binary data properly
-    messages_json = ModelMessagesTypeAdapter.dump_json(conversation["messages"]).decode('utf-8')
+    # Transform to UI format using adapter
+    ui_messages = ConversationAdapter.transform_to_ui_messages(
+        conversation["messages"], 
+        conversation_id
+    )
     
-    # Create response with serialized messages
-    response_data = {
+    return {
         "status": "success",
         "conversation": {
-            **conversation,
-            "messages": json.loads(messages_json)  # Parse back to dict for JSON response
+            "conversation_id": conversation["conversation_id"],
+            "created_at": conversation["created_at"],
+            "updated_at": conversation["updated_at"],
+            "messages": ui_messages
         }
     }
-    
-    return JSONResponse(content=response_data)
 
 @router.delete("/{conversation_id}")
 async def delete_conversation_by_id(conversation_id: str):
@@ -104,6 +73,40 @@ async def delete_conversation_by_id(conversation_id: str):
         "status": "success",
         "message": f"Conversation {conversation_id} deleted"
     }
+
+@router.get("/{conversation_id}/images/{image_id}")
+async def get_conversation_image(conversation_id: str, image_id: str):
+    """Serve conversation images"""
+    # Resolve absolute path based on this module, not cwd()
+    base = Path(__file__).resolve().parent.parent
+    image_dir = base / "uploads" / "conversation_images" / conversation_id
+
+    # Search for the image by supported extensions
+    extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    for ext in extensions:
+        image_path = image_dir / f"{image_id}.{ext}"
+        if image_path.exists():
+            # Map extension to media type
+            media_type_map = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'webp': 'image/webp'
+            }
+            media_type = media_type_map.get(ext, 'application/octet-stream')
+            try:
+                return FileResponse(
+                    path=str(image_path),
+                    media_type=media_type,
+                    headers={"Cache-Control": "public, max-age=3600"},
+                )
+            except OSError as e:
+                logger.error(f"Error serving image {image_id} for conversation {conversation_id}: {e}")
+                raise HTTPException(status_code=500, detail="Failed to serve image")
+
+    # If no matching file was found, return 404
+    raise HTTPException(status_code=404, detail="Image not found")
 
 @router.post("")
 async def create_conversation():

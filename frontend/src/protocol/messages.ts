@@ -110,7 +110,7 @@ export interface ChatMessage {
   images?: Array<{
     id: string
     data: string // base64 encoded
-    mediaType: string
+    media_type: string
     name: string
   }>
 }

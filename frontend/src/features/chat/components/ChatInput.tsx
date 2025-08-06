@@ -69,7 +69,7 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
         id: crypto.randomUUID(),
         file,
         url,
-        mediaType: file.type as ImageAttachment['mediaType'],
+        media_type: file.type as ImageAttachment['media_type'],
         size: file.size,
         name: file.name
       }

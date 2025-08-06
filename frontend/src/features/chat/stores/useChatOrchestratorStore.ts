@@ -57,20 +57,20 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
         const { addMessage } = msgStore
 
         // Helper function to convert images to base64
-        const convertImagesToBase64 = async (images: ImageAttachment[]): Promise<Array<{id: string, data: string, mediaType: string, name: string}>> => {
+        const convertImagesToBase64 = async (images: ImageAttachment[]): Promise<Array<{id: string, data: string, media_type: string, name: string}>> => {
           const promises = images.map(async (img) => {
-            return new Promise<{id: string, data: string, mediaType: string, name: string}>((resolve) => {
+            return new Promise<{id: string, data: string, media_type: string, name: string}>((resolve) => {
               const reader = new FileReader()
               reader.onload = () => {
                 const base64 = (reader.result as string).split(',')[1] // Remove data:image/...;base64, prefix
                 resolve({
                   id: img.id,
                   data: base64,
-                  mediaType: img.mediaType,
+                  media_type: img.media_type,
                   name: img.name
                 })
               }
-              reader.readAsDataURL(img.file)
+              reader.readAsDataURL(img.file!)
             })
           })
           return Promise.all(promises)
