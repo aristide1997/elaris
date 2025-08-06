@@ -78,7 +78,7 @@
       }
     ],
     "mac": {
-      "icon": "icon.png",
+      "icon": "icon.icns",
       "identity": null,
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
