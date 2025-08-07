@@ -56,13 +56,6 @@
         ]
       },
       {
-        "from": "node_modules/npm",
-        "to": "npm",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
         "from": "../node-dist",
         "to": "node",
         "filter": [
@@ -96,7 +89,6 @@
   },
   "dependencies": {
     "electron-updater": "^6.1.7",
-    "zustand": "^5.0.6",
-    "npm": "*"
+    "zustand": "^5.0.6"
   }
 }
