@@ -183,6 +183,11 @@ pip install -r requirements.txt
 print_step "Creating Python executable..."
 pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean
 
+# Clean up PyInstaller temp files to reduce bundle size
+print_step "Cleaning up PyInstaller temporary files..."
+rm -rf ../build/temp
+print_success "PyInstaller temp files cleaned up"
+
 cd ..
 print_success "Python backend built successfully"
 
