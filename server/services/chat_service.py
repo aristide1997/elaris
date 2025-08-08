@@ -161,10 +161,12 @@ class ChatSession:
                 
                 for i, message in enumerate(messages):
                     if message.kind == 'request':  # User message in pydantic-ai
-                        if user_count == user_message_index:
-                            edit_position = i
-                            break
-                        user_count += 1
+                        # Check if this ModelRequest contains a UserPromptPart
+                        if any(part.part_kind == 'user-prompt' for part in message.parts):
+                            if user_count == user_message_index:
+                                edit_position = i
+                                break
+                            user_count += 1
                 
                 if edit_position is None:
                     logger.error(f"User message at index {user_message_index} not found")
