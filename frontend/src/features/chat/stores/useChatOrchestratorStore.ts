@@ -131,6 +131,7 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
                 wsSend({ type: 'chat_message', content: msg.content, conversation_id: newCid } as MCPClientMessage)
               }
             })
+            
           })
           .catch((err: any) => {
             handleError(`Failed to start conversation: ${err.message}`)
@@ -314,8 +315,16 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       },
 
       handleAssistantComplete: () => {
-        const { setCurrentAssistantId } = useMessagesStore.getState()
+        const { setCurrentAssistantId, messages } = useMessagesStore.getState()
         setCurrentAssistantId(null)
+        
+        // Count assistant messages in current conversation
+        const assistantMessageCount = messages.filter(m => m.type === 'assistant').length
+        
+        // If this was the first assistant message, refresh conversation list
+        if (assistantMessageCount === 1) {
+          window.dispatchEvent(new CustomEvent('conversationCreated'))
+        }
       },
 
       handleThinkingStart: () => {
