@@ -17,23 +17,36 @@ const ChatHistoryList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const fetchConversations = async () => {
+    setIsLoading(true)
+    try {
+      const url = `${getApiBase()}/api/conversations?limit=20`
+      const res = await fetch(url)
+      const data = await res.json()
+      setConversations(data.conversations || [])
+    } catch (error) {
+      console.error('Failed to fetch conversations:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
-    const fetchConversations = async () => {
-      setIsLoading(true)
-      try {
-        const url = `${getApiBase()}/api/conversations?limit=20`
-        const res = await fetch(url)
-        const data = await res.json()
-        setConversations(data.conversations || [])
-      } catch (error) {
-        console.error('Failed to fetch conversations:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    fetchConversations()
+  }, [serverPort])
+
+  useEffect(() => {
+    const handleConversationCreated = () => {
+      fetchConversations()
     }
 
-    fetchConversations()
-  }, [serverPort, conversationId])
+    window.addEventListener('conversationCreated', handleConversationCreated)
+    
+    return () => {
+      window.removeEventListener('conversationCreated', handleConversationCreated)
+    }
+  }, [])
+
 
   const handleSelectConversation = (conversationId: string) => {
     selectConversation(conversationId)
