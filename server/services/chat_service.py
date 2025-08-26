@@ -13,7 +13,8 @@ from services.tool_approval import ToolApprovalManager
 from services.mcp_agent import MCPAgentManager
 from services.message_processor import MessageStreamProcessor
 from core.database import get_conversation_by_id, save_conversation, update_conversation
-from pydantic_ai.messages import ModelRequest, Usage, UserPromptPart, BinaryContent
+from pydantic_ai.messages import ModelRequest, UserPromptPart, BinaryContent
+from pydantic_ai.usage import RunUsage
 
 logger = logging.getLogger(__name__)
 
