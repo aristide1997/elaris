@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLLMProviderStore } from '../stores/useLLMProviderStore'
-import { useConnectionStore } from '../../connection'
+import { 
+  useCurrentProviderQuery, 
+  useModelsForProviderQuery, 
+  useSelectModelMutation 
+} from '../../../shared/api/queries'
 import './ModelPicker.css'
 
 interface ModelPickerProps {
@@ -13,25 +16,15 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
   const [showCustomInput, setShowCustomInput] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const {
-    currentProvider,
-    availableModels,
-    isLoadingModels,
-    modelsError,
-    loadCurrentProvider,
-    loadModelsForProvider,
-    selectModel,
-    clearModelsError
-  } = useLLMProviderStore()
-
-  const isConnected = useConnectionStore(state => state.isConnected)
-
-  // Load current provider when connected
-  useEffect(() => {
-    if (isConnected) {
-      loadCurrentProvider()
-    }
-  }, [isConnected, loadCurrentProvider])
+  // Use React Query for provider data
+  const { data: currentProvider } = useCurrentProviderQuery()
+  const { 
+    data: availableModels = [], 
+    isLoading: isLoadingModels, 
+    error: modelsError 
+  } = useModelsForProviderQuery(currentProvider?.provider || null)
+  
+  const selectModelMutation = useSelectModelMutation()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -47,25 +40,8 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Load models when provider changes (regardless of dropdown state)
-  useEffect(() => {
-    if (currentProvider?.provider) {
-      loadModelsForProvider(currentProvider.provider)
-    }
-  }, [currentProvider?.provider, loadModelsForProvider])
-
-  // Also load models when dropdown opens (in case they weren't loaded yet)
-  useEffect(() => {
-    if (currentProvider?.provider && isOpen && availableModels.length === 0 && !isLoadingModels) {
-      loadModelsForProvider(currentProvider.provider)
-    }
-  }, [currentProvider?.provider, isOpen, availableModels.length, isLoadingModels, loadModelsForProvider])
-
   const handleToggleDropdown = () => {
     setIsOpen(!isOpen)
-    if (!isOpen) {
-      clearModelsError()
-    }
   }
 
   const handleModelSelect = async (modelId: string) => {
@@ -75,7 +51,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
     }
 
     try {
-      await selectModel(modelId)
+      await selectModelMutation.mutateAsync(modelId)
       setIsOpen(false)
       setShowCustomInput(false)
       setCustomModel('')
@@ -88,7 +64,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
     if (!customModel.trim()) return
 
     try {
-      await selectModel(customModel)
+      await selectModelMutation.mutateAsync(customModel)
       setIsOpen(false)
       setShowCustomInput(false)
       setCustomModel('')
@@ -157,7 +133,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
 
           {modelsError && (
             <div className="dropdown-error">
-              <span>{modelsError}</span>
+              <span>{modelsError.message}</span>
             </div>
           )}
 

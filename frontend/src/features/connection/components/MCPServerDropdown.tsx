@@ -1,22 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
-import { useMCPServerStore } from '../stores/useMCPServerStore'
-import { useConnectionStore } from '../stores/useConnectionStore'
+import { useMCPServersQuery, useToggleMCPServerMutation } from '../../../shared/api/queries'
 import './MCPServerDropdown.css'
 
 const MCPServerDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const {
-    servers,
-    isLoading,
-    error,
-    fetchServerStates,
-    toggleServer,
-    clearError
-  } = useMCPServerStore()
-
-  const isConnected = useConnectionStore(state => state.isConnected)
+  // Use React Query for MCP servers
+  const { 
+    data: servers = {}, 
+    isLoading, 
+    error 
+  } = useMCPServersQuery()
+  
+  const toggleServerMutation = useToggleMCPServerMutation()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -30,17 +27,12 @@ const MCPServerDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Fetch server states when connected and periodically
-  useEffect(() => {
-    if (!isConnected) return
-
-    fetchServerStates()
-    const interval = setInterval(fetchServerStates, 5000) // Refresh every 5 seconds
-    return () => clearInterval(interval)
-  }, [isConnected, fetchServerStates])
-
   const handleToggleServer = async (serverName: string, enabled: boolean) => {
-    await toggleServer(serverName, enabled)
+    try {
+      await toggleServerMutation.mutateAsync({ server_name: serverName, enabled })
+    } catch (error) {
+      console.error('Failed to toggle server:', error)
+    }
   }
 
   const getServerStatusColor = (server: { enabled: boolean; running: boolean }) => {
@@ -78,8 +70,7 @@ const MCPServerDropdown: React.FC = () => {
             <h4>MCP Servers</h4>
             {error && (
               <div className="mcp-error">
-                {error}
-                <button onClick={clearError} className="mcp-error-close">×</button>
+                {error.message}
               </div>
             )}
           </div>

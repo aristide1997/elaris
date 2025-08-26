@@ -1,48 +1,27 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useChatActions } from '../../chat/hooks/useChatActions'
-import { useConnectionStore } from '../../connection'
-import { getApiBase } from '../../../shared/utils/api'
+import { useConversationsQuery, useDeleteConversationMutation, conversationKeys } from '../../../shared/api/queries'
 import './ChatHistoryList.css'
 
-interface ConversationSummary {
-  conversation_id: string
-  created_at: string
-  updated_at: string
-  message_count: number
-  preview: string
-}
-
 const ChatHistoryList: React.FC = () => {
-  const { selectConversation, serverPort, conversationId } = useChatActions()
-  const [conversations, setConversations] = useState<ConversationSummary[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const { selectConversation, conversationId } = useChatActions()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  
+  // Use React Query for conversations
+  const { 
+    data: conversations = [], 
+    isLoading, 
+    error 
+  } = useConversationsQuery(20)
+  
+  const deleteConversationMutation = useDeleteConversationMutation()
 
-  const isConnected = useConnectionStore(state => state.isConnected)
-
-  const fetchConversations = async () => {
-    setIsLoading(true)
-    try {
-      const url = `${getApiBase()}/api/conversations?limit=20`
-      const res = await fetch(url)
-      const data = await res.json()
-      setConversations(data.conversations || [])
-    } catch (error) {
-      console.error('Failed to fetch conversations:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (isConnected && serverPort) {
-      fetchConversations()
-    }
-  }, [isConnected, serverPort])
-
+  // Listen for conversationCreated events to refresh the list
   useEffect(() => {
     const handleConversationCreated = () => {
-      fetchConversations()
+      queryClient.invalidateQueries({ queryKey: conversationKeys.lists() })
     }
 
     window.addEventListener('conversationCreated', handleConversationCreated)
@@ -50,8 +29,7 @@ const ChatHistoryList: React.FC = () => {
     return () => {
       window.removeEventListener('conversationCreated', handleConversationCreated)
     }
-  }, [])
-
+  }, [queryClient])
 
   const handleSelectConversation = (conversationId: string) => {
     selectConversation(conversationId)
@@ -62,21 +40,11 @@ const ChatHistoryList: React.FC = () => {
     setDeletingId(targetConversationId)
     
     try {
-      const url = `${getApiBase()}/api/conversations/${targetConversationId}`
-      const response = await fetch(url, {
-        method: 'DELETE'
-      })
+      await deleteConversationMutation.mutateAsync(targetConversationId)
       
-      if (response.ok) {
-        // Remove from local state
-        setConversations(prev => prev.filter(conv => conv.conversation_id !== targetConversationId))
-        
-        // If this was the active conversation, clear it
-        if (targetConversationId === conversationId) {
-          selectConversation('')
-        }
-      } else {
-        console.error('Failed to delete conversation')
+      // If this was the active conversation, clear it
+      if (targetConversationId === conversationId) {
+        selectConversation('')
       }
     } catch (error) {
       console.error('Error deleting conversation:', error)
@@ -90,6 +58,15 @@ const ChatHistoryList: React.FC = () => {
       <div className="chat-history-loading">
         <div className="loading-spinner"></div>
         <span>Loading conversations...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="chat-history-error">
+        <p>Failed to load conversations</p>
+        <p className="error-message">{error.message}</p>
       </div>
     )
   }
