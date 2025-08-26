@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useChatActions } from '../../chat/hooks/useChatActions'
+import { useConnectionStore } from '../../connection'
 import { getApiBase } from '../../../shared/utils/api'
 import './ChatHistoryList.css'
 
@@ -17,6 +18,8 @@ const ChatHistoryList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const isConnected = useConnectionStore(state => state.isConnected)
+
   const fetchConversations = async () => {
     setIsLoading(true)
     try {
@@ -32,8 +35,10 @@ const ChatHistoryList: React.FC = () => {
   }
 
   useEffect(() => {
-    fetchConversations()
-  }, [serverPort])
+    if (isConnected && serverPort) {
+      fetchConversations()
+    }
+  }, [isConnected, serverPort])
 
   useEffect(() => {
     const handleConversationCreated = () => {

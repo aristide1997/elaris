@@ -48,13 +48,16 @@ class AppManager {
       // Create application menu
       this.menuManager.createApplicationMenu();
       
-      // Initialize backend
-      await this.backendManager.initialize();
+      // Start backend initialization in parallel (don't await)
+      this.backendManager.initialize().catch(error => {
+        console.error('Backend initialization failed:', error);
+        // Backend manager will handle retries via health monitoring
+      });
 
-      // Create main window
+      // Create main window immediately
       const mainWindow = this.windowManager.createMainWindow();
       
-      // Notify window about server port
+      // Notify window about server port (even if backend not ready yet)
       this.windowManager.notifyServerPort(this.backendManager.getServerPort());
       
       // Setup auto-updater
@@ -65,7 +68,7 @@ class AppManager {
       
     } catch (error) {
       console.error('Failed to start application:', error);
-      dialog.showErrorBox('Startup Error', 'Failed to start the application backend.');
+      dialog.showErrorBox('Startup Error', `Failed to start the application: ${error.message}`);
       app.quit();
     }
   }
@@ -83,16 +86,15 @@ class AppManager {
   async onActivate() {
     if (!this.windowManager.hasMainWindow()) {
       try {
-        // Immediately restart backend if needed
+        // Start backend if needed (don't await - let it start in parallel)
         if (!this.backendManager.isBackendRunning()) {
           this.backendManager.startPythonBackend();
-          await waitForBackend(this.backendManager.getServerPort());
         }
         
-        // Create main window
+        // Create main window immediately
         this.windowManager.createMainWindow();
         
-        // Notify window about server port
+        // Notify window about server port (even if backend not ready yet)
         this.windowManager.notifyServerPort(this.backendManager.getServerPort());
         
         // Restart health monitoring if it was stopped

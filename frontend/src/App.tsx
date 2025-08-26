@@ -16,13 +16,17 @@ function App() {
   const { settings, loadSettings } = useSettingsStore()
   const { loadCurrentProvider } = useLLMProviderStore()
 
-  // Load settings on app start
+  // Load settings on app start - wait for backend connection
   useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
+    if (isConnected) {
+      loadSettings()
+    }
+  }, [isConnected, loadSettings])
 
   // Listen for settings updates from settings window
   useEffect(() => {
+    if (!isConnected) return
+
     const handleSettingsUpdate = (event: any, updatedSettings: any) => {
       // Reload settings to ensure main window is synchronized
       loadSettings()
@@ -40,7 +44,7 @@ function App() {
         window.electronAPI.removeAllListeners('settings-updated')
       }
     }
-  }, [loadSettings, loadCurrentProvider])
+  }, [isConnected, loadSettings, loadCurrentProvider])
 
   return (
     <div className="app">
