@@ -39,6 +39,12 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocke
 
   // Connect to WebSocket
   const connect = useCallback(() => {
+    // Clear any existing reconnection timer when connecting immediately
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+
     // Don't create a new connection if one already exists
     if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) {
       console.log('WebSocket already connecting, skipping...')
@@ -123,6 +129,22 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocke
     }
   }, [])
 
+  // Handle page visibility changes (sleep/wake detection)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && wsRef.current?.readyState !== WebSocket.OPEN) {
+        console.log('Page became visible and WebSocket not connected, attempting reconnection...')
+        connect()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [connect])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -142,4 +164,4 @@ export function useMCPWebSocket({ onMessage, onApprovalRequest }: UseMCPWebSocke
     sendMessage,
     serverPort
   }
-} 
+}
