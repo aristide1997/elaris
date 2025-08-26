@@ -8,3 +8,5 @@ smart llm absed message chat preview
 add image support
 
 Default close thinking
+
+Add React Query persistence for offline support (localStorage cache survives app restarts/refreshes)

@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useConnectionStore } from '../../connection/stores/useConnectionStore'
-import { useLLMProviderStore } from '../stores/useLLMProviderStore'
+import { 
+  useAvailableProvidersQuery, 
+  useCurrentProviderQuery, 
+  useModelsForProviderQuery,
+  useTestProviderMutation,
+  useConfigureProviderMutation
+} from '../../../shared/api/queries'
 import { useWebSocketConnection } from '../../connection'
 import './SettingsWindow.css'
 
@@ -39,43 +45,17 @@ const SettingsWindow: React.FC = () => {
 
   const sendMessage = useConnectionStore(state => state.sendMessage)
 
-  // LLM Provider store
-  const {
-    availableProviders,
-    currentProvider,
-    availableModels,
-    isLoading: isProviderLoading,
-    isLoadingModels,
-    error: providerError,
-    modelsError,
-    loadAvailableProviders,
-    loadCurrentProvider,
-    loadModelsForProvider,
-    testProvider,
-    configureProvider,
-    clearError: clearProviderError,
-    clearModelsError
-  } = useLLMProviderStore()
+  // React Query hooks for LLM providers
+  const { data: availableProviders = {}, isLoading: isProviderLoading, error: providerError } = useAvailableProvidersQuery()
+  const { data: currentProvider } = useCurrentProviderQuery()
+  const { data: availableModels = [], isLoading: isLoadingModels, error: modelsError } = useModelsForProviderQuery(selectedProvider || null)
+  const testProviderMutation = useTestProviderMutation()
+  const configureProviderMutation = useConfigureProviderMutation()
 
   // Load settings when window opens
   useEffect(() => {
     loadSettings()
   }, [loadSettings])
-
-  // Load LLM provider data when modal opens
-  useEffect(() => {
-    if (activeTab === 'llm') {
-      loadAvailableProviders()
-      loadCurrentProvider()
-    }
-  }, [activeTab, loadAvailableProviders, loadCurrentProvider])
-
-  // Load models when provider is selected
-  useEffect(() => {
-    if (selectedProvider && activeTab === 'llm') {
-      loadModelsForProvider(selectedProvider)
-    }
-  }, [selectedProvider, activeTab, loadModelsForProvider])
 
   // Initialize LLM form state when current provider loads
   useEffect(() => {
@@ -364,7 +344,7 @@ const SettingsWindow: React.FC = () => {
               <div>
                 {providerError && (
                   <div className="settings-errors">
-                    <div>{providerError}</div>
+                    <div>{providerError.message}</div>
                   </div>
                 )}
 
@@ -452,7 +432,7 @@ const SettingsWindow: React.FC = () => {
                           
                           {modelsError && (
                             <div className="form-description" style={{ color: '#dc3545', marginTop: '8px' }}>
-                              {modelsError}
+                              {modelsError.message}
                             </div>
                           )}
                           
@@ -534,7 +514,7 @@ const SettingsWindow: React.FC = () => {
                                 setIsTestingProvider(true)
                                 setTestResult(null)
                                 try {
-                                  const result = await testProvider(selectedProvider, selectedModel, providerConfig)
+                                  const result = await testProviderMutation.mutateAsync({ provider: selectedProvider, model: selectedModel, config: providerConfig })
                                   setTestResult(result)
                                 } finally {
                                   setIsTestingProvider(false)

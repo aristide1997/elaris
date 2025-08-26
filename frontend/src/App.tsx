@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore, useLLMProviderStore } from './features/ui'
+import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore } from './features/ui'
 import { ChatWindow } from './features/chat'
 import { useConnectionStore } from './features/connection'
 import { useWebSocketConnection } from './features/connection'
@@ -11,10 +11,9 @@ function App() {
   // Initialize WebSocket connection and store integration
   useWebSocketConnection()
   
-  const isConnected = useConnectionStore(state => state.isConnected)
+  const isConnected = useConnectionStore(state => state.status === 'connected')
   const { isSidebarCollapsed, toggleSidebar, openDebug } = useUIStore()
   const { settings, loadSettings } = useSettingsStore()
-  const { loadCurrentProvider } = useLLMProviderStore()
 
   // Load settings on app start - wait for backend connection
   useEffect(() => {
@@ -30,8 +29,6 @@ function App() {
     const handleSettingsUpdate = (event: any, updatedSettings: any) => {
       // Reload settings to ensure main window is synchronized
       loadSettings()
-      // Also reload the current provider to refresh the model picker
-      loadCurrentProvider()
     }
 
     if (window.electronAPI?.onSettingsUpdated) {
@@ -44,7 +41,7 @@ function App() {
         window.electronAPI.removeAllListeners('settings-updated')
       }
     }
-  }, [isConnected, loadSettings, loadCurrentProvider])
+  }, [isConnected, loadSettings])
 
   return (
     <div className="app">

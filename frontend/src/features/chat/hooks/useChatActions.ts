@@ -8,7 +8,7 @@ import { useChatOrchestratorStore } from '../stores/useChatOrchestratorStore'
  * Combines data from multiple stores into a clean API for components
  */
 export const useChatActions = () => {
-  const isConnected = useConnectionStore(state => state.isConnected)
+  const isConnected = useConnectionStore(state => state.status === 'connected')
   const serverPort = useConnectionStore(state => state.serverPort)
   const messages = useMessagesStore(state => state.messages)
   const conversationId = useConversationStore(state => state.conversationId)
