@@ -3,11 +3,8 @@ import { devtools } from 'zustand/middleware'
 import type { UIMessage, MessagesStore, MessagesState } from '../types'
 import { MessageService } from '../services/MessageService'
 
-const createWelcomeMessage = (): UIMessage => 
-  MessageService.systemMessage('🤖 MCP Assistant ready! Start a conversation or ask me anything.')
-
 const initialState: MessagesState = {
-  messages: [createWelcomeMessage()],
+  messages: [],
   currentAssistantId: null,
   currentThinkingId: null,
   currentToolSessionId: null
@@ -63,7 +60,7 @@ export const useMessagesStore = create<MessagesStore>()(
 
       resetToWelcome: () => {
         set({
-          messages: [createWelcomeMessage()],
+          messages: [],
           currentAssistantId: null,
           currentThinkingId: null,
           currentToolSessionId: null
