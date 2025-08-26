@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useMCPServerStore } from '../stores/useMCPServerStore'
+import { useConnectionStore } from '../stores/useConnectionStore'
 import './MCPServerDropdown.css'
 
 const MCPServerDropdown: React.FC = () => {
@@ -15,6 +16,8 @@ const MCPServerDropdown: React.FC = () => {
     clearError
   } = useMCPServerStore()
 
+  const isConnected = useConnectionStore(state => state.isConnected)
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -27,12 +30,14 @@ const MCPServerDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Fetch server states on mount and periodically
+  // Fetch server states when connected and periodically
   useEffect(() => {
+    if (!isConnected) return
+
     fetchServerStates()
     const interval = setInterval(fetchServerStates, 5000) // Refresh every 5 seconds
     return () => clearInterval(interval)
-  }, [fetchServerStates])
+  }, [isConnected, fetchServerStates])
 
   const handleToggleServer = async (serverName: string, enabled: boolean) => {
     await toggleServer(serverName, enabled)

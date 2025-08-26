@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLLMProviderStore } from '../stores/useLLMProviderStore'
+import { useConnectionStore } from '../../connection'
 import './ModelPicker.css'
 
 interface ModelPickerProps {
@@ -23,10 +24,14 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
     clearModelsError
   } = useLLMProviderStore()
 
-  // Load current provider on mount
+  const isConnected = useConnectionStore(state => state.isConnected)
+
+  // Load current provider when connected
   useEffect(() => {
-    loadCurrentProvider()
-  }, [loadCurrentProvider])
+    if (isConnected) {
+      loadCurrentProvider()
+    }
+  }, [isConnected, loadCurrentProvider])
 
   // Close dropdown when clicking outside
   useEffect(() => {
