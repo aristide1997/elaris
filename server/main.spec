@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, copy_metadata
 
 # Get the current directory
 current_dir = Path('.')
@@ -20,7 +20,7 @@ a = Analysis(
         ('core', 'core'),
         ('services', 'services'),
         ('tests', 'tests'),
-    ] + datas_pai,
+    ] + datas_pai + copy_metadata('genai_prices'),
     hiddenimports=[
         'uvicorn',
         'uvicorn.lifespan',
