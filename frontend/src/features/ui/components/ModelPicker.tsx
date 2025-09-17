@@ -1,9 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { 
-  useCurrentProviderQuery, 
-  useModelsForProviderQuery, 
-  useSelectModelMutation 
-} from '../../../shared/api/queries'
+import { useCurrentProviderQuery, useModelsForProviderQuery } from '../../../shared/api/queries'
+import { useDropdown } from '../../../shared/hooks/useDropdown'
+import { useModelSelection } from '../hooks/useModelSelection'
 import './ModelPicker.css'
 
 interface ModelPickerProps {
@@ -11,11 +8,6 @@ interface ModelPickerProps {
 }
 
 const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [customModel, setCustomModel] = useState('')
-  const [showCustomInput, setShowCustomInput] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
   // Use React Query for provider data
   const { data: currentProvider } = useCurrentProviderQuery()
   const { 
@@ -23,64 +15,23 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
     isLoading: isLoadingModels, 
     error: modelsError 
   } = useModelsForProviderQuery(currentProvider?.provider || null)
+
+  // Use custom hooks for separated concerns
+  const { isOpen, dropdownRef, toggleDropdown, closeDropdown } = useDropdown()
   
-  const selectModelMutation = useSelectModelMutation()
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-        setShowCustomInput(false)
-        setCustomModel('')
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleToggleDropdown = () => {
-    setIsOpen(!isOpen)
-  }
-
-  const handleModelSelect = async (modelId: string) => {
-    if (modelId === 'custom') {
-      setShowCustomInput(true)
-      return
-    }
-
-    try {
-      await selectModelMutation.mutateAsync(modelId)
-      setIsOpen(false)
-      setShowCustomInput(false)
-      setCustomModel('')
-    } catch (error) {
-      console.error('Failed to select model:', error)
-    }
-  }
-
-  const handleCustomModelSubmit = async () => {
-    if (!customModel.trim()) return
-
-    try {
-      await selectModelMutation.mutateAsync(customModel)
-      setIsOpen(false)
-      setShowCustomInput(false)
-      setCustomModel('')
-    } catch (error) {
-      console.error('Failed to select custom model:', error)
-    }
-  }
-
-  const handleCustomModelKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleCustomModelSubmit()
-    } else if (e.key === 'Escape') {
-      setShowCustomInput(false)
-      setCustomModel('')
-    }
-  }
+  const {
+    customModel,
+    setCustomModel,
+    showCustomInput,
+    isSelectingModel,
+    error: selectionError,
+    handleModelSelect,
+    handleCustomModelSubmit,
+    handleCustomModelKeyDown,
+    cancelCustomModel
+  } = useModelSelection(() => {
+    closeDropdown()
+  })
 
   const getDisplayName = (model: string) => {
     const modelInfo = availableModels.find(m => m.id === model)
@@ -103,7 +54,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
 
   return (
     <div className={`model-picker ${className}`} ref={dropdownRef}>
-      <div className="model-picker-trigger" onClick={handleToggleDropdown}>
+      <div className="model-picker-trigger" onClick={toggleDropdown}>
         <span className="model-name">
           {truncateModelName(getDisplayName(currentProvider.model))}
         </span>
@@ -128,12 +79,12 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
         <div className="model-picker-dropdown">
           <div className="dropdown-header">
             <span>Select Model</span>
-            {isLoadingModels && <span className="loading-text">Loading...</span>}
+            {(isLoadingModels || isSelectingModel) && <span className="loading-text">Loading...</span>}
           </div>
 
-          {modelsError && (
+          {(modelsError || selectionError) && (
             <div className="dropdown-error">
-              <span>{modelsError.message}</span>
+              <span>{modelsError?.message || selectionError}</span>
             </div>
           )}
 
@@ -156,10 +107,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
                   Select
                 </button>
                 <button 
-                  onClick={() => {
-                    setShowCustomInput(false)
-                    setCustomModel('')
-                  }}
+                  onClick={cancelCustomModel}
                   className="btn-secondary"
                 >
                   Cancel
