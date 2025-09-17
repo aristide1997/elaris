@@ -14,7 +14,7 @@
   justify-content: center;
   gap: var(--space-2);
   transition: background-color 0.2s ease;
-  min-height: 44px;
+  min-height: var(--button-height-md);
 }
 
 .new-chat-button:hover {
@@ -37,7 +37,7 @@
 
 .new-chat-text {
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.01em;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 /* Responsive adjustments */
@@ -45,7 +45,7 @@
   .new-chat-button {
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-xs);
-    min-height: 40px;
+    min-height: var(--space-10);
   }
   
   .new-chat-icon {

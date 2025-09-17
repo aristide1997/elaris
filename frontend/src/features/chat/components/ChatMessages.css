@@ -8,7 +8,7 @@
 
 .messages {
   margin: 0 auto;
-  max-width: 900px;
+  max-width: var(--container-xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -18,7 +18,7 @@
 
 /* Custom scrollbar styling for chat container */
 .chat-container::-webkit-scrollbar {
-  width: 8px;
+  width: var(--scrollbar-width);
 }
 
 .chat-container::-webkit-scrollbar-track {
@@ -28,8 +28,8 @@
 
 .chat-container::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: var(--radius-full);
-  transition: background-color 0.2s ease;
+  border-radius: var(--scrollbar-track-radius);
+  transition: background-color var(--duration-normal) var(--easing-standard);
 }
 
 .chat-container::-webkit-scrollbar-thumb:hover {
@@ -60,12 +60,12 @@
 .messages-empty p {
   font-size: var(--font-size-sm);
   margin: 0;
-  max-width: 400px;
+  max-width: var(--container-md);
   line-height: 1.5;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: var(--breakpoint-md)) {
   .chat-container {
     padding: var(--space-4) var(--space-3);
   }
@@ -77,7 +77,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: var(--breakpoint-sm)) {
   .chat-container {
     padding: var(--space-3) var(--space-2);
   }
