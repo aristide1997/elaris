@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent, type KeyboardEvent, type ChangeEvent, type DragEvent } from 'react'
+import { useRef, useCallback, type ChangeEvent } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { PlusIcon, ImageIcon } from '@radix-ui/react-icons'
 import { type ImageAttachment } from '../types'
+import { useImageAttachments } from '../hooks/useImageAttachments'
+import { useDragAndDrop } from '../hooks/useDragAndDrop'
+import { useFormInput } from '../hooks/useFormInput'
 import ImagePreview from './ImagePreview'
 import './ChatInput.css'
 
@@ -13,130 +16,46 @@ interface ChatInputProps {
 }
 
 function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: ChatInputProps): React.ReactElement {
-  const [message, setMessage] = useState('')
-  const [attachedImages, setAttachedImages] = useState<ImageAttachment[]>([])
-  const [dragActive, setDragActive] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
-    e.preventDefault()
-    if ((message.trim() || attachedImages.length > 0) && !disabled) {
-      onSendMessage(message.trim(), attachedImages.length > 0 ? attachedImages : undefined)
-      setMessage('')
-      setAttachedImages([])
-      // Clean up blob URLs
-      // attachedImages.forEach(img => URL.revokeObjectURL(img.url))
-    }
-  }
+  // Use custom hooks for separated concerns
+  const { 
+    attachedImages, 
+    addImages, 
+    removeImage, 
+    clearAttachments,
+    error: attachmentError
+  } = useImageAttachments()
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if ((message.trim() || attachedImages.length > 0) && !disabled) {
-        onSendMessage(message.trim(), attachedImages.length > 0 ? attachedImages : undefined)
-        setMessage('')
-        setAttachedImages([])
-        // Clean up blob URLs
-        // attachedImages.forEach(img => URL.revokeObjectURL(img.url))
-      }
-    }
-  }
+  const { dragActive, handleDrop, handleDragOver, handleDragLeave } = useDragAndDrop(addImages, disabled)
 
-  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
-    setMessage(e.target.value)
-  }
-
-  const processImageFiles = useCallback((files: File[]) => {
-    const maxImageSize = 10 * 1024 * 1024 // 10MB limit
-    const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    
-    files.forEach(file => {
-      // Validate file type
-      if (!supportedTypes.includes(file.type)) {
-        console.warn(`Unsupported file type: ${file.type}`)
-        return
-      }
-      
-      // Validate file size
-      if (file.size > maxImageSize) {
-        console.warn(`File too large: ${file.name} (${file.size} bytes)`)
-        return
-      }
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file)
-      
-      const imageAttachment: ImageAttachment = {
-        id: crypto.randomUUID(),
-        file,
-        url,
-        media_type: file.type as ImageAttachment['media_type'],
-        size: file.size,
-        name: file.name
-      }
-      
-      setAttachedImages(prev => [...prev, imageAttachment])
-    })
-  }, [])
-
-  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragActive(false)
-    
-    if (disabled) return
-    
-    const files = Array.from(e.dataTransfer?.files || [])
-    const imageFiles = files.filter(file => file.type.startsWith('image/'))
-    
-    if (imageFiles.length > 0) {
-      processImageFiles(imageFiles)
-    }
-  }, [disabled, processImageFiles])
-
-  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    if (!disabled) {
-      setDragActive(true)
-    }
-  }, [disabled])
-
-  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragActive(false)
-  }, [])
+  const { 
+    message, 
+    textareaRef, 
+    handleSubmit, 
+    handleKeyDown, 
+    handleChange 
+  } = useFormInput(
+    (content: string, images?: ImageAttachment[]) => {
+      onSendMessage(content, images)
+      clearAttachments()
+    },
+    attachedImages,
+    disabled
+  )
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length > 0) {
-      processImageFiles(files)
+      addImages(files)
     }
     // Reset input value to allow selecting the same file again
     e.target.value = ''
-  }, [processImageFiles])
-
-  const handleRemoveImage = useCallback((id: string) => {
-    setAttachedImages(prev => {
-      const imageToRemove = prev.find(img => img.id === id)
-      if (imageToRemove) {
-        URL.revokeObjectURL(imageToRemove.url)
-      }
-      return prev.filter(img => img.id !== id)
-    })
-  }, [])
+  }, [addImages])
 
   const handleImageButtonClick = useCallback(() => {
     fileInputRef.current?.click()
   }, [])
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      const el = textareaRef.current
-      el.style.setProperty('height', 'auto')
-      el.style.setProperty('height', `${el.scrollHeight}px`)
-    }
-  }, [message])
 
   return (
     <div 
@@ -149,7 +68,7 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
         <div className="attached-images">
           <ImagePreview 
             images={attachedImages} 
-            onRemove={handleRemoveImage}
+            onRemove={removeImage}
           />
         </div>
       )}
