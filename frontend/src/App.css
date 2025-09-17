@@ -115,19 +115,17 @@ body {
   background-color: var(--color-text-tertiary);
 }
 
-/* Focus styles - only show when navigating with keyboard */
+/* Focus styles - clean modern look with no outlines */
 *:focus {
   outline: none;
 }
 
 *:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: none;
 }
 
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  outline: none;
 }
