@@ -33,7 +33,7 @@
 }
 
 .mcp-dropdown-arrow {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   transition: transform 0.2s ease;
 }
 
@@ -119,8 +119,8 @@
 .mcp-switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: var(--button-height-md);
+  height: var(--icon-lg);
 }
 
 .mcp-switch input {
@@ -177,10 +177,10 @@ input:disabled + .mcp-slider {
 }
 
 .mcp-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--color-border);
-  border-top: 2px solid var(--color-accent);
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  border: var(--border-width-normal) solid var(--color-border);
+  border-top: var(--border-width-normal) solid var(--color-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

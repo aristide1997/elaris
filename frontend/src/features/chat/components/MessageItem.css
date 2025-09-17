@@ -95,7 +95,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-wide);
   border: 1px solid transparent;
 }
 
@@ -128,7 +128,7 @@
 }
 
 .message-content code {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, var(--opacity-overlay));
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-family: var(--font-family-mono);
@@ -136,7 +136,7 @@
 }
 
 .user-message .message-content code {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, var(--opacity-overlay));
 }
 
 .message-content pre {
@@ -151,8 +151,8 @@
 }
 
 .user-message .message-content pre {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, var(--opacity-overlay));
+  border-color: rgba(255, 255, 255, var(--opacity-overlay));
 }
 
 /* Code styling for assistant messages */
@@ -275,7 +275,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: var(--breakpoint-md)) {
   .message-content {
     max-width: 90%;
     padding: var(--space-3) var(--space-4);
@@ -293,7 +293,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: var(--breakpoint-sm)) {
   .message-content {
     max-width: 95%;
     padding: var(--space-2) var(--space-3);
@@ -312,16 +312,16 @@
 /* Message editing styles */
 .message-edit-btn {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(0, 0, 0, 0.1);
+  top: var(--space-1);
+  right: var(--space-1);
+  background: rgba(0, 0, 0, var(--opacity-overlay));
   border: none;
   border-radius: var(--radius-sm);
   padding: var(--space-1);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s ease;
-  font-size: 12px;
+  transition: opacity var(--duration-normal) var(--easing-standard);
+  font-size: var(--font-size-xs);
 }
 
 .user-message .message-content:hover .message-edit-btn {
@@ -329,7 +329,7 @@
 }
 
 .message-edit-btn:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, var(--opacity-overlay));
 }
 
 .message-edit-container {
@@ -338,7 +338,7 @@
 
 .message-edit-textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: var(--button-height-xl);
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -371,7 +371,7 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-normal) var(--easing-standard);
 }
 
 .edit-save-btn {
@@ -396,5 +396,5 @@
 }
 
 .edit-cancel-btn:hover {
-  background: var(--color-surface-tertiary);
+  background: var(--color-border-subtle);
 }
