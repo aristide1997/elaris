@@ -4,7 +4,6 @@ import { getApiBase } from '../../../shared/utils/api'
 
 interface Settings {
   system_prompt: string
-  debug_mode: boolean
   llm_provider: {
     provider: string
     model: string

@@ -1,18 +1,22 @@
 import { useEffect } from 'react'
-import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore } from './features/ui'
+import { Layout, Sidebar, useUIStore, useSettingsStore } from './features/ui'
 import { ChatWindow } from './features/chat'
 import { useConnectionStore } from './features/connection'
 import { useWebSocketConnection } from './features/connection'
 import { UpdateNotification } from './features/updater'
 import { Modals } from './shared/components/Modals'
+import { useKeyboardShortcuts } from './shared/hooks/useKeyboardShortcuts'
 import './App.css'
 
 function App() {
   // Initialize WebSocket connection and store integration
   useWebSocketConnection()
   
+  // Initialize global keyboard shortcuts
+  useKeyboardShortcuts()
+  
   const isConnected = useConnectionStore(state => state.status === 'connected')
-  const { isSidebarCollapsed, toggleSidebar, openDebug } = useUIStore()
+  const { isSidebarCollapsed } = useUIStore()
   const { settings, loadSettings } = useSettingsStore()
 
   // Load settings on app start - wait for backend connection
@@ -43,15 +47,9 @@ function App() {
     }
   }, [isConnected, loadSettings])
 
+
   return (
     <div className="app">
-      <ChatHeader
-        isConnected={isConnected}
-        onDebugClick={openDebug}
-        onToggleSidebar={toggleSidebar}
-        isSidebarCollapsed={isSidebarCollapsed}
-        debugMode={settings?.debug_mode ?? false}
-      />
       <Layout sidebar={<Sidebar />} isSidebarCollapsed={isSidebarCollapsed}>
         <ChatWindow />
       </Layout>
