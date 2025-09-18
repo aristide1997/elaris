@@ -151,9 +151,6 @@ const SettingsWindow: React.FC = () => {
     }
   }
 
-  const handleDebugModeChange = (checked: boolean) => {
-    updateSettings({ debug_mode: checked })
-  }
 
   const handleAutoApproveToolsChange = (checked: boolean) => {
     updateSettings({ auto_approve_tools: checked })
@@ -322,21 +319,6 @@ const SettingsWindow: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="settings-form-group">
-                  <label htmlFor="debug-mode">
-                    <input
-                      id="debug-mode"
-                      type="checkbox"
-                      checked={settings.debug_mode}
-                      onChange={(e) => handleDebugModeChange(e.target.checked)}
-                      style={{ marginRight: '8px' }}
-                    />
-                    Debug Mode
-                  </label>
-                  <div className="form-description">
-                    Show debug button and connection status in the header for troubleshooting.
-                  </div>
-                </div>
               </div>
             )}
 
