@@ -1,6 +1,4 @@
 import { type ReactElement } from 'react'
-import { MCPServerDropdown } from '../../connection'
-import ModelPicker from './ModelPicker'
 import './ChatHeader.css'
 
 interface ChatHeaderProps {
@@ -35,8 +33,6 @@ function ChatHeader({ isConnected, onDebugClick, onToggleSidebar, isSidebarColla
             🔍 Debug
           </button>
         )}
-        <MCPServerDropdown />
-        <ModelPicker />
         {debugMode && (
           <div className="connection-status">
             <span className={`status-dot ${isConnected ? 'connected' : ''}`}></span>
