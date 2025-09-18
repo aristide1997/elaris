@@ -9,17 +9,39 @@
 .input-wrapper {
   max-width: var(--container-xl);
   margin: 0 auto;
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-end;
   position: relative;
 }
 
-.input-with-attachments {
-  display: flex;
-  align-items: flex-end;
-  flex: 1;
+.input-box {
   position: relative;
+  background: var(--color-surface);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+.input-box:focus-within {
+  border-color: var(--color-border-strong);
+}
+
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-1);
+}
+
+.controls-left,
+.controls-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .attached-images {
@@ -28,11 +50,6 @@
 }
 
 .attachment-button {
-  position: absolute;
-  left: var(--space-3);
-  bottom: 50%;
-  transform: translateY(50%);
-  z-index: 2;
   width: var(--icon-2xl);
   height: var(--icon-2xl);
   border: none;
@@ -132,18 +149,18 @@
 
 .message-input {
   flex: 1;
-  padding: var(--space-3) var(--space-5) var(--space-3) var(--space-12);
-  border: var(--border-width-normal) solid var(--color-border-subtle);
-  border-radius: var(--radius-2xl);
+  padding: var(--space-2) var(--space-2);
+  border: none;
+  border-radius: 0;
   font-size: var(--font-size-base);
   font-family: inherit;
   line-height: 1.5;
   resize: none;
   max-height: 200px;
-  min-height: var(--button-height-xl);
-  background: var(--color-surface);
+  min-height: var(--button-height-lg);
+  background: transparent;
   color: var(--color-text-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   position: relative;
 }
 
@@ -153,7 +170,6 @@
 
 .message-input:focus {
   outline: none;
-  border-color: var(--color-accent);
 }
 
 .message-input:disabled {
@@ -163,61 +179,55 @@
   border-color: var(--color-border-subtle);
 }
 
-.send-button {
-  width: var(--button-height-xl);
-  height: var(--button-height-xl);
+.input-row .send-button,
+.input-row .stop-button {
+  width: var(--button-height-md);
+  height: var(--button-height-md);
   border: none;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: white;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.send-button:hover:not(:disabled) {
-  background: var(--color-accent-hover);
+.input-row .send-button:hover:not(:disabled) {
+  color: var(--color-accent);
 }
 
-.send-button:disabled {
-  background: var(--color-text-tertiary);
+.input-row .send-button:disabled {
+  color: var(--color-text-tertiary);
   cursor: not-allowed;
 }
 
-.send-button svg {
+.input-row .send-button svg {
   width: var(--icon-md);
   height: var(--icon-md);
 }
 
 /* Stop button styling */
-.stop-button {
-  width: var(--button-height-xl);
-  height: var(--button-height-xl);
-  border: none;
-  border-radius: var(--radius-full);
+.input-row .stop-button {
   background: var(--color-danger);
   color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.stop-button:hover:not(:disabled) {
+.input-row .stop-button:hover:not(:disabled) {
   background: var(--color-danger);
   opacity: var(--opacity-hover);
 }
 
-.stop-button:disabled {
+.input-row .stop-button:disabled {
   background: var(--color-text-tertiary);
   cursor: not-allowed;
 }
 
-.stop-button svg {
+.input-row .stop-button svg {
   width: var(--icon-md);
   height: var(--icon-md);
 }
+
 
 
 /* Responsive adjustments */
@@ -226,31 +236,20 @@
     padding: var(--space-3) var(--space-4) var(--space-4);
   }
   
-  .input-wrapper {
-    gap: var(--space-2);
-    max-width: 100%;
-  }
-  
   .attachment-button {
     width: var(--icon-xl);
     height: var(--icon-xl);
-    left: var(--space-2);
   }
   
   .message-input {
-    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
     font-size: var(--font-size-sm);
-    min-height: var(--button-height-lg);
+    min-height: var(--button-height-md);
   }
   
-  .send-button {
-    width: var(--button-height-lg);
-    height: var(--button-height-lg);
-  }
-  
-  .send-button svg {
-    width: var(--icon-sm);
-    height: var(--icon-sm);
+  .input-row .send-button,
+  .input-row .stop-button {
+    width: var(--button-height-sm);
+    height: var(--button-height-sm);
   }
 }
 
@@ -262,23 +261,10 @@
   .attachment-button {
     width: var(--icon-lg);
     height: var(--icon-lg);
-    left: var(--space-2);
   }
   
   .message-input {
-    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
-    border-radius: var(--radius-xl);
-    min-height: var(--button-height-md);
+    min-height: var(--button-height-sm);
     max-height: var(--container-sm);
-  }
-  
-  .send-button {
-    width: var(--button-height-md);
-    height: var(--button-height-md);
-  }
-  
-  .send-button svg {
-    width: var(--icon-sm);
-    height: var(--icon-sm);
   }
 }

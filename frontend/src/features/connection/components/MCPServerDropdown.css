@@ -1,26 +1,29 @@
 .mcp-server-dropdown {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .mcp-dropdown-trigger {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-primary);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-sm);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--color-text-secondary);
+  padding: 0;
+  font-size: var(--font-size-xs);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  transition: all 0.2s ease;
-  min-width: 80px;
+  justify-content: center;
+  gap: var(--space-1);
+  transition: color 0.2s ease;
+  min-width: auto;
+  font-weight: var(--font-weight-normal);
+  outline: none;
 }
 
 .mcp-dropdown-trigger:hover {
-  background: var(--color-surface-secondary);
-  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .mcp-dropdown-trigger:disabled {
@@ -28,13 +31,24 @@
   cursor: not-allowed;
 }
 
+.mcp-status-text,
+.mcp-dropdown-arrow {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
 .mcp-status-text {
-  font-weight: 500;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mcp-dropdown-arrow {
-  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .mcp-dropdown-trigger[data-state="open"] .mcp-dropdown-arrow {
@@ -149,7 +163,7 @@
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.2s;
+  transition: 0.2s ease;
   border-radius: 50%;
 }
 
@@ -189,5 +203,3 @@ input:disabled + .mcp-slider {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-/* Scrollbar for server list - uses global scrollbar styling from App.css */
