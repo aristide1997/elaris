@@ -73,10 +73,6 @@ const ChatHistoryList: React.FC = () => {
 
   return (
     <div className="chat-history-list">
-      <div className="chat-history-header">
-        <h3>Recent Chats</h3>
-      </div>
-      
       <div className="chat-history-items">
         {conversations.length === 0 ? (
           <div className="no-conversations">
@@ -91,7 +87,7 @@ const ChatHistoryList: React.FC = () => {
             >
               <button
                 onClick={() => handleSelectConversation(conv.conversation_id)}
-                className="chat-history-item"
+                className={`chat-history-item ${conversationId === conv.conversation_id ? 'selected' : ''}`}
                 title={conv.preview}
               >
                 <div className="chat-preview">
