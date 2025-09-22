@@ -11,6 +11,19 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  position: relative;
+  -webkit-mask: linear-gradient(
+    to bottom,
+    black 0%,
+    black calc(100% - 8vh),
+    transparent 100%
+  );
+  mask: linear-gradient(
+    to bottom,
+    black 0%,
+    black calc(100% - 8vh),
+    transparent 100%
+  );
 }
 
 .chat-history-item-container {
