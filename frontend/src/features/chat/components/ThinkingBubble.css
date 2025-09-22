@@ -171,17 +171,17 @@
 }
 
 .thinking-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: color-mix(in srgb, var(--color-black) 5%, transparent);
   border-radius: var(--radius-sm);
 }
 
 .thinking-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, var(--color-black) 20%, transparent);
   border-radius: var(--radius-sm);
 }
 
 .thinking-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--color-black) 30%, transparent);
 }
 
 /* Responsive adjustments */

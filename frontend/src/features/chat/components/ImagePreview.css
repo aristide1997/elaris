@@ -36,7 +36,7 @@
   height: var(--icon-lg);
   border: none;
   border-radius: var(--radius-full);
-  background: rgba(0, 0, 0, var(--opacity-strong));
+  background: color-mix(in srgb, var(--color-black) 70%, transparent);
   color: white;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
