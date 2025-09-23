@@ -4,6 +4,11 @@
   padding: var(--space-6) var(--space-4);
   background: var(--color-chat-background);
   position: relative;
+  /* Fade out effect for scrolling */
+  mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black calc(100% - 14px), 
+    transparent 100%);
 }
 
 .messages {

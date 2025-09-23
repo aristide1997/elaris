@@ -1,7 +1,6 @@
 .input-container {
   padding: var(--space-4) var(--space-6) var(--space-6);
   background: var(--color-surface);
-  border-top: 1px solid var(--color-border-subtle);
   position: relative;
 }
 
