@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   background: var(--color-surface);
+  position: relative;
 }
 
 .sidebar-top {
@@ -113,6 +114,26 @@
   background-color: var(--color-text-tertiary);
 }
 
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 101;
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: var(--color-border);
+}
+
+.resize-handle.resizing {
+  background: var(--color-text-secondary);
+}
+
 /* Responsive - maintain good spacing on mobile */
 @media (max-width: 640px) {
   .sidebar-top {
@@ -129,5 +150,9 @@
 
   .brand-logo {
     height: 12px;
+  }
+  
+  .resize-handle {
+    display: none;
   }
 }

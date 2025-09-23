@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react'
 import NewChatButton from '../../conversations/components/NewChatButton'
 import ChatHistoryList from '../../conversations/components/ChatHistoryList'
 import SettingsButton from './SettingsButton'
@@ -7,6 +8,38 @@ import './Sidebar.css'
 
 const Sidebar: React.FC = () => {
   const { toggleSidebar } = useUIStore()
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [isResizing, setIsResizing] = useState(false)
+
+  const MIN_WIDTH = 200
+  const MAX_WIDTH = 500
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
+  }, [sidebarWidth])
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.min(Math.max(e.clientX, MIN_WIDTH), MAX_WIDTH)
+      setSidebarWidth(newWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [])
 
   return (
     <div className="sidebar-container">
@@ -46,6 +79,11 @@ const Sidebar: React.FC = () => {
       <div className="sidebar-content">
         <ChatHistoryList />
       </div>
+      
+      <div 
+        className={`resize-handle ${isResizing ? 'resizing' : ''}`}
+        onMouseDown={handleMouseDown}
+      />
     </div>
   )
 }
