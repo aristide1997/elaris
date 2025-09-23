@@ -26,6 +26,37 @@
   );
 }
 
+/* Hide scrollbar by default, show it only on hover */
+.chat-history-items {
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+.chat-history-items::-webkit-scrollbar {
+  /* WebKit browsers */
+  width: 0;
+  height: 0;
+}
+
+.chat-history-items:hover {
+  /* Firefox */
+  scrollbar-width: thin;
+}
+
+.chat-history-items:hover::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+
+.chat-history-items:hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-history-items:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
 .chat-history-item-container {
   position: relative;
   display: flex;
