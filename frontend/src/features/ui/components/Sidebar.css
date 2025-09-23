@@ -6,12 +6,14 @@
 }
 
 .sidebar-top {
+  height: var(--header-height);
   flex-shrink: 0;
   background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) var(--space-4) var(--space-44) var(--space-4);
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-44);
 }
 
 .sidebar-brand {
@@ -114,7 +116,7 @@
 /* Responsive - maintain good spacing on mobile */
 @media (max-width: 640px) {
   .sidebar-top {
-    padding: var(--space-3) var(--space-3) var(--space-2) var(--space-3);
+    padding: 0 var(--space-3);
   }
 
   .quick-actions {
