@@ -51,14 +51,14 @@
 }
 
 .messages-empty h3 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   margin: 0;
 }
 
 .messages-empty p {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   margin: 0;
   max-width: var(--container-md);
   line-height: 1.5;
