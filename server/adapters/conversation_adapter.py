@@ -53,12 +53,9 @@ class ConversationAdapter:
         return f"{int(datetime.now().timestamp() * 1000)}-{uuid.uuid4().hex[:9]}"
     
     @staticmethod
-    def _truncate_preview(text: str, max_words: int = 4) -> str:
-        """Truncate text for preview purposes"""
-        words = text.split()
-        if len(words) <= max_words:
-            return text
-        return " ".join(words[:max_words]) + "..."
+    def _get_preview_content(text: str, max_chars: int = 100) -> str:
+        """Get preview content - no truncation, just length limit for data transfer"""
+        return text[:max_chars] if text else ""
     
     @staticmethod
     def _store_image_attachment(image_data: bytes, media_type: str, conversation_id: str) -> UIAttachment:
@@ -281,4 +278,4 @@ class ConversationAdapter:
     def get_conversation_preview(pydantic_messages: list) -> str:
         """Get a preview of the conversation (first user message)"""
         first_message = ConversationAdapter._get_first_user_message(pydantic_messages)
-        return ConversationAdapter._truncate_preview(first_message)
+        return ConversationAdapter._get_preview_content(first_message)
