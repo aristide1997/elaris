@@ -1,6 +1,7 @@
 :root {
   /* Modern Color Palette */
-  --color-background: #fafbfc;
+  --color-background: #ffffff;
+  --color-chat-background: #ffffff;
   --color-surface: #ffffff;
   --color-surface-secondary: #f6f8fa;
   --color-border: #e1e4e8;

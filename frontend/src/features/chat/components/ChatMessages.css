@@ -2,7 +2,7 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--space-6) var(--space-4);
-  background: var(--color-background);
+  background: var(--color-chat-background);
   position: relative;
 }
 
