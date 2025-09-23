@@ -1,5 +1,5 @@
 .input-container {
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  padding: var(--space-4) var(--space-4) var(--space-6);
   background: var(--color-surface);
   position: relative;
 }
@@ -15,7 +15,7 @@
   position: relative;
   background: var(--color-surface);
   border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-chat-input);
   padding: var(--space-1) var(--space-3);
 }
 .input-box:focus-within {
@@ -232,7 +232,7 @@
 /* Responsive adjustments */
 @media (max-width: var(--breakpoint-md)) {
   .input-container {
-    padding: var(--space-3) var(--space-4) var(--space-4);
+    padding: var(--space-3) var(--space-3) var(--space-4);
   }
   
   .attachment-button {

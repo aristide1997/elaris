@@ -126,6 +126,7 @@
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-full: 9999px;
+  --radius-chat-input: 18px;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(30, 30, 30, 0.05);
