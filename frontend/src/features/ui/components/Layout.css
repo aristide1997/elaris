@@ -1,6 +1,6 @@
 .layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: var(--sidebar-width, 280px) 1fr;
   flex: 1;
   overflow: hidden;
   background: var(--color-background);
@@ -44,13 +44,13 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .layout {
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: var(--sidebar-width, 260px) 1fr;
   }
 }
 
 @media (max-width: 640px) {
   .layout {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: var(--sidebar-width, 240px) 1fr;
   }
   
   .sidebar {
