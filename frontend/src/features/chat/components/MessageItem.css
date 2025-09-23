@@ -55,7 +55,7 @@
   max-width: 90%;
   color: var(--color-accent);
   font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   padding: var(--space-3) var(--space-4);
 }
 
@@ -86,7 +86,7 @@
   margin-bottom: var(--space-4);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
 }
 
 .session-status {

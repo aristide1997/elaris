@@ -88,7 +88,7 @@
 
 .thinking-summary {
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   flex: 1;
 }
 
@@ -124,7 +124,7 @@
 .thinking-title {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   flex: 1;
 }
 
@@ -136,7 +136,7 @@
 
 .thinking-content {
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
