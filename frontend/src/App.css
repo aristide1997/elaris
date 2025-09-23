@@ -91,6 +91,9 @@
   --button-height-lg: 48px;
   --button-height-xl: 56px;
   
+  /* Header Height */
+  --header-height: 44px;
+  
   /* Container Widths */
   --container-sm: 320px;
   --container-md: 480px;
