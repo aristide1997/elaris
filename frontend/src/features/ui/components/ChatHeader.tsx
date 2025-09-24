@@ -22,9 +22,6 @@ const ChatHeader: React.FC = () => {
             </svg>
           </button>
         )}
-      </div>
-      
-      <div className="chat-header-right">
         <button 
           type="button" 
           className="icon-button new-chat-button" 
