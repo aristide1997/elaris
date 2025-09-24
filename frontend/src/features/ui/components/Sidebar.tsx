@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import NewChatButton from '../../conversations/components/NewChatButton'
 import ChatHistoryList from '../../conversations/components/ChatHistoryList'
 import SettingsButton from './SettingsButton'
 import { ElarisLogo } from '../index'
@@ -62,7 +61,7 @@ const Sidebar: React.FC = () => {
 
       <div className="quick-actions">
         <div className="qa-left">
-          <NewChatButton />
+          <SettingsButton />
         </div>
         <div className="qa-right">
           <button type="button" className="icon-button" aria-label="Search" title="Search">
@@ -71,7 +70,6 @@ const Sidebar: React.FC = () => {
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </button>
-          <SettingsButton />
         </div>
       </div>
       <div className="quick-actions-divider" />
