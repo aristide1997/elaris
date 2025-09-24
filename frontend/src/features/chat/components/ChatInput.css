@@ -48,65 +48,6 @@
   margin: 0 auto var(--space-3) auto;
 }
 
-.attachment-button {
-  width: var(--icon-2xl);
-  height: var(--icon-2xl);
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--duration-normal) var(--easing-standard);
-}
-
-.attachment-button:hover:not(:disabled) {
-  color: var(--color-accent);
-  background: var(--color-accent-subtle);
-}
-
-.attachment-button:disabled {
-  color: var(--color-text-tertiary);
-  cursor: not-allowed;
-}
-
-/* Radix Dropdown Menu Styles */
-.dropdown-content {
-  min-width: var(--container-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2);
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  cursor: pointer;
-  outline: none;
-  user-select: none;
-}
-
-.dropdown-item:hover,
-.dropdown-item[data-highlighted] {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent);
-}
-
-.dropdown-arrow {
-  fill: var(--color-surface);
-  stroke: var(--color-border-subtle);
-  stroke-width: var(--border-width-thin);
-}
 
 .drag-active {
   background: var(--color-accent-subtle);
@@ -235,11 +176,6 @@
     padding: var(--space-3) var(--space-3) var(--space-4);
   }
   
-  .attachment-button {
-    width: var(--icon-xl);
-    height: var(--icon-xl);
-  }
-  
   .message-input {
     font-size: var(--font-size-sm);
     min-height: var(--button-height-md);
@@ -255,11 +191,6 @@
 @media (max-width: var(--breakpoint-sm)) {
   .input-container {
     padding: var(--space-3);
-  }
-  
-  .attachment-button {
-    width: var(--icon-lg);
-    height: var(--icon-lg);
   }
   
   .message-input {

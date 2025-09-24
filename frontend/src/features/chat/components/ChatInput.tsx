@@ -1,6 +1,3 @@
-import { useRef, useCallback, type ChangeEvent } from 'react'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { PlusIcon, ImageIcon } from '@radix-ui/react-icons'
 import { type ImageAttachment } from '../types'
 import { useImageAttachments } from '../hooks/useImageAttachments'
 import { useDragAndDrop } from '../hooks/useDragAndDrop'
@@ -8,6 +5,7 @@ import { useFormInput } from '../hooks/useFormInput'
 import { MCPServerDropdown } from '../../connection'
 import ModelPicker from '../../ui/components/ModelPicker'
 import ImagePreview from './ImagePreview'
+import AttachmentButton from './AttachmentButton'
 import './ChatInput.css'
 
 interface ChatInputProps {
@@ -18,8 +16,6 @@ interface ChatInputProps {
 }
 
 function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: ChatInputProps): React.ReactElement {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   // Use custom hooks for separated concerns
   const { 
     attachedImages, 
@@ -45,19 +41,6 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
     attachedImages,
     disabled
   )
-
-  const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length > 0) {
-      addImages(files)
-    }
-    // Reset input value to allow selecting the same file again
-    e.target.value = ''
-  }, [addImages])
-
-  const handleImageButtonClick = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
 
   return (
     <div 
@@ -113,30 +96,10 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
           </div>
           <div className="controls-row">
             <div className="controls-left">
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    className="attachment-button"
-                    title="Add attachments"
-                  >
-                    <PlusIcon width={16} height={16} />
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content className="dropdown-content" sideOffset={8}>
-                    <DropdownMenu.Item 
-                      className="dropdown-item"
-                      onSelect={handleImageButtonClick}
-                    >
-                      <ImageIcon width={16} height={16} />
-                      <span>Attach Images</span>
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Arrow className="dropdown-arrow" />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+              <AttachmentButton 
+                onFilesSelected={addImages}
+                disabled={disabled}
+              />
             </div>
             <div className="controls-right">
               <MCPServerDropdown />
@@ -145,16 +108,6 @@ function ChatInput({ onSendMessage, onStopMessage, disabled, isStreaming }: Chat
           </div>
         </div>
       </form>
-      
-      
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleFileSelect}
-        style={{ display: 'none' }}
-      />
       
       {dragActive && (
         <div className="drag-overlay">

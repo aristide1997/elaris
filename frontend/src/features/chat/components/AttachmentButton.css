@@ -1,0 +1,113 @@
+.attachment-button-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.attachment-button {
+  width: var(--icon-2xl);
+  height: var(--icon-2xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  outline: none;
+  position: relative;
+}
+
+.attachment-button:hover:not(:disabled) {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.attachment-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.attachment-button:disabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.attachment-button[data-state="open"] {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+/* Attachment Dropdown Styles */
+.attachment-dropdown-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+  z-index: 1000;
+  padding: var(--space-1);
+}
+
+.attachment-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.attachment-dropdown-item:hover,
+.attachment-dropdown-item[data-highlighted] {
+  background: var(--color-surface-secondary);
+  color: var(--color-accent);
+}
+
+.attachment-dropdown-item svg {
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.attachment-dropdown-item:hover svg,
+.attachment-dropdown-item[data-highlighted] svg {
+  color: var(--color-accent);
+}
+
+.attachment-dropdown-arrow {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: var(--breakpoint-md)) {
+  .attachment-button {
+    width: var(--icon-xl);
+    height: var(--icon-xl);
+  }
+  
+  .attachment-dropdown-content {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .attachment-button {
+    width: var(--icon-lg);
+    height: var(--icon-lg);
+  }
+  
+  .attachment-dropdown-content {
+    min-width: 160px;
+  }
+}
