@@ -80,62 +80,68 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
 
         <Select.Portal>
           <Select.Content className="model-picker-dropdown">
-            {isLoadingModels && (
-              <div className="dropdown-header">
-                <span className="loading-text">Loading...</span>
-              </div>
-            )}
+            <div className="dropdown-header">
+              <h4>Models</h4>
+              {modelsError && (
+                <div className="dropdown-error">
+                  {modelsError.message}
+                </div>
+              )}
+            </div>
 
-            {modelsError && (
-              <div className="dropdown-error">
-                <span>{modelsError.message}</span>
-              </div>
-            )}
+            <div className="model-list">
+              <Select.Viewport>
+                {isLoadingModels && (
+                  <div className="model-loading">
+                    <div className="model-spinner"></div>
+                    <span>Loading models...</span>
+                  </div>
+                )}
 
-            <Select.Viewport>
-              {!isLoadingModels && !modelsError && availableModels.length > 0 && (
-                <>
-                  {availableModels.map((model) => (
-                    <Select.Item key={model.id} value={model.id} className="dropdown-option">
-                      <div className="model-info">
-                        <Select.ItemText>
-                          <span className="model-name">{model.name}</span>
-                        </Select.ItemText>
-                        <span className="model-id">{model.id}</span>
-                      </div>
-                      {model.context_length && (
-                        <span className="model-context">
-                          {model.context_length.toLocaleString()} ctx
-                        </span>
-                      )}
-                      <Select.ItemIndicator className="select-item-indicator">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path 
-                            d="M10 3L4.5 8.5L2 6" 
-                            stroke="currentColor" 
-                            strokeWidth="1.5" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </Select.ItemIndicator>
+                {!isLoadingModels && !modelsError && availableModels.length > 0 && (
+                  <>
+                    {availableModels.map((model) => (
+                      <Select.Item key={model.id} value={model.id} className="dropdown-option">
+                        <div className="model-info">
+                          <Select.ItemText>
+                            <span className="model-name">{model.name}</span>
+                          </Select.ItemText>
+                          <span className="model-id">{model.id}</span>
+                        </div>
+                        {model.context_length && (
+                          <span className="model-context">
+                            {model.context_length.toLocaleString()} ctx
+                          </span>
+                        )}
+                        <Select.ItemIndicator className="select-item-indicator">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path 
+                              d="M10 3L4.5 8.5L2 6" 
+                              stroke="currentColor" 
+                              strokeWidth="1.5" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    ))}
+                    
+                    <Select.Separator className="dropdown-separator" />
+                    
+                    <Select.Item value="custom" className="custom-model-button">
+                      <Select.ItemText>Custom model...</Select.ItemText>
                     </Select.Item>
-                  ))}
-                  
-                  <Select.Separator className="dropdown-separator" />
-                  
-                  <Select.Item value="custom" className="custom-model-button">
-                    <Select.ItemText>Custom model...</Select.ItemText>
-                  </Select.Item>
-                </>
-              )}
+                  </>
+                )}
 
-              {!isLoadingModels && !modelsError && availableModels.length === 0 && (
-                <Select.Item value="" disabled className="dropdown-option disabled">
-                  <Select.ItemText>No models available</Select.ItemText>
-                </Select.Item>
-              )}
-            </Select.Viewport>
+                {!isLoadingModels && !modelsError && availableModels.length === 0 && (
+                  <div className="no-models-available">
+                    No models available
+                  </div>
+                )}
+              </Select.Viewport>
+            </div>
           </Select.Content>
         </Select.Portal>
       </Select.Root>
