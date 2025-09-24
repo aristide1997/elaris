@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import ChatHistoryList from '../../conversations/components/ChatHistoryList'
 import SettingsButton from './SettingsButton'
+import SearchBar from './SearchBar'
 import { ElarisLogo } from '../index'
 import { useUIStore } from '../stores/useUIStore'
 import './Sidebar.css'
@@ -64,12 +65,7 @@ const Sidebar: React.FC = () => {
           <SettingsButton />
         </div>
         <div className="qa-right">
-          <button type="button" className="icon-button" aria-label="Search" title="Search">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
+          <SearchBar />
         </div>
       </div>
       <div className="quick-actions-divider" />
