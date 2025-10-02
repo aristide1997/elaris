@@ -61,13 +61,11 @@ const Sidebar: React.FC = () => {
       </div>
 
       <div className="quick-actions">
-        <div className="qa-left">
-          <SettingsButton />
-        </div>
-        <div className="qa-right">
-          <SearchBar />
-        </div>
+        <SearchBar />
+        <SettingsButton />
       </div>
+
+      <div className="section-header">Chats</div>
       <div className="quick-actions-divider" />
 
       <div className="sidebar-content">
