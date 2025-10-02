@@ -32,9 +32,16 @@ const SearchBar: React.FC = () => {
     }
   }
 
-  const handleSubmit = () => {
-    if (searchQuery.trim()) {
-      addToHistory(searchQuery)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (searchQuery.trim()) {
+        addToHistory(searchQuery)
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      clearQuery()
+      setExpanded(false)
     }
   }
 
@@ -44,70 +51,67 @@ const SearchBar: React.FC = () => {
     }
   }, [isExpanded])
 
-  if (!isExpanded) {
-    return (
-      <button 
-        type="button" 
-        className="icon-button search-button" 
-        aria-label="Search" 
-        title="Search"
-        onClick={handleExpand}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </button>
-    )
-  }
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const shortcut = isMac ? '⌘F' : 'Ctrl+F'
 
   return (
-    <div className="search-bar-container">
-      <div className="search-input-container">
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchQuery}
-          onChange={handleInputChange}
-          onBlur={handleCollapse}
-          placeholder="Search conversations..."
-          className="search-input"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleClear}
-            className="clear-button"
-            aria-label="Clear search"
-          >
-            <svg 
-              width="14" 
-              height="14" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
+    <div 
+      className={`sidebar-button search-container ${isExpanded ? 'expanded' : ''}`}
+      onClick={!isExpanded ? handleExpand : undefined}
+    >
+      {/* Search icon - always visible */}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+
+      {/* Text label and shortcut - only show when not expanded */}
+      {!isExpanded && (
+        <>
+          <span className="sidebar-button-text">Search</span>
+          <span className="sidebar-button-shortcut">{shortcut}</span>
+        </>
+      )}
+
+      {/* Input field - shows when expanded */}
+      {isExpanded && (
+        <>
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchQuery}
+            onChange={handleInputChange}
+            onBlur={handleCollapse}
+            onKeyDown={handleKeyDown}
+            placeholder="Search conversations..."
+            className="search-input"
+            aria-label="Search conversations"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleClear}
+              className="search-clear-btn"
+              aria-label="Clear search"
             >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        )}
-      </div>
-      <button 
-        type="button" 
-        className="icon-button search-icon-button" 
-        aria-label="Search" 
-        title="Search"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </button>
+              <svg 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
+        </>
+      )}
     </div>
   )
 }

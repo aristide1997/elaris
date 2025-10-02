@@ -25,14 +25,18 @@ const SettingsIcon: React.FC = () => (
 
 const SettingsButton: React.FC = () => {
   const { openSettings } = useUIStore()
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const shortcut = isMac ? '⌘,' : 'Ctrl+,'
 
   const handleSettingsClick = () => {
     openSettings()
   }
 
   return (
-    <button className="icon-button" onClick={handleSettingsClick} type="button" aria-label="Settings" title="Settings">
+    <button className="sidebar-button" onClick={handleSettingsClick} type="button" aria-label="Settings" title={`Settings - ${shortcut}`}>
       <SettingsIcon />
+      <span className="sidebar-button-text">Settings</span>
+      <span className="sidebar-button-shortcut">{shortcut}</span>
     </button>
   )
 }

@@ -61,10 +61,7 @@
   position: relative;
   display: flex;
   align-items: stretch;
-  border-bottom: 1px solid var(--color-border-subtle);
 }
-
-.chat-history-item-container:last-child { border-bottom: none; }
 
 .chat-history-item {
   flex: 1;
