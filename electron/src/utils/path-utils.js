@@ -43,6 +43,8 @@ function getPythonEnvironment(serverPort, workingDirectory) {
     ].filter(Boolean).join(':'),
     PORT: serverPort.toString(),
     PYTHONPATH: workingDirectory,
+    // Disable logfire (transitive dependency from pydantic-ai) to prevent PyInstaller crashes
+    LOGFIRE_IGNORE_NO_CONFIG: '1',
   };
 }
 
