@@ -3,10 +3,15 @@
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-xl);
   padding: var(--space-3);
-  margin: var(--space-2) 0;
+  margin: 0;
   font-family: var(--font-family-base);
   transition: all var(--duration-slow) var(--easing-standard);
   position: relative;
+  width: 100%;
+}
+
+.assistant-message-bubble .thinking-bubble {
+  margin: 0;
 }
 
 .thinking-bubble.streaming {

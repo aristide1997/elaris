@@ -1,0 +1,162 @@
+/* Assistant message content */
+.assistant-message-content {
+  width: 100%;
+  line-height: 1.6;
+  font-size: var(--font-size-base);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.assistant-message-content * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Typography */
+.assistant-message-content p {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.assistant-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings */
+.assistant-message-content h1,
+.assistant-message-content h2,
+.assistant-message-content h3,
+.assistant-message-content h4,
+.assistant-message-content h5,
+.assistant-message-content h6 {
+  margin: var(--space-5) 0 var(--space-3) 0;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.assistant-message-content h1:first-child,
+.assistant-message-content h2:first-child,
+.assistant-message-content h3:first-child,
+.assistant-message-content h4:first-child,
+.assistant-message-content h5:first-child,
+.assistant-message-content h6:first-child {
+  margin-top: 0;
+}
+
+.assistant-message-content h1 {
+  font-size: 1.5em;
+  border-bottom: 2px solid var(--color-border-subtle);
+  padding-bottom: var(--space-1);
+}
+
+.assistant-message-content h2 {
+  font-size: 1.3em;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-1);
+}
+
+.assistant-message-content h3 {
+  font-size: 1.2em;
+}
+
+/* Inline code */
+.assistant-message-content code {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+}
+
+/* Code blocks */
+.assistant-message-content pre {
+  background: var(--color-surface-secondary);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-primary);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  margin: var(--space-3) 0;
+  overflow-x: auto;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border-subtle);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.assistant-message-content pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Lists */
+.assistant-message-content ul,
+.assistant-message-content ol {
+  margin: var(--space-3) 0;
+  padding-left: var(--space-5);
+}
+
+.assistant-message-content li {
+  margin: var(--space-1) 0;
+}
+
+/* Blockquotes */
+.assistant-message-content blockquote {
+  border-left: 4px solid var(--color-accent);
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-accent-subtle);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-style: italic;
+}
+
+/* Tables */
+.assistant-message-content table {
+  border-collapse: collapse;
+  margin: var(--space-3) 0;
+  width: 100%;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.assistant-message-content th,
+.assistant-message-content td {
+  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.assistant-message-content th {
+  background: var(--color-surface-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Links */
+.assistant-message-content a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.assistant-message-content a:hover {
+  text-decoration: none;
+}
+
+/* Horizontal rule */
+.assistant-message-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  margin: var(--space-4) 0;
+}
+
+/* Text formatting */
+.assistant-message-content strong {
+  font-weight: var(--font-weight-semibold);
+}
+
+.assistant-message-content em {
+  font-style: italic;
+}
