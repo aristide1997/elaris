@@ -1,0 +1,123 @@
+/* Base message container */
+.message-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 85%;
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+/* User message container */
+.message-container--user {
+  align-self: flex-end;
+  background: var(--color-accent);
+  color: white;
+  border-bottom-right-radius: var(--radius-md);
+}
+
+/* Assistant message container */
+.message-container--assistant {
+  align-self: flex-start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-bottom-left-radius: var(--radius-md);
+  color: var(--color-text-primary);
+}
+
+/* System message container */
+.message-container--system {
+  align-self: center;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  max-width: 90%;
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  padding: var(--space-3) var(--space-4);
+}
+
+.message-container--system.system-error {
+  background: var(--color-danger-subtle);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* Responsive adjustments */
+@media (max-width: var(--breakpoint-md)) {
+  .message-container {
+    max-width: 90%;
+    padding: var(--space-4);
+  }
+  
+  .message-container--system {
+    max-width: 95%;
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .message-container {
+    max-width: 95%;
+    padding: var(--space-3);
+  }
+  
+  .message-container--user {
+    border-bottom-right-radius: var(--radius-sm);
+  }
+  
+  .message-container--assistant {
+    border-bottom-left-radius: var(--radius-sm);
+  }
+}
+
+/* Tool session styling within assistant messages */
+.tool-session-wrapper {
+  width: 100%;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.tool-session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.session-status {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  border: 1px solid transparent;
+}
+
+.session-status.executing {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.session-status.completed {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.session-status.blocked {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
