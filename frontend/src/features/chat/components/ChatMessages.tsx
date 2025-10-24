@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import * as ScrollArea from '@radix-ui/react-scroll-area'
 import type { UIMessage } from '../types'
 import Message from './Message'
 import UserMessage from './UserMessage'
@@ -64,56 +65,81 @@ function ChatMessages({ messages }: ChatMessagesProps) {
   const messageGroups = groupMessages(messages)
 
   return (
-    <div className="chat-container">
-      <div className="messages">
-        {messageGroups.map((group, groupIndex) => {
-          if (group.type === 'user') {
-            // User messages
-            return group.messages.map((message) => (
-              <Message key={message.id} type="user">
-                <UserMessage message={message as any} />
-              </Message>
-            ))
-          } else if (group.type === 'system') {
-            // System messages
-            return group.messages.map((message) => (
-              <Message key={message.id} type="system">
-                {message.content}
-              </Message>
-            ))
-          } else {
-            // Assistant message group (thinking, tools, text)
-            return (
-              <Message key={`group-${groupIndex}`} type="assistant">
-                {group.messages.map((message) => {
-                  if (message.type === 'thinking') {
-                    return <ThinkingBubble key={message.id} thinking={message as any} />
-                  } else if (message.type === 'tool_session') {
-                    return (
-                      <div key={message.id} className="tool-session-wrapper">
-                        <div className="tool-session-header">
-                          🔧 Tool Execution Phase
-                          <span className={`session-status ${message.status}`}>
-                            {message.status}
-                          </span>
+    <ScrollArea.Root className="chat-scroll-area" type="auto">
+      <ScrollArea.Viewport className="chat-container">
+        <div className="messages">
+          {messageGroups.map((group, groupIndex) => {
+            const groupTimestamp = group.messages[0]?.timestamp
+
+            if (group.type === 'user') {
+              // User messages
+              return group.messages.map((message) => (
+                <Message
+                  key={message.id}
+                  type="user"
+                  name="You"
+                  timestamp={message.timestamp}
+                >
+                  <UserMessage message={message as any} />
+                </Message>
+              ))
+            } else if (group.type === 'system') {
+              // System messages
+              return group.messages.map((message) => (
+                <Message
+                  key={message.id}
+                  type="system"
+                  timestamp={message.timestamp}
+                >
+                  {message.content}
+                </Message>
+              ))
+            } else {
+              // Assistant message group (thinking, tools, text)
+              return (
+                <Message
+                  key={`group-${groupIndex}`}
+                  type="assistant"
+                  name="Elaris Assistant"
+                  timestamp={groupTimestamp}
+                >
+                  {group.messages.map((message) => {
+                    if (message.type === 'thinking') {
+                      return <ThinkingBubble key={message.id} thinking={message as any} />
+                    } else if (message.type === 'tool_session') {
+                      return (
+                        <div key={message.id} className="tool-session-wrapper">
+                          <div className="tool-session-header">
+                            🔧 Tool Execution Phase
+                            <span className={`session-status ${message.status}`}>
+                              {message.status}
+                            </span>
+                          </div>
+                          {message.tools && message.tools.length > 0 && (
+                            <ToolContainer tools={message.tools} />
+                          )}
                         </div>
-                        {message.tools && message.tools.length > 0 && (
-                          <ToolContainer tools={message.tools} />
-                        )}
-                      </div>
-                    )
-                  } else if (message.type === 'assistant') {
-                    return <AssistantMessage key={message.id} message={message as any} />
-                  }
-                  return null
-                })}
-              </Message>
-            )
-          }
-        })}
-        <div ref={messagesEndRef} />
-      </div>
-    </div>
+                      )
+                    } else if (message.type === 'assistant') {
+                      return <AssistantMessage key={message.id} message={message as any} />
+                    }
+                    return null
+                  })}
+                </Message>
+              )
+            }
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea.Viewport>
+      <ScrollArea.Scrollbar
+        orientation="vertical"
+        className="chat-scrollbar"
+      >
+        <ScrollArea.Thumb className="chat-scrollbar-thumb" />
+      </ScrollArea.Scrollbar>
+      <ScrollArea.Corner className="chat-scrollbar-corner" />
+    </ScrollArea.Root>
   )
 }
 
