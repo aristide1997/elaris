@@ -71,11 +71,11 @@ export const useImageAttachments = (): UseImageAttachmentsReturn => {
   }, [])
 
   const clearAttachments = useCallback(() => {
-    // Clean up blob URLs
-    attachedImages.forEach(img => URL.revokeObjectURL(img.url))
+    // Don't revoke blob URLs here - messages in the UI still need them
+    // Browser will clean them up when page is closed/reloaded
     setAttachedImages([])
     setError(null)
-  }, [attachedImages])
+  }, [])
 
   const clearError = useCallback(() => {
     setError(null)
