@@ -6,6 +6,8 @@ import { useWebSocketConnection } from './features/connection'
 import { UpdateNotification } from './features/updater'
 import { Modals } from './shared/components/Modals'
 import { useKeyboardShortcuts } from './shared/hooks/useKeyboardShortcuts'
+import { queryClient } from './shared/api/queryClient'
+import { llmProviderKeys } from './shared/api/queries'
 import './App.css'
 
 function App() {
@@ -30,9 +32,10 @@ function App() {
   useEffect(() => {
     if (!isConnected) return
 
-    const handleSettingsUpdate = (event: any, updatedSettings: any) => {
+    const handleSettingsUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: llmProviderKeys.all })
       // Reload settings to ensure main window is synchronized
-      loadSettings()
+      void loadSettings()
     }
 
     if (window.electronAPI?.onSettingsUpdated) {

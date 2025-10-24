@@ -103,21 +103,72 @@ const SettingsWindow: React.FC = () => {
   const handleSave = async () => {
     if (!settings) return
 
-    let updatedSettings = settings
+    // Handle LLM provider configuration separately
+    if (activeTab === 'llm') {
+      // Validate LLM configuration
+      if (!selectedProvider) {
+        setTestResult({ success: false, message: 'Please select a provider' })
+        return
+      }
+      if (!selectedModel && selectedModel !== 'custom') {
+        setTestResult({ success: false, message: 'Please select a model' })
+        return
+      }
+      if (selectedModel === 'custom' && !customModelName) {
+        setTestResult({ success: false, message: 'Please enter a custom model name' })
+        return
+      }
+
+      const modelToUse = selectedModel === 'custom' ? customModelName : selectedModel
+
+      try {
+        await configureProviderMutation.mutateAsync({
+          provider: selectedProvider,
+          model: modelToUse,
+          config: providerConfig
+        })
+
+        if (window.electronAPI?.settingsUpdated) {
+          await window.electronAPI.settingsUpdated({
+            llm_provider: {
+              provider: selectedProvider,
+              model: modelToUse,
+              config: providerConfig
+            }
+          })
+        }
+
+        if (window.electronAPI?.closeSettings) {
+          await window.electronAPI.closeSettings()
+        }
+      } catch (error) {
+        console.error('Failed to configure provider:', error)
+        setTestResult({ 
+          success: false, 
+          message: 'Failed to save provider configuration',
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+      return
+    }
+
+    // Handle general and MCP settings
+    // Exclude llm_provider from general settings - it's managed separately
+    const { llm_provider, ...settingsWithoutLLM } = settings
+    let updatedSettings = { ...settingsWithoutLLM }
 
     // If on MCP tab, validate and parse JSON first
     if (activeTab === 'mcp') {
       try {
         const mcpServers = JSON.parse(mcpJsonText)
-        updatedSettings = { ...settings, mcp_servers: mcpServers }
-        await saveSettings(updatedSettings)
+        updatedSettings = { ...updatedSettings, mcp_servers: mcpServers }
       } catch (e) {
         setMcpJsonError('Invalid JSON format')
         return
       }
-    } else {
-      await saveSettings(updatedSettings)
     }
+
+    await saveSettings(updatedSettings)
 
     if (!error && validationErrors.length === 0) {
       sendMessage({ type: 'update_settings', settings: updatedSettings })
