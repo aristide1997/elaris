@@ -12,7 +12,7 @@
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
-  max-width: var(--container-xl);
+  max-width: var(--container-xxl);
   margin: 0 auto;
   padding: 0 var(--space-5);
   box-sizing: border-box;
@@ -70,7 +70,7 @@
 }
 
 .message-row--system .message-row__content {
-  max-width: min(var(--container-xl), 60ch);
+  max-width: min(var(--container-xxl), 60ch);
   padding: 0 var(--space-4);
   align-items: center;
 }

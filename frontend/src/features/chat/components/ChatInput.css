@@ -6,7 +6,7 @@
 
 
 .input-wrapper {
-  max-width: var(--container-xl);
+  max-width: var(--container-xxl);
   margin: 0 auto;
   position: relative;
 }
@@ -44,7 +44,7 @@
 }
 
 .attached-images {
-  max-width: var(--container-xl);
+  max-width: var(--container-xxl);
   margin: 0 auto var(--space-3) auto;
 }
 

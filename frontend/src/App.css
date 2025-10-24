@@ -100,6 +100,7 @@
   --container-md: 480px;
   --container-lg: 800px;
   --container-xl: 900px;
+  --container-xxl: 1000px;
   
   /* Letter Spacing */
   --letter-spacing-tight: 0.01em;
