@@ -79,7 +79,14 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ className = '' }) => {
         </Select.Trigger>
 
         <Select.Portal>
-          <Select.Content className="model-picker-dropdown">
+          <Select.Content 
+            className="model-picker-dropdown" 
+            position="popper"
+            side="top" 
+            align="end"
+            sideOffset={8}
+            avoidCollisions={false}
+          >
             <div className="dropdown-header">
               <h4>Models</h4>
               {modelsError && (
