@@ -4,6 +4,7 @@
   width: 100%;
   line-height: 1.6;
   font-size: var(--font-size-base);
+  color: var(--color-text-primary);
 }
 
 .user-message-content__text {
@@ -15,22 +16,14 @@
   position: absolute;
   top: var(--space-1);
   right: var(--space-1);
-  background: rgba(255, 255, 255, var(--opacity-overlay));
-  border: none;
-  border-radius: var(--radius-sm);
+  background: var(--color-surface-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   padding: var(--space-1);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--easing-standard);
-  font-size: var(--font-size-xs);
-}
-
-.user-message-content:hover .user-message-content__edit-btn {
   opacity: 1;
-}
-
-.user-message-content__edit-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 /* User message editing */
@@ -42,24 +35,24 @@
   width: 100%;
   min-height: var(--button-height-xl);
   padding: var(--space-3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: var(--font-size-base);
   line-height: 1.5;
   resize: vertical;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 .user-message-edit__textarea:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .user-message-edit__textarea::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-tertiary);
 }
 
 .user-message-edit__buttons {
@@ -80,26 +73,27 @@
 }
 
 .user-message-edit__button--save {
-  background: white;
-  color: var(--color-accent);
+  background: var(--color-accent);
+  color: white;
 }
 
 .user-message-edit__button--save:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--color-accent) 85%, white 15%);
 }
 
 .user-message-edit__button--save:disabled {
-  background: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  color: color-mix(in srgb, white 40%, var(--color-accent) 60%);
   cursor: not-allowed;
 }
 
 .user-message-edit__button--cancel {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .user-message-edit__button--cancel:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
 }
