@@ -1,4 +1,4 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, Menu } = require('electron');
 const { MAIN_WINDOW, SETTINGS_WINDOW } = require('../config/constants');
 const { getFrontendPaths, getAssetPaths } = require('../utils/path-utils');
 
@@ -35,6 +35,39 @@ class WindowManager {
 
     this.mainWindow.on('closed', () => {
       this.mainWindow = null;
+    });
+
+    // Enable context menu for right-click (copy/paste/etc)
+    this.mainWindow.webContents.on('context-menu', (event, params) => {
+      const { editFlags, isEditable, selectionText } = params;
+      
+      const menuTemplate = [];
+      
+      // Add editing options for editable fields
+      if (isEditable) {
+        menuTemplate.push(
+          { role: 'undo', enabled: editFlags.canUndo },
+          { role: 'redo', enabled: editFlags.canRedo },
+          { type: 'separator' },
+          { role: 'cut', enabled: editFlags.canCut },
+          { role: 'copy', enabled: editFlags.canCopy },
+          { role: 'paste', enabled: editFlags.canPaste },
+          { role: 'delete', enabled: editFlags.canDelete },
+          { type: 'separator' },
+          { role: 'selectAll', enabled: editFlags.canSelectAll }
+        );
+      } else if (selectionText && selectionText.trim() !== '') {
+        // Add copy option for selected text
+        menuTemplate.push(
+          { role: 'copy', enabled: editFlags.canCopy }
+        );
+      }
+      
+      // Show the context menu if there are items
+      if (menuTemplate.length > 0) {
+        const contextMenu = Menu.buildFromTemplate(menuTemplate);
+        contextMenu.popup();
+      }
     });
 
     return this.mainWindow;
@@ -78,6 +111,36 @@ class WindowManager {
 
     this.settingsWindow.on('closed', () => {
       this.settingsWindow = null;
+    });
+
+    // Enable context menu for settings window
+    this.settingsWindow.webContents.on('context-menu', (event, params) => {
+      const { editFlags, isEditable, selectionText } = params;
+      
+      const menuTemplate = [];
+      
+      if (isEditable) {
+        menuTemplate.push(
+          { role: 'undo', enabled: editFlags.canUndo },
+          { role: 'redo', enabled: editFlags.canRedo },
+          { type: 'separator' },
+          { role: 'cut', enabled: editFlags.canCut },
+          { role: 'copy', enabled: editFlags.canCopy },
+          { role: 'paste', enabled: editFlags.canPaste },
+          { role: 'delete', enabled: editFlags.canDelete },
+          { type: 'separator' },
+          { role: 'selectAll', enabled: editFlags.canSelectAll }
+        );
+      } else if (selectionText && selectionText.trim() !== '') {
+        menuTemplate.push(
+          { role: 'copy', enabled: editFlags.canCopy }
+        );
+      }
+      
+      if (menuTemplate.length > 0) {
+        const contextMenu = Menu.buildFromTemplate(menuTemplate);
+        contextMenu.popup();
+      }
     });
 
     return this.settingsWindow;
