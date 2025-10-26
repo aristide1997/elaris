@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WebSocket API Handler - WebSocket endpoint for chat communication
+WebSocket API Handler - Routes WebSocket messages to conversation orchestrator
 """
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -8,66 +8,73 @@ import asyncio
 import json
 import logging
 
-from services.chat_service import ChatSession
+from core.messaging import WebSocketMessenger
+from services.conversation_repository import ConversationRepository
+from services.approval_service import ApprovalService
+from services.agent_factory import AgentFactory
+from services.stream_handler import StreamHandler
+from services.conversation_orchestrator import ConversationOrchestrator
 
 logger = logging.getLogger(__name__)
 
 async def websocket_endpoint(websocket: WebSocket):
-    """Main WebSocket endpoint for chat communication"""
+    """Main WebSocket endpoint - routes messages to orchestrator"""
     await websocket.accept()
     logger.info("New WebSocket connection established")
     
-    # Create a new chat session instance
-    chat_session = ChatSession(websocket)
+    messenger = WebSocketMessenger(websocket)
+    repository = ConversationRepository()
+    approval_service = ApprovalService(messenger)
+    agent_factory = AgentFactory()
+    stream_handler = StreamHandler(messenger, approval_service)
+    
+    orchestrator = ConversationOrchestrator(
+        messenger=messenger,
+        repository=repository,
+        agent_factory=agent_factory,
+        stream_handler=stream_handler,
+        approval_service=approval_service
+    )
 
-    # Callback to log exceptions from background tasks
     def _log_task_result(task: asyncio.Task):
         try:
             exc = task.exception()
             if exc:
-                logger.error("Chat task exception", exc_info=exc)
+                logger.error("Task exception", exc_info=exc)
         except asyncio.CancelledError:
             pass
     
     try:
-        # Send ready signal to client
-        await chat_session.send_system_ready()
+        await orchestrator.send_ready()
         
-        # Main message handling loop
         while True:
             try:
-                # Receive message from client
                 data = await websocket.receive_json()
                 
                 if data["type"] == "chat_message":
-                    # Handle chat message
                     user_input = data["content"].strip()
                     images = data.get("images", [])
-                    # Require conversation_id (provided by frontend)
                     conversation_id = data.get("conversation_id")
+                    
                     if not conversation_id:
                         logger.error("Missing conversation_id from client message")
                         await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
                         continue
                     
                     if user_input or images:
-                        logger.info(f"Received chat message: {user_input} with {len(images)} images for conversation: {conversation_id}")
-                        # Prune any completed tasks to avoid memory growth
-                        chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
-                        # Schedule handling chat message in background to allow processing approval responses
-                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id, images))
+                        logger.info(f"Received chat message for conversation: {conversation_id}")
+                        orchestrator.tasks = [t for t in orchestrator.tasks if not t.done()]
+                        task = asyncio.create_task(orchestrator.handle_chat_message(user_input, conversation_id, images))
                         task.add_done_callback(_log_task_result)
-                        chat_session.tasks.append(task)
+                        orchestrator.tasks.append(task)
                 
                 elif data["type"] == "approval_response":
-                    # Handle tool approval response
                     approval_id = data["approval_id"]
                     approved = data["approved"]
                     logger.info(f"Received approval response: {approval_id} = {approved}")
-                    await chat_session.handle_approval_response(approval_id, approved)
+                    await orchestrator.handle_approval_response(approval_id, approved)
                 
                 elif data["type"] == "edit_user_message":
-                    # Handle user message editing
                     conversation_id = data.get("conversation_id")
                     user_message_index = data.get("user_message_index")
                     new_content = data.get("new_content", "").strip()
@@ -88,26 +95,23 @@ async def websocket_endpoint(websocket: WebSocket):
                         continue
                     
                     logger.info(f"Received edit request: conversation {conversation_id}, user message {user_message_index}")
-                    # Prune any completed tasks to avoid memory growth
-                    chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
-                    # Schedule handling edit message in background
-                    task = asyncio.create_task(chat_session.handle_edit_user_message(conversation_id, user_message_index, new_content))
+                    orchestrator.tasks = [t for t in orchestrator.tasks if not t.done()]
+                    task = asyncio.create_task(orchestrator.handle_edit_message(conversation_id, user_message_index, new_content))
                     task.add_done_callback(_log_task_result)
-                    chat_session.tasks.append(task)
+                    orchestrator.tasks.append(task)
                 
                 elif data["type"] == "update_settings":
-                    # Handle dynamic settings update mid-session
-                    logger.info("Received update_settings via WebSocket - next message will use updated settings automatically")
-                    await chat_session.send_system_ready("Settings updated successfully")
+                    logger.info("Received update_settings via WebSocket")
+                    await orchestrator.send_ready("Settings updated successfully")
+                
                 elif data["type"] == "stop_stream":
-                    # User requested to stop the current stream
                     logger.info(f"Received stop_stream for conversation: {data.get('conversation_id')}")
-                    for task in chat_session.tasks:
+                    for task in orchestrator.tasks:
                         if not task.done():
                             task.cancel()
-                    # Notify client that assistant has stopped
                     await websocket.send_json({"type": "assistant_complete"})
                     continue
+                
                 else:
                     logger.warning(f"Unknown message type: {data['type']}")
                     
@@ -128,17 +132,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 "message": f"Server error: {str(e)}"
             })
         except:
-            pass  # Connection might be closed
+            pass
     finally:
         logger.info("Cleaning up WebSocket connection")
-        # Cancel any pending chat handling tasks
-        for t in getattr(chat_session, 'tasks', []):
+        for t in getattr(orchestrator, 'tasks', []):
             if not t.done():
                 t.cancel()
-        logger.info("Cancelled background chat tasks")
+        logger.info("Cancelled background tasks")
         
-        # Cleanup chat session resources
         try:
-            await chat_session.cleanup()
+            await orchestrator.cleanup()
         except Exception as e:
-            logger.error(f"Error during chat session cleanup: {e}")
+            logger.error(f"Error during orchestrator cleanup: {e}")

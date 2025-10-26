@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tool Approval Manager - Handles tool execution approval workflow
+Approval Service - Handles tool execution approval workflow
 """
 
 import asyncio
@@ -13,7 +13,7 @@ from core.config import config_manager
 
 logger = logging.getLogger(__name__)
 
-class ToolApprovalManager:
+class ApprovalService:
     """Manages tool execution approval workflow"""
     
     def __init__(self, messenger: WebSocketMessenger):
@@ -22,8 +22,6 @@ class ToolApprovalManager:
     
     async def request_approval(self, tool_name: str, args: dict) -> bool:
         """Request user approval for tool execution"""
-        # Check if auto-approval is enabled
-        from core.config import config_manager
         auto_approve = await config_manager.get_value("auto_approve_tools", False)
         
         if auto_approve:
@@ -34,7 +32,6 @@ class ToolApprovalManager:
         
         logger.info(f"Requesting approval for tool: {tool_name} with ID: {approval_id}")
         
-        # Send approval request to client
         await self.messenger.send_message(
             "approval_request",
             approval_id=approval_id,
@@ -42,15 +39,13 @@ class ToolApprovalManager:
             args=args
         )
         
-        # Create a future to wait for the response
         loop = asyncio.get_running_loop()
         approval_future = loop.create_future()
         self.pending_approvals[approval_id] = approval_future
         
         try:
-            # Wait for approval response with timeout
             timeout = await config_manager.get_value("approval_timeout", 60.0)
-            approved = await asyncio.wait_for(approval_future, timeout=timeout)  # configurable timeout
+            approved = await asyncio.wait_for(approval_future, timeout=timeout)
             logger.info(f"Approval received for {approval_id}: {approved}")
             return approved
         except asyncio.TimeoutError:
@@ -60,7 +55,6 @@ class ToolApprovalManager:
             logger.error(f"Error waiting for approval: {e}")
             return False
         finally:
-            # Clean up
             self.pending_approvals.pop(approval_id, None)
     
     async def handle_approval_response(self, approval_id: str, approved: bool):
