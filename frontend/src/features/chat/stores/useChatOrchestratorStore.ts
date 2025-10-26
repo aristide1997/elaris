@@ -272,9 +272,7 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       },
       // Message handling helpers
       handleSystemReady: (message: string) => {
-        const { addMessage } = useMessagesStore.getState()
-        const msg = MessageService.systemMessage(message)
-        addMessage(msg)
+        console.log(message)
       },
 
       handleAssistantStart: () => {

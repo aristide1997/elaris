@@ -4,7 +4,6 @@ import { getApiBase } from '../../../shared/utils/api'
 
 interface Settings {
   system_prompt: string
-  debug_mode: boolean
   llm_provider: {
     provider: string
     model: string
@@ -26,7 +25,7 @@ interface SettingsState {
 
 interface SettingsActions {
   loadSettings: () => Promise<void>
-  saveSettings: (settings: Settings) => Promise<void>
+  saveSettings: (settings: Partial<Settings>) => Promise<void>
   validateMcpServers: (mcpServers: Record<string, any>) => Promise<boolean>
   updateSettings: (settings: Partial<Settings>) => void
   resetSettings: () => void
@@ -78,7 +77,7 @@ export const useSettingsStore = create<SettingsStore>()(
         }
       },
 
-      saveSettings: async (settings: Settings) => {
+      saveSettings: async (settings: Partial<Settings>) => {
         set({ isLoading: true, error: null, validationErrors: [] }, false, 'saveSettings/start')
         
         try {
@@ -94,8 +93,12 @@ export const useSettingsStore = create<SettingsStore>()(
           const data = await response.json()
           
           if (data.status === 'success') {
+            // Merge the saved settings with current settings
+            const currentSettings = get().settings
+            const updatedSettings = currentSettings ? { ...currentSettings, ...settings } : settings as Settings
+            
             set({ 
-              settings: settings, 
+              settings: updatedSettings, 
               isLoading: false,
               isDirty: false,
               validationErrors: [],

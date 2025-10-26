@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useChatActions } from '../../chat/hooks/useChatActions'
 import { useConversationsQuery, useDeleteConversationMutation, conversationKeys } from '../../../shared/api/queries'
+import { useSearchStore } from '../../ui/stores/useSearchStore'
 import './ChatHistoryList.css'
 
 const ChatHistoryList: React.FC = () => {
   const { selectConversation, conversationId } = useChatActions()
+  const { query: searchQuery } = useSearchStore()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
   
@@ -71,27 +73,33 @@ const ChatHistoryList: React.FC = () => {
     )
   }
 
+  // Filter conversations based on search query
+  const filteredConversations = conversations.filter(conv => 
+    !searchQuery || conv.preview?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="chat-history-list">
-      <div className="chat-history-header">
-        <h3>Recent Chats</h3>
-      </div>
-      
       <div className="chat-history-items">
         {conversations.length === 0 ? (
           <div className="no-conversations">
             <p>No conversations yet</p>
             <p className="no-conversations-subtitle">Start a new chat to begin</p>
           </div>
+        ) : filteredConversations.length === 0 ? (
+          <div className="no-conversations">
+            <p>No conversations found</p>
+            <p className="no-conversations-subtitle">Try a different search term</p>
+          </div>
         ) : (
-          conversations.map(conv => (
+          filteredConversations.map(conv => (
             <div
               key={conv.conversation_id}
               className="chat-history-item-container"
             >
               <button
                 onClick={() => handleSelectConversation(conv.conversation_id)}
-                className="chat-history-item"
+                className={`chat-history-item ${conversationId === conv.conversation_id ? 'selected' : ''}`}
                 title={conv.preview}
               >
                 <div className="chat-preview">

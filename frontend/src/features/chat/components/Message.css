@@ -1,0 +1,149 @@
+/* Slack-inspired layout for chat messages */
+.message-row {
+  width: 100%;
+  padding: var(--space-2) 0;
+  border-radius: var(--radius-lg);
+  transition: background-color var(--duration-fast) var(--easing-standard);
+  color: var(--color-text-primary);
+}
+
+.message-row__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--container-xxl);
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+  box-sizing: border-box;
+}
+
+.message-row--user,
+.message-row--assistant {
+  background: transparent;
+}
+
+.message-row--user {
+  background: var(--color-surface-secondary);
+  border-radius: 0;
+}
+
+.message-row__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--font-size-sm);
+}
+
+.message-row__author {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.message-row__timestamp {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+
+.message-row__body {
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  word-break: break-word;
+  max-width: 100%;
+  width: 100%;
+}
+
+.message-row__body > * + * {
+  margin-top: var(--space-4);
+}
+
+.message-row--system {
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  text-align: center;
+  margin: 0 var(--space-4);
+  padding: var(--space-2) 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.message-row--system .message-row__content {
+  max-width: min(var(--container-xxl), 60ch);
+  padding: 0 var(--space-4);
+  align-items: center;
+}
+
+.message-row--system .message-row__body {
+  max-width: 100%;
+  padding-left: 0;
+}
+
+/* Tool session styling within assistant messages */
+.tool-session-wrapper {
+  width: 100%;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+}
+
+.tool-session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.session-status {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  border: 1px solid transparent;
+}
+
+.session-status.executing {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.session-status.completed {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.session-status.blocked {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+/* Responsive adjustments */
+@media (max-width: var(--breakpoint-md)) {
+  .message-row__content {
+    padding: 0 var(--space-4);
+  }
+
+  .message-row--system {
+    margin: 0 var(--space-2);
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .message-row__content {
+    padding: 0 var(--space-3);
+  }
+
+  .message-row__header {
+    gap: var(--space-1);
+  }
+}
