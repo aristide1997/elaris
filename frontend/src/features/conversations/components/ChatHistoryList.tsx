@@ -1,37 +1,39 @@
 import { useState, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useChatActions } from '../../chat/hooks/useChatActions'
-import { useConversationsQuery, useDeleteConversationMutation, conversationKeys } from '../../../shared/api/queries'
-import { useSearchStore } from '../../ui/stores/useSearchStore'
+import { getApiBase } from '../../../shared/utils/api'
 import './ChatHistoryList.css'
 
+interface ConversationSummary {
+  conversation_id: string
+  created_at: string
+  updated_at: string
+  message_count: number
+  preview: string
+}
+
 const ChatHistoryList: React.FC = () => {
-  const { selectConversation, conversationId } = useChatActions()
-  const { query: searchQuery } = useSearchStore()
+  const { selectConversation, serverPort, conversationId } = useChatActions()
+  const [conversations, setConversations] = useState<ConversationSummary[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const queryClient = useQueryClient()
-  
-  // Use React Query for conversations
-  const { 
-    data: conversations = [], 
-    isLoading, 
-    error 
-  } = useConversationsQuery(20)
-  
-  const deleteConversationMutation = useDeleteConversationMutation()
 
-  // Listen for conversationCreated events to refresh the list
   useEffect(() => {
-    const handleConversationCreated = () => {
-      queryClient.invalidateQueries({ queryKey: conversationKeys.lists() })
+    const fetchConversations = async () => {
+      setIsLoading(true)
+      try {
+        const url = `${getApiBase()}/api/conversations?limit=20`
+        const res = await fetch(url)
+        const data = await res.json()
+        setConversations(data.conversations || [])
+      } catch (error) {
+        console.error('Failed to fetch conversations:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    window.addEventListener('conversationCreated', handleConversationCreated)
-    
-    return () => {
-      window.removeEventListener('conversationCreated', handleConversationCreated)
-    }
-  }, [queryClient])
+    fetchConversations()
+  }, [serverPort, conversationId])
 
   const handleSelectConversation = (conversationId: string) => {
     selectConversation(conversationId)
@@ -42,11 +44,21 @@ const ChatHistoryList: React.FC = () => {
     setDeletingId(targetConversationId)
     
     try {
-      await deleteConversationMutation.mutateAsync(targetConversationId)
+      const url = `${getApiBase()}/api/conversations/${targetConversationId}`
+      const response = await fetch(url, {
+        method: 'DELETE'
+      })
       
-      // If this was the active conversation, clear it
-      if (targetConversationId === conversationId) {
-        selectConversation('')
+      if (response.ok) {
+        // Remove from local state
+        setConversations(prev => prev.filter(conv => conv.conversation_id !== targetConversationId))
+        
+        // If this was the active conversation, clear it
+        if (targetConversationId === conversationId) {
+          selectConversation('')
+        }
+      } else {
+        console.error('Failed to delete conversation')
       }
     } catch (error) {
       console.error('Error deleting conversation:', error)
@@ -64,42 +76,27 @@ const ChatHistoryList: React.FC = () => {
     )
   }
 
-  if (error) {
-    return (
-      <div className="chat-history-error">
-        <p>Failed to load conversations</p>
-        <p className="error-message">{error.message}</p>
-      </div>
-    )
-  }
-
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter(conv => 
-    !searchQuery || conv.preview?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
   return (
     <div className="chat-history-list">
+      <div className="chat-history-header">
+        <h3>Recent Chats</h3>
+      </div>
+      
       <div className="chat-history-items">
         {conversations.length === 0 ? (
           <div className="no-conversations">
             <p>No conversations yet</p>
             <p className="no-conversations-subtitle">Start a new chat to begin</p>
           </div>
-        ) : filteredConversations.length === 0 ? (
-          <div className="no-conversations">
-            <p>No conversations found</p>
-            <p className="no-conversations-subtitle">Try a different search term</p>
-          </div>
         ) : (
-          filteredConversations.map(conv => (
+          conversations.map(conv => (
             <div
               key={conv.conversation_id}
               className="chat-history-item-container"
             >
               <button
                 onClick={() => handleSelectConversation(conv.conversation_id)}
-                className={`chat-history-item ${conversationId === conv.conversation_id ? 'selected' : ''}`}
+                className="chat-history-item"
                 title={conv.preview}
               >
                 <div className="chat-preview">

@@ -1,106 +1,34 @@
 .input-container {
-  padding: var(--space-4) var(--space-4) var(--space-6);
+  padding: var(--space-4) var(--space-6) var(--space-6);
   background: var(--color-surface);
+  border-top: 1px solid var(--color-border-subtle);
   position: relative;
 }
 
 
 .input-wrapper {
-  max-width: var(--container-xxl);
+  max-width: 900px;
   margin: 0 auto;
-  position: relative;
-}
-
-.input-box {
-  position: relative;
-  background: var(--color-surface);
-  border: var(--border-width-thin) solid var(--color-border);
-  border-radius: var(--radius-chat-input);
-  padding: var(--space-1) var(--space-3);
-}
-.input-box:focus-within {
-  border-color: var(--color-border-strong);
-}
-
-
-.input-row {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.controls-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--space-1);
-}
-
-.controls-left,
-.controls-right {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-3);
-}
-
-.attached-images {
-  max-width: var(--container-xxl);
-  margin: 0 auto var(--space-3) auto;
-}
-
-
-.drag-active {
-  background: var(--color-accent-subtle);
-  border-color: var(--color-accent);
-}
-
-.drag-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(59, 130, 246, var(--opacity-overlay));
-  border: var(--border-width-normal) dashed var(--color-accent);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.drag-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-accent);
-  font-weight: var(--font-weight-medium);
-}
-
-.drag-message svg {
-  opacity: 0.7;
-}
-
-.drag-message p {
-  margin: 0;
-  font-size: var(--font-size-lg);
+  align-items: flex-end;
+  position: relative;
 }
 
 .message-input {
   flex: 1;
-  padding: var(--space-2) var(--space-2);
-  border: none;
-  border-radius: 0;
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
   font-size: var(--font-size-base);
   font-family: inherit;
   line-height: 1.5;
   resize: none;
   max-height: 200px;
-  min-height: var(--button-height-lg);
-  background: transparent;
+  min-height: 56px;
+  background: var(--color-surface);
   color: var(--color-text-primary);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   position: relative;
 }
 
@@ -110,6 +38,7 @@
 
 .message-input:focus {
   outline: none;
+  border-color: var(--color-accent);
 }
 
 .message-input:disabled {
@@ -119,82 +48,109 @@
   border-color: var(--color-border-subtle);
 }
 
-.input-row .send-button,
-.input-row .stop-button {
-  width: var(--button-height-md);
-  height: var(--button-height-md);
+.send-button {
+  width: 56px;
+  height: 56px;
   border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.input-row .send-button:hover:not(:disabled) {
-  color: var(--color-accent);
+.send-button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
 }
 
-.input-row .send-button:disabled {
-  color: var(--color-text-tertiary);
-  cursor: not-allowed;
-}
-
-.input-row .send-button svg {
-  width: var(--icon-md);
-  height: var(--icon-md);
-}
-
-/* Stop button styling */
-.input-row .stop-button {
-  background: var(--color-danger);
-  color: white;
-}
-
-.input-row .stop-button:hover:not(:disabled) {
-  background: var(--color-danger);
-  opacity: var(--opacity-hover);
-}
-
-.input-row .stop-button:disabled {
+.send-button:disabled {
   background: var(--color-text-tertiary);
   cursor: not-allowed;
 }
 
-.input-row .stop-button svg {
-  width: var(--icon-md);
-  height: var(--icon-md);
+.send-button svg {
+  width: 20px;
+  height: 20px;
 }
 
+/* Stop button styling */
+.stop-button {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: #e53e3e;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stop-button:hover:not(:disabled) {
+  background: #c53030;
+}
+
+.stop-button:disabled {
+  background: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+.stop-button svg {
+  width: 20px;
+  height: 20px;
+}
 
 
 /* Responsive adjustments */
-@media (max-width: var(--breakpoint-md)) {
+@media (max-width: 768px) {
   .input-container {
-    padding: var(--space-3) var(--space-3) var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  
+  .input-wrapper {
+    gap: var(--space-2);
+    max-width: 100%;
   }
   
   .message-input {
+    padding: var(--space-3) var(--space-4);
     font-size: var(--font-size-sm);
-    min-height: var(--button-height-md);
+    min-height: 48px;
   }
   
-  .input-row .send-button,
-  .input-row .stop-button {
-    width: var(--button-height-sm);
-    height: var(--button-height-sm);
+  .send-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .send-button svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
-@media (max-width: var(--breakpoint-sm)) {
+@media (max-width: 640px) {
   .input-container {
     padding: var(--space-3);
   }
   
   .message-input {
-    min-height: var(--button-height-sm);
-    max-height: var(--container-sm);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-xl);
+    min-height: 44px;
+    max-height: 120px;
+  }
+  
+  .send-button {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .send-button svg {
+    width: 16px;
+    height: 16px;
   }
 }

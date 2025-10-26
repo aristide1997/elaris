@@ -5,7 +5,6 @@ Chat Session - Main orchestrator for chat conversations with AI agents
 
 import asyncio
 import logging
-import base64
 from fastapi import WebSocket
 
 from core.messaging import WebSocketMessenger
@@ -13,8 +12,7 @@ from services.tool_approval import ToolApprovalManager
 from services.mcp_agent import MCPAgentManager
 from services.message_processor import MessageStreamProcessor
 from core.database import get_conversation_by_id, save_conversation, update_conversation
-from pydantic_ai.messages import ModelRequest, UserPromptPart, BinaryContent
-from pydantic_ai.usage import RunUsage
+from pydantic_ai.messages import ModelRequest, Usage
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +34,7 @@ class ChatSession:
         # Ensure messages are processed sequentially per session
         self._message_lock = asyncio.Lock()
     
-    async def handle_chat_message(self, user_input: str, conversation_id: str, images=None):
+    async def handle_chat_message(self, user_input: str, conversation_id: str):
         """Handle a chat message from the user with streaming response"""
         async with self._message_lock:
             try:
@@ -49,34 +47,12 @@ class ChatSession:
                     existing_messages = []
                     logger.info(f"Starting new conversation {conversation_id}")
                 
-                # Prepare content for agent iteration
-                if images and len(images) > 0:
-                    # Process images into pydantic-ai format
-                    content_parts = []
-                    
-                    if user_input.strip():
-                        content_parts.append(user_input)
-                    
-                    # Convert images to BinaryContent
-                    for img_data in images:
-                        try:
-                            image_bytes = base64.b64decode(img_data['data'])
-                            binary_content = BinaryContent(
-                                data=image_bytes,
-                                media_type=img_data['media_type']
-                            )
-                            content_parts.append(binary_content)
-                            logger.info(f"Added image: {img_data['name']} ({img_data['media_type']}, {len(image_bytes)} bytes)")
-                        except Exception as e:
-                            logger.error(f"Error processing image {img_data.get('name', 'unknown')}: {e}")
-                            await self.messenger.send_error(f"Error processing image: {str(e)}")
-                            return
-                    
-                    # Use content_parts directly for agent.iter()
-                    user_content = content_parts
+                # Always save user message before streaming response
+                user_request = ModelRequest.user_text_prompt(user_input)
+                if conversation:
+                    await update_conversation(conversation_id, existing_messages + [user_request], Usage())
                 else:
-                    # Text-only message
-                    user_content = user_input
+                    await save_conversation(conversation_id, [user_request], Usage())
                 
                 # Prepare message history for agent iteration
                 message_history = existing_messages if existing_messages else None
@@ -85,23 +61,12 @@ class ChatSession:
                 agent = await self.agent_manager.create_agent()
                 
                 # Begin streaming iteration with the AI agent
-                async with agent.iter(user_content, message_history=message_history) as run:
+                async with agent.iter(user_input, message_history=message_history) as run:
                     await self.message_processor.process_agent_stream(run)
                     
                     # After stream completes, save or update the conversation
                     await self._save_conversation(run.result, conversation_id)
                     
-            except RuntimeError as e:
-                # Handle model capability errors (e.g., images not supported)
-                if "support" in str(e).lower():
-                    logger.warning(f"Model capability error: {e}")
-                    await self.messenger.send_error(f"This model doesn't support images: {str(e)}")
-                else:
-                    logger.error(f"Runtime error handling chat message: {e}", exc_info=True)
-                    await self.messenger.send_error(f"Error processing message: {str(e)}")
-            except NotImplementedError as e:
-                logger.warning(f"Feature not implemented: {e}")
-                await self.messenger.send_error(f"Image type not supported: {str(e)}")
             except asyncio.CancelledError:
                 # Task was cancelled by user stop request - swallow without error
                 logger.info(f"Chat message handling cancelled for conversation {conversation_id}")
@@ -141,65 +106,6 @@ class ChatSession:
         except Exception as e:
             logger.error(f"Error saving conversation: {e}", exc_info=True)
             return None
-    
-    async def handle_edit_user_message(self, conversation_id: str, user_message_index: int, new_content: str):
-        """Handle editing a user message and re-running the conversation from that point"""
-        async with self._message_lock:
-            try:
-                # Load the existing conversation
-                conversation = await get_conversation_by_id(conversation_id)
-                if not conversation:
-                    logger.error(f"Conversation {conversation_id} not found for editing")
-                    await self.messenger.send_error("Conversation not found")
-                    return
-                
-                messages = conversation['messages']
-                logger.info(f"Editing conversation {conversation_id} with {len(messages)} messages")
-                
-                # Find the user message at the specified index
-                user_count = 0
-                edit_position = None
-                
-                for i, message in enumerate(messages):
-                    if message.kind == 'request':  # User message in pydantic-ai
-                        # Check if this ModelRequest contains a UserPromptPart
-                        if any(part.part_kind == 'user-prompt' for part in message.parts):
-                            if user_count == user_message_index:
-                                edit_position = i
-                                break
-                            user_count += 1
-                
-                if edit_position is None:
-                    logger.error(f"User message at index {user_message_index} not found")
-                    await self.messenger.send_error(f"User message at index {user_message_index} not found")
-                    return
-                
-                # Truncate conversation history up to (but not including) the edit position
-                messages_up_to_edit = messages[:edit_position]
-                logger.info(f"Truncating conversation to {len(messages_up_to_edit)} messages before edit point")
-                
-                # Prepare message history for agent iteration (None if empty)
-                message_history = messages_up_to_edit if messages_up_to_edit else None
-                
-                # Create a fresh agent for this edited message
-                agent = await self.agent_manager.create_agent()
-                
-                # Begin streaming iteration with the AI agent using the new content
-                async with agent.iter(new_content, message_history=message_history) as run:
-                    await self.message_processor.process_agent_stream(run)
-                    
-                    # After stream completes, save the updated conversation
-                    await self._save_conversation(run.result, conversation_id)
-                    
-                logger.info(f"Successfully processed edit for conversation {conversation_id}")
-                    
-            except asyncio.CancelledError:
-                # Task was cancelled by user stop request - swallow without error
-                logger.info(f"Edit message handling cancelled for conversation {conversation_id}")
-                return
-            except Exception as e:
-                logger.error(f"Error handling edit message: {e}", exc_info=True)
-                await self.messenger.send_error(f"Error processing edit: {str(e)}")
     
     async def handle_approval_response(self, approval_id: str, approved: bool):
         """Handle approval response from the client"""

@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_all, copy_metadata
+from PyInstaller.utils.hooks import collect_all
 
 # Get the current directory
 current_dir = Path('.')
@@ -20,7 +20,7 @@ a = Analysis(
         ('core', 'core'),
         ('services', 'services'),
         ('tests', 'tests'),
-    ] + datas_pai + copy_metadata('genai_prices'),
+    ] + datas_pai,
     hiddenimports=[
         'uvicorn',
         'uvicorn.lifespan',
@@ -44,11 +44,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[
-        'logfire',
-        'logfire.integrations',
-        'logfire.integrations.pydantic',
-    ],
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=None,

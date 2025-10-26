@@ -42,7 +42,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 if data["type"] == "chat_message":
                     # Handle chat message
                     user_input = data["content"].strip()
-                    images = data.get("images", [])
                     # Require conversation_id (provided by frontend)
                     conversation_id = data.get("conversation_id")
                     if not conversation_id:
@@ -50,12 +49,12 @@ async def websocket_endpoint(websocket: WebSocket):
                         await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
                         continue
                     
-                    if user_input or images:
-                        logger.info(f"Received chat message: {user_input} with {len(images)} images for conversation: {conversation_id}")
+                    if user_input:
+                        logger.info(f"Received chat message: {user_input} for conversation: {conversation_id}")
                         # Prune any completed tasks to avoid memory growth
                         chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
                         # Schedule handling chat message in background to allow processing approval responses
-                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id, images))
+                        task = asyncio.create_task(chat_session.handle_chat_message(user_input, conversation_id))
                         task.add_done_callback(_log_task_result)
                         chat_session.tasks.append(task)
                 
@@ -65,35 +64,6 @@ async def websocket_endpoint(websocket: WebSocket):
                     approved = data["approved"]
                     logger.info(f"Received approval response: {approval_id} = {approved}")
                     await chat_session.handle_approval_response(approval_id, approved)
-                
-                elif data["type"] == "edit_user_message":
-                    # Handle user message editing
-                    conversation_id = data.get("conversation_id")
-                    user_message_index = data.get("user_message_index")
-                    new_content = data.get("new_content", "").strip()
-                    
-                    if not conversation_id:
-                        logger.error("Missing conversation_id from edit message")
-                        await websocket.send_json({"type": "error", "message": "Missing conversation_id"})
-                        continue
-                    
-                    if user_message_index is None:
-                        logger.error("Missing user_message_index from edit message")
-                        await websocket.send_json({"type": "error", "message": "Missing user_message_index"})
-                        continue
-                    
-                    if not new_content:
-                        logger.error("Missing new_content from edit message")
-                        await websocket.send_json({"type": "error", "message": "Missing new_content"})
-                        continue
-                    
-                    logger.info(f"Received edit request: conversation {conversation_id}, user message {user_message_index}")
-                    # Prune any completed tasks to avoid memory growth
-                    chat_session.tasks = [t for t in chat_session.tasks if not t.done()]
-                    # Schedule handling edit message in background
-                    task = asyncio.create_task(chat_session.handle_edit_user_message(conversation_id, user_message_index, new_content))
-                    task.add_done_callback(_log_task_result)
-                    chat_session.tasks.append(task)
                 
                 elif data["type"] == "update_settings":
                     # Handle dynamic settings update mid-session

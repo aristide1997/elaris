@@ -3,128 +3,13 @@
   flex-direction: column;
   height: 100%;
   background: var(--color-surface);
-  position: relative;
 }
 
-.sidebar-top {
-  height: var(--header-height);
+.sidebar-header {
   flex-shrink: 0;
   background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.sidebar-brand {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-}
-
-.brand-logo {
-  height: 14px;
-  width: auto;
-  color: var(--color-text-primary);
-  transition: opacity 0.2s ease;
-}
-
-.brand-logo:hover {
-  opacity: 0.8;
-}
-
-.collapse-button {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  width: var(--space-8);
-  height: var(--space-8);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.collapse-button:hover {
-  background: var(--color-surface-secondary);
-  color: var(--color-text-primary);
-}
-
-.quick-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-1);
-  gap: var(--space-2);
-}
-
-/* Sidebar button styles for text + icon + shortcut layout */
-.sidebar-button {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-  width: 100%;
-  position: relative;
-}
-
-.sidebar-button:hover {
-  background: var(--color-surface-secondary);
-  color: var(--color-text-primary);
-}
-
-.sidebar-button svg {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.sidebar-button-text {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-button-shortcut {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.sidebar-button:hover .sidebar-button-shortcut {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.quick-actions-divider {
-  height: 1px;
-  background: var(--color-border-subtle);
-  margin: 0 var(--space-4);
-}
-
-.section-header {
-  margin-top: var(--space-4);
-  padding: var(--space-2) var(--space-4);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.05em;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .sidebar-content {
@@ -133,10 +18,15 @@
   display: flex;
   flex-direction: column;
   background: var(--color-surface);
-  padding: var(--space-2) 0;
+  padding: var(--space-3) 0;
 }
 
-/* footer removed in new design */
+.sidebar-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  padding: var(--space-3);
+}
 
 /* Improved scrolling area within sidebar content */
 .sidebar-content > * {
@@ -162,85 +52,17 @@
   background-color: var(--color-text-tertiary);
 }
 
-.resize-handle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4px;
-  height: 100%;
-  background: transparent;
-  cursor: col-resize;
-  z-index: 101;
-  transition: background-color 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: var(--color-border);
-}
-
-.resize-handle.resizing {
-  background: var(--color-text-secondary);
-}
-
 /* Responsive - maintain good spacing on mobile */
 @media (max-width: 640px) {
-  .sidebar-top {
-    padding: 0 var(--space-3);
+  .sidebar-header {
+    padding: var(--space-3);
   }
-
-  .quick-actions {
-    padding: var(--space-1) var(--space-3);
+  
+  .sidebar-footer {
+    padding: var(--space-2);
   }
-
+  
   .sidebar-content {
     padding: var(--space-2) 0;
   }
-
-  .brand-logo {
-    height: 12px;
-  }
-  
-  .resize-handle {
-    display: none;
-  }
-
-  /* On very small screens, show only icons */
-  .sidebar-button-text {
-    display: none;
-  }
-
-  .sidebar-button-shortcut {
-    display: none;
-  }
-
-  .sidebar-button {
-    justify-content: center;
-    padding: var(--space-2);
-    gap: 0;
-  }
-}
-
-/* For narrow sidebar widths (when resized small), show icon-only mode */
-@media (min-width: 641px) {
-  @container sidebar (max-width: 240px) {
-    .sidebar-button-text {
-      display: none;
-    }
-
-    .sidebar-button-shortcut {
-      display: none;
-    }
-
-    .sidebar-button {
-      justify-content: center;
-      padding: var(--space-2);
-      gap: 0;
-    }
-  }
-}
-
-/* Container query support for the sidebar */
-.sidebar-container {
-  container-type: inline-size;
-  container-name: sidebar;
 }

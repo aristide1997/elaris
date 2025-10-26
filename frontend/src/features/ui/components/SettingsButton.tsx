@@ -1,12 +1,14 @@
 import { useUIStore } from '../stores/useUIStore'
+import './SettingsButton.css'
 
 const SettingsIcon: React.FC = () => (
   <svg
-    width="16"
-    height="16"
+    width="20"
+    height="20"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className="settings-icon-svg"
   >
     <path
       d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
@@ -25,18 +27,17 @@ const SettingsIcon: React.FC = () => (
 
 const SettingsButton: React.FC = () => {
   const { openSettings } = useUIStore()
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
-  const shortcut = isMac ? '⌘,' : 'Ctrl+,'
 
   const handleSettingsClick = () => {
     openSettings()
   }
 
   return (
-    <button className="sidebar-button" onClick={handleSettingsClick} type="button" aria-label="Settings" title={`Settings - ${shortcut}`}>
-      <SettingsIcon />
-      <span className="sidebar-button-text">Settings</span>
-      <span className="sidebar-button-shortcut">{shortcut}</span>
+    <button className="settings-button" onClick={handleSettingsClick} type="button">
+      <span className="settings-icon">
+        <SettingsIcon />
+      </span>
+      <span className="settings-text">Settings</span>
     </button>
   )
 }

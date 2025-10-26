@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useConnectionStore } from '../../connection/stores/useConnectionStore'
-import { 
-  useAvailableProvidersQuery, 
-  useCurrentProviderQuery, 
-  useModelsForProviderQuery,
-  useTestProviderMutation,
-  useConfigureProviderMutation
-} from '../../../shared/api/queries'
+import { useLLMProviderStore } from '../stores/useLLMProviderStore'
 import { useWebSocketConnection } from '../../connection'
 import './SettingsWindow.css'
 
@@ -45,17 +39,43 @@ const SettingsWindow: React.FC = () => {
 
   const sendMessage = useConnectionStore(state => state.sendMessage)
 
-  // React Query hooks for LLM providers
-  const { data: availableProviders = {}, isLoading: isProviderLoading, error: providerError } = useAvailableProvidersQuery()
-  const { data: currentProvider } = useCurrentProviderQuery()
-  const { data: availableModels = [], isLoading: isLoadingModels, error: modelsError } = useModelsForProviderQuery(selectedProvider || null)
-  const testProviderMutation = useTestProviderMutation()
-  const configureProviderMutation = useConfigureProviderMutation()
+  // LLM Provider store
+  const {
+    availableProviders,
+    currentProvider,
+    availableModels,
+    isLoading: isProviderLoading,
+    isLoadingModels,
+    error: providerError,
+    modelsError,
+    loadAvailableProviders,
+    loadCurrentProvider,
+    loadModelsForProvider,
+    testProvider,
+    configureProvider,
+    clearError: clearProviderError,
+    clearModelsError
+  } = useLLMProviderStore()
 
   // Load settings when window opens
   useEffect(() => {
     loadSettings()
   }, [loadSettings])
+
+  // Load LLM provider data when modal opens
+  useEffect(() => {
+    if (activeTab === 'llm') {
+      loadAvailableProviders()
+      loadCurrentProvider()
+    }
+  }, [activeTab, loadAvailableProviders, loadCurrentProvider])
+
+  // Load models when provider is selected
+  useEffect(() => {
+    if (selectedProvider && activeTab === 'llm') {
+      loadModelsForProvider(selectedProvider)
+    }
+  }, [selectedProvider, activeTab, loadModelsForProvider])
 
   // Initialize LLM form state when current provider loads
   useEffect(() => {
@@ -103,72 +123,21 @@ const SettingsWindow: React.FC = () => {
   const handleSave = async () => {
     if (!settings) return
 
-    // Handle LLM provider configuration separately
-    if (activeTab === 'llm') {
-      // Validate LLM configuration
-      if (!selectedProvider) {
-        setTestResult({ success: false, message: 'Please select a provider' })
-        return
-      }
-      if (!selectedModel && selectedModel !== 'custom') {
-        setTestResult({ success: false, message: 'Please select a model' })
-        return
-      }
-      if (selectedModel === 'custom' && !customModelName) {
-        setTestResult({ success: false, message: 'Please enter a custom model name' })
-        return
-      }
-
-      const modelToUse = selectedModel === 'custom' ? customModelName : selectedModel
-
-      try {
-        await configureProviderMutation.mutateAsync({
-          provider: selectedProvider,
-          model: modelToUse,
-          config: providerConfig
-        })
-
-        if (window.electronAPI?.settingsUpdated) {
-          await window.electronAPI.settingsUpdated({
-            llm_provider: {
-              provider: selectedProvider,
-              model: modelToUse,
-              config: providerConfig
-            }
-          })
-        }
-
-        if (window.electronAPI?.closeSettings) {
-          await window.electronAPI.closeSettings()
-        }
-      } catch (error) {
-        console.error('Failed to configure provider:', error)
-        setTestResult({ 
-          success: false, 
-          message: 'Failed to save provider configuration',
-          error: error instanceof Error ? error.message : String(error)
-        })
-      }
-      return
-    }
-
-    // Handle general and MCP settings
-    // Exclude llm_provider from general settings - it's managed separately
-    const { llm_provider, ...settingsWithoutLLM } = settings
-    let updatedSettings = { ...settingsWithoutLLM }
+    let updatedSettings = settings
 
     // If on MCP tab, validate and parse JSON first
     if (activeTab === 'mcp') {
       try {
         const mcpServers = JSON.parse(mcpJsonText)
-        updatedSettings = { ...updatedSettings, mcp_servers: mcpServers }
+        updatedSettings = { ...settings, mcp_servers: mcpServers }
+        await saveSettings(updatedSettings)
       } catch (e) {
         setMcpJsonError('Invalid JSON format')
         return
       }
+    } else {
+      await saveSettings(updatedSettings)
     }
-
-    await saveSettings(updatedSettings)
 
     if (!error && validationErrors.length === 0) {
       sendMessage({ type: 'update_settings', settings: updatedSettings })
@@ -202,6 +171,9 @@ const SettingsWindow: React.FC = () => {
     }
   }
 
+  const handleDebugModeChange = (checked: boolean) => {
+    updateSettings({ debug_mode: checked })
+  }
 
   const handleAutoApproveToolsChange = (checked: boolean) => {
     updateSettings({ auto_approve_tools: checked })
@@ -370,6 +342,21 @@ const SettingsWindow: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="settings-form-group">
+                  <label htmlFor="debug-mode">
+                    <input
+                      id="debug-mode"
+                      type="checkbox"
+                      checked={settings.debug_mode}
+                      onChange={(e) => handleDebugModeChange(e.target.checked)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    Debug Mode
+                  </label>
+                  <div className="form-description">
+                    Show debug button and connection status in the header for troubleshooting.
+                  </div>
+                </div>
               </div>
             )}
 
@@ -377,7 +364,7 @@ const SettingsWindow: React.FC = () => {
               <div>
                 {providerError && (
                   <div className="settings-errors">
-                    <div>{providerError.message}</div>
+                    <div>{providerError}</div>
                   </div>
                 )}
 
@@ -465,7 +452,7 @@ const SettingsWindow: React.FC = () => {
                           
                           {modelsError && (
                             <div className="form-description" style={{ color: '#dc3545', marginTop: '8px' }}>
-                              {modelsError.message}
+                              {modelsError}
                             </div>
                           )}
                           
@@ -547,7 +534,7 @@ const SettingsWindow: React.FC = () => {
                                 setIsTestingProvider(true)
                                 setTestResult(null)
                                 try {
-                                  const result = await testProviderMutation.mutateAsync({ provider: selectedProvider, model: selectedModel, config: providerConfig })
+                                  const result = await testProvider(selectedProvider, selectedModel, providerConfig)
                                   setTestResult(result)
                                 } finally {
                                   setIsTestingProvider(false)

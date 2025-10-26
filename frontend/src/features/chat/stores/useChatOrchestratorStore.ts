@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { MCPServerMessage, MCPClientMessage, ImageAttachment } from '../types'
+import type { MCPServerMessage, MCPClientMessage } from '../types'
 import type { MCPApprovalRequest } from '../../approval/types'
 import { MessageService } from '../services/MessageService'
 import { useApprovalStore } from '../../approval/stores/useApprovalStore'
@@ -11,9 +11,8 @@ import { useConversationStore } from '../../conversations/stores/useConversation
 interface ChatOrchestratorActions {
   // Idempotent stub creation flags
   isCreatingConversation: boolean
-  pendingMessages: Array<{ content: string; images?: ImageAttachment[] }>
-  sendMessage: (content: string, images?: ImageAttachment[]) => void
-  editMessage: (messageId: string, newContent: string) => void
+  pendingMessages: string[]
+  sendMessage: (content: string) => void
   handleServerMessage: (message: MCPServerMessage) => void
   handleRawApprovalRequest: (msg: MCPApprovalRequest) => void
   selectConversation: (id: string) => Promise<void>
@@ -46,8 +45,8 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
     (set, get) => ({
       // Idempotent stub creation state
       isCreatingConversation: false,
-      pendingMessages: [],
-      sendMessage: (content: string, images?: ImageAttachment[]) => {
+      pendingMessages: [] as string[],
+      sendMessage: (content: string) => {
         const convStore = useConversationStore.getState()
         const connStore = useConnectionStore.getState()
         const msgStore = useMessagesStore.getState()
@@ -56,82 +55,36 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
         const { conversationId } = convStore
         const { addMessage } = msgStore
 
-        // Helper function to convert images to base64
-        const convertImagesToBase64 = async (images: ImageAttachment[]): Promise<Array<{id: string, data: string, media_type: string, name: string}>> => {
-          const promises = images.map(async (img) => {
-            return new Promise<{id: string, data: string, media_type: string, name: string}>((resolve) => {
-              const reader = new FileReader()
-              reader.onload = () => {
-                const base64 = (reader.result as string).split(',')[1] // Remove data:image/...;base64, prefix
-                resolve({
-                  id: img.id,
-                  data: base64,
-                  media_type: img.media_type,
-                  name: img.name
-                })
-              }
-              reader.readAsDataURL(img.file!)
-            })
-          })
-          return Promise.all(promises)
-        }
-
         // Optimistically add user message
         const userMessage = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2,9)}`,
           type: 'user' as const,
           content,
-          timestamp: new Date(),
-          attachments: images
+          timestamp: new Date()
         }
         addMessage(userMessage)
 
-        // Prepare message data
-        const messageData = { content, images }
-
         // If conversation already exists, send immediately
         if (conversationId) {
-          if (images && images.length > 0) {
-            convertImagesToBase64(images).then(base64Images => {
-              wsSend({ 
-                type: 'chat_message', 
-                content, 
-                conversation_id: conversationId,
-                images: base64Images
-              } as MCPClientMessage)
-            })
-          } else {
-            wsSend({ type: 'chat_message', content, conversation_id: conversationId } as MCPClientMessage)
-          }
+          wsSend({ type: 'chat_message', content, conversation_id: conversationId } as MCPClientMessage)
           return
         }
 
         // If stub creation in progress, queue this message
         if (get().isCreatingConversation) {
-          set(state => ({ pendingMessages: [...state.pendingMessages, messageData] }))
+          set(state => ({ pendingMessages: [...state.pendingMessages, content] }))
           return
         }
 
         // Start stub creation and queue first message
-        set({ isCreatingConversation: true, pendingMessages: [messageData] })
+        set({ isCreatingConversation: true, pendingMessages: [content] })
         convStore.startNewChat(serverPort, handleError, () => {})
           .then(() => {
             const newCid = useConversationStore.getState().conversationId!
             // Flush queued messages
-            get().pendingMessages.forEach(async (msg) => {
-              if (msg.images && msg.images.length > 0) {
-                const base64Images = await convertImagesToBase64(msg.images)
-                wsSend({ 
-                  type: 'chat_message', 
-                  content: msg.content, 
-                  conversation_id: newCid,
-                  images: base64Images
-                } as MCPClientMessage)
-              } else {
-                wsSend({ type: 'chat_message', content: msg.content, conversation_id: newCid } as MCPClientMessage)
-              }
+            get().pendingMessages.forEach(msg => {
+              wsSend({ type: 'chat_message', content: msg, conversation_id: newCid } as MCPClientMessage)
             })
-            
           })
           .catch((err: any) => {
             handleError(`Failed to start conversation: ${err.message}`)
@@ -139,42 +92,6 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
           .finally(() => {
             set({ isCreatingConversation: false, pendingMessages: [] })
           })
-      },
-
-      editMessage: (messageId: string, newContent: string) => {
-        const convStore = useConversationStore.getState()
-        const connStore = useConnectionStore.getState()
-        const msgStore = useMessagesStore.getState()
-        const handleError = get().handleError
-        const { sendMessage: wsSend } = connStore
-        const { conversationId } = convStore
-        const { getUserMessageIndex, truncateFromUserMessage, updateMessage } = msgStore
-
-        if (!conversationId) {
-          handleError("No active conversation to edit")
-          return
-        }
-
-        // Get the user message index for this message
-        const userMessageIndex = getUserMessageIndex(messageId)
-        if (userMessageIndex === -1) {
-          handleError("Message not found or not a user message")
-          return
-        }
-
-        // Update local state with edited message before truncating history
-        updateMessage(messageId, { content: newContent })
-
-        // Truncate the conversation from this message forward
-        truncateFromUserMessage(messageId)
-
-        // Send the edit request to the backend
-        wsSend({
-          type: 'edit_user_message',
-          conversation_id: conversationId,
-          user_message_index: userMessageIndex,
-          new_content: newContent
-        } as MCPClientMessage)
       },
 
       handleRawApprovalRequest: (msg: MCPApprovalRequest) => {
@@ -272,7 +189,9 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       },
       // Message handling helpers
       handleSystemReady: (message: string) => {
-        console.log(message)
+        const { addMessage } = useMessagesStore.getState()
+        const msg = MessageService.systemMessage(message)
+        addMessage(msg)
       },
 
       handleAssistantStart: () => {
@@ -313,16 +232,8 @@ export const useChatOrchestratorStore = create<ChatOrchestratorStore>()(
       },
 
       handleAssistantComplete: () => {
-        const { setCurrentAssistantId, messages } = useMessagesStore.getState()
+        const { setCurrentAssistantId } = useMessagesStore.getState()
         setCurrentAssistantId(null)
-        
-        // Count assistant messages in current conversation
-        const assistantMessageCount = messages.filter(m => m.type === 'assistant').length
-        
-        // If this was the first assistant message, refresh conversation list
-        if (assistantMessageCount === 1) {
-          window.dispatchEvent(new CustomEvent('conversationCreated'))
-        }
       },
 
       handleThinkingStart: () => {

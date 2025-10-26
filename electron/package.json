@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "0.0.1-beta.8",
+  "version": "0.0.1-beta.6",
   "description": "Elaris Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "dev:electron": "NODE_ENV=development electron .",
     "pack": "cd ../frontend && npm run build && cd ../electron && electron-builder --dir",
     "dist": "cd ../frontend && npm run build && cd ../electron && electron-builder",
-    "build:python": "cd ../server && pip install -r requirements.txt && pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean && rm -rf ../build/temp",
+    "build:python": "cd ../server && pip install -r requirements.txt && pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean",
     "build:dmg": "npm run build:python && npm run build",
     "build:all": "npm run build:python && cd ../frontend && npm run build && cd ../electron && electron-builder"
   },
@@ -56,6 +56,13 @@
         ]
       },
       {
+        "from": "node_modules/npm",
+        "to": "npm",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
         "from": "../node-dist",
         "to": "node",
         "filter": [
@@ -71,7 +78,7 @@
       }
     ],
     "mac": {
-      "icon": "icon.icns",
+      "icon": "icon.png",
       "identity": null,
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -89,6 +96,7 @@
   },
   "dependencies": {
     "electron-updater": "^6.1.7",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "npm": "*"
   }
 }

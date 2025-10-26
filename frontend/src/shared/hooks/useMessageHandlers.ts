@@ -1,3 +1,4 @@
+import { useConnectionStore } from '../../features/connection/stores/useConnectionStore'
 import { useChatOrchestratorStore } from '../../features/chat/stores/useChatOrchestratorStore'
 
 /**
@@ -6,9 +7,11 @@ import { useChatOrchestratorStore } from '../../features/chat/stores/useChatOrch
 export const useMessageHandlers = () => {
   const handleServerMessage = useChatOrchestratorStore(state => state.handleServerMessage)
   const handleRawApprovalRequest = useChatOrchestratorStore(state => state.handleRawApprovalRequest)
+  const setConnection = useConnectionStore(state => state.setConnection)
   
   return {
     handleServerMessage,
-    handleRawApprovalRequest
+    handleRawApprovalRequest,
+    setConnection
   }
-}
+} 

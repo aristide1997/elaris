@@ -123,17 +123,6 @@ jobs:
           echo "Building ${{ matrix.arch }} with code signing..."
           ./scripts/build-dmg.sh ${{ matrix.build_flag }} --sign
 
-      - name: Rename ARM64 update manifest
-        if: matrix.arch == 'arm64'
-        run: |
-          if [ -f dist/latest-mac.yml ]; then
-            mv dist/latest-mac.yml dist/latest-mac-arm64.yml
-            echo "Renamed latest-mac.yml -> latest-mac-arm64.yml"
-          else
-            echo "No latest-mac.yml found to rename (skipping)"
-          fi
-          ls -l dist/*.yml || true
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

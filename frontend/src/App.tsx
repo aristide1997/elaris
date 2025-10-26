@@ -1,41 +1,33 @@
 import { useEffect } from 'react'
-import { Layout, Sidebar, useUIStore, useSettingsStore } from './features/ui'
+import { Layout, Sidebar, ChatHeader, useUIStore, useSettingsStore, useLLMProviderStore } from './features/ui'
 import { ChatWindow } from './features/chat'
 import { useConnectionStore } from './features/connection'
 import { useWebSocketConnection } from './features/connection'
 import { UpdateNotification } from './features/updater'
 import { Modals } from './shared/components/Modals'
-import { useKeyboardShortcuts } from './shared/hooks/useKeyboardShortcuts'
-import { queryClient } from './shared/api/queryClient'
-import { llmProviderKeys } from './shared/api/queries'
 import './App.css'
 
 function App() {
   // Initialize WebSocket connection and store integration
   useWebSocketConnection()
   
-  // Initialize global keyboard shortcuts
-  useKeyboardShortcuts()
-  
-  const isConnected = useConnectionStore(state => state.status === 'connected')
-  const { isSidebarCollapsed } = useUIStore()
+  const isConnected = useConnectionStore(state => state.isConnected)
+  const { isSidebarCollapsed, toggleSidebar, openDebug } = useUIStore()
   const { settings, loadSettings } = useSettingsStore()
+  const { loadCurrentProvider } = useLLMProviderStore()
 
-  // Load settings on app start - wait for backend connection
+  // Load settings on app start
   useEffect(() => {
-    if (isConnected) {
-      loadSettings()
-    }
-  }, [isConnected, loadSettings])
+    loadSettings()
+  }, [loadSettings])
 
   // Listen for settings updates from settings window
   useEffect(() => {
-    if (!isConnected) return
-
-    const handleSettingsUpdate = () => {
-      void queryClient.invalidateQueries({ queryKey: llmProviderKeys.all })
+    const handleSettingsUpdate = (event: any, updatedSettings: any) => {
       // Reload settings to ensure main window is synchronized
-      void loadSettings()
+      loadSettings()
+      // Also reload the current provider to refresh the model picker
+      loadCurrentProvider()
     }
 
     if (window.electronAPI?.onSettingsUpdated) {
@@ -48,11 +40,17 @@ function App() {
         window.electronAPI.removeAllListeners('settings-updated')
       }
     }
-  }, [isConnected, loadSettings])
-
+  }, [loadSettings, loadCurrentProvider])
 
   return (
     <div className="app">
+      <ChatHeader
+        isConnected={isConnected}
+        onDebugClick={openDebug}
+        onToggleSidebar={toggleSidebar}
+        isSidebarCollapsed={isSidebarCollapsed}
+        debugMode={settings?.debug_mode ?? false}
+      />
       <Layout sidebar={<Sidebar />} isSidebarCollapsed={isSidebarCollapsed}>
         <ChatWindow />
       </Layout>

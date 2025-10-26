@@ -107,12 +107,6 @@ export interface ChatMessage {
   type: 'chat_message'
   content: string
   conversation_id: string
-  images?: Array<{
-    id: string
-    data: string // base64 encoded
-    media_type: string
-    name: string
-  }>
 }
 
 export interface ApprovalResponseMessage {
@@ -131,16 +125,8 @@ export interface StopStreamMessage {
   conversation_id: string
 }
 
-export interface EditUserMessageMessage {
-  type: 'edit_user_message'
-  conversation_id: string
-  user_message_index: number
-  new_content: string
-}
-
 export type ClientToServerMessage =
   | ChatMessage
   | ApprovalResponseMessage
   | UpdateSettingsMessage
   | StopStreamMessage
-  | EditUserMessageMessage

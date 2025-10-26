@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 import json
 
-from core.database import (
+from conversation_db import (
     init_db,
     save_conversation,
     update_conversation,
@@ -14,7 +14,7 @@ from core.database import (
     get_latest_conversation_messages,
     delete_conversation,
 )
-from core.database import DB_FILE
+from conversation_db import DB_FILE
 from pydantic_ai.messages import ModelMessagesTypeAdapter
 
 class DummyUsage:
@@ -28,11 +28,9 @@ class DummyUsage:
 def temp_db(tmp_path, monkeypatch):
     # Redirect the DB file to a temporary path
     db_path = tmp_path / "test.db"
-    monkeypatch.setattr("core.database.DB_FILE", str(db_path))
+    monkeypatch.setattr("conversation_db.DB_FILE", str(db_path))
     # Stub out JSON serialization of messages
     monkeypatch.setattr(ModelMessagesTypeAdapter, "dump_json", lambda msgs: json.dumps(msgs).encode("utf-8"))
-    # Stub out validation to simply load raw JSON back into Python structures
-    monkeypatch.setattr(ModelMessagesTypeAdapter, "validate_json", lambda s: json.loads(s))
     return db_path
 
 @pytest.mark.anyio
