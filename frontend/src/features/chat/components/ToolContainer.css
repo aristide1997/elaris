@@ -2,7 +2,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
-  margin: var(--space-2) 0;
+  margin: 0;
   position: relative;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -23,12 +23,12 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-sm);
-  min-height: 2.5rem;
+  min-height: var(--space-10);
 }
 
 .tool-status-dot {
-  width: 6px;
-  height: 6px;
+  width: var(--space-2);
+  height: var(--space-2);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -67,8 +67,8 @@
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.15s ease;
-  min-height: 2.5rem;
+  transition: background-color var(--duration-fast) var(--easing-standard);
+  min-height: var(--space-10);
 }
 
 .tool-result-summary:hover {
@@ -82,10 +82,10 @@
 }
 
 .tool-expand-icon {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: var(--color-text-tertiary);
-  transition: transform 0.2s ease, color 0.15s ease;
+  transition: transform var(--duration-normal) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
   flex-shrink: 0;
 }
 
@@ -115,9 +115,9 @@
   font-size: var(--font-size-sm);
   white-space: pre-wrap;
   overflow-x: auto;
-  max-height: 300px;
+  max-height: var(--container-lg);
   overflow-y: auto;
-  animation: slideDown 0.2s ease-out;
+  animation: slideDown var(--duration-normal) ease-out;
 }
 
 @keyframes slideDown {
@@ -129,28 +129,28 @@
   }
   to {
     opacity: 1;
-    max-height: 300px;
+    max-height: var(--container-lg);
     padding-top: var(--space-3);
     padding-bottom: var(--space-3);
   }
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
+@media (max-width: var(--breakpoint-sm)) {
   .tool-item-inline {
     padding: var(--space-1) var(--space-2);
-    min-height: 2rem;
+    min-height: var(--space-8);
   }
   
   .tool-result-summary {
     padding: var(--space-1) var(--space-2);
-    min-height: 2rem;
+    min-height: var(--space-8);
   }
   
   .tool-result {
     font-size: var(--font-size-xs);
     padding: var(--space-2);
-    max-height: 200px;
+    max-height: var(--container-sm);
   }
   
   .tool-name {

@@ -1,26 +1,29 @@
 .mcp-server-dropdown {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .mcp-dropdown-trigger {
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #fff;
-  padding: 8px 12px;
-  font-size: 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--color-text-secondary);
+  padding: 0;
+  font-size: var(--font-size-xs);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  min-width: 80px;
+  justify-content: center;
+  gap: var(--space-1);
+  transition: color 0.2s ease;
+  min-width: auto;
+  font-weight: var(--font-weight-normal);
+  outline: none;
 }
 
 .mcp-dropdown-trigger:hover {
-  background: #333;
-  border-color: #555;
+  color: var(--color-accent);
 }
 
 .mcp-dropdown-trigger:disabled {
@@ -28,65 +31,62 @@
   cursor: not-allowed;
 }
 
+.mcp-status-text,
+.mcp-dropdown-arrow {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
 .mcp-status-text {
-  font-weight: 500;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mcp-dropdown-arrow {
-  font-size: 12px;
+  color: var(--color-text-tertiary);
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.mcp-dropdown-arrow.open {
+.mcp-dropdown-trigger[data-state="open"] .mcp-dropdown-arrow {
   transform: rotate(180deg);
 }
 
 .mcp-dropdown-content {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   min-width: 280px;
-  margin-top: 4px;
+  z-index: 1000;
 }
 
 .mcp-dropdown-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #444;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .mcp-dropdown-header h4 {
-  color: #fff;
+  color: var(--color-text-primary);
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
 }
 
 .mcp-error {
-  background: #dc354520;
-  border: 1px solid #dc3545;
-  border-radius: 4px;
-  padding: 8px 12px;
-  margin-top: 8px;
-  color: #dc3545;
-  font-size: 12px;
+  background: var(--color-danger-subtle);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.mcp-error-close {
-  background: none;
-  border: none;
-  color: #dc3545;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  margin-left: 8px;
 }
 
 .mcp-server-list {
@@ -98,8 +98,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #333;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .mcp-server-item:last-child {
@@ -111,30 +111,30 @@
 }
 
 .mcp-server-name {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 2px;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-1);
 }
 
 .mcp-server-status {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
 }
 
 .mcp-no-servers {
-  padding: 20px 16px;
+  padding: var(--space-5) var(--space-4);
   text-align: center;
-  color: #888;
-  font-size: 14px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 /* Toggle Switch Styles */
 .mcp-switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: var(--button-height-md);
+  height: var(--icon-lg);
 }
 
 .mcp-switch input {
@@ -150,9 +150,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #444;
+  background-color: var(--color-border);
   transition: 0.2s;
-  border-radius: 24px;
+  border-radius: var(--radius-full);
 }
 
 .mcp-slider:before {
@@ -163,12 +163,12 @@
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.2s;
+  transition: 0.2s ease;
   border-radius: 50%;
 }
 
 input:checked + .mcp-slider {
-  background-color: #007bff;
+  background-color: var(--color-accent);
 }
 
 input:checked + .mcp-slider:before {
@@ -184,17 +184,17 @@ input:disabled + .mcp-slider {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  color: #888;
-  font-size: 12px;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
 }
 
 .mcp-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #444;
-  border-top: 2px solid #007bff;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  border: var(--border-width-normal) solid var(--color-border);
+  border-top: var(--border-width-normal) solid var(--color-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -202,22 +202,4 @@ input:disabled + .mcp-slider {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-/* Scrollbar for server list */
-.mcp-server-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.mcp-server-list::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-.mcp-server-list::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 3px;
-}
-
-.mcp-server-list::-webkit-scrollbar-thumb:hover {
-  background: #555;
 }

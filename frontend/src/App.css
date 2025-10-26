@@ -1,6 +1,7 @@
 :root {
   /* Modern Color Palette */
-  --color-background: #fafbfc;
+  --color-background: #ffffff;
+  --color-chat-background: #ffffff;
   --color-surface: #ffffff;
   --color-surface-secondary: #f6f8fa;
   --color-border: #e1e4e8;
@@ -17,15 +18,16 @@
   --color-warning-subtle: #fef3c7;
   --color-danger: #cf222e;
   --color-danger-subtle: #ffebe9;
+  --color-black: #1E1E1E;
   
   /* Typography */
-  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
   --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
   
   /* Font Sizes */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
+  --font-size-xs: 0.625rem;
+  --font-size-sm: 0.75rem;
+  --font-size-base: 0.875rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
@@ -43,8 +45,80 @@
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
+  --space-7: 1.75rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-28: 7rem;
+  --space-32: 8rem;
+  --space-36: 9rem;
+  --space-40: 10rem;
+  --space-44: 11rem;
+  
+  /* Animation & Transition */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.2s;
+  --duration-slow: 0.3s;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-enter: cubic-bezier(0, 0, 0.2, 1);
+  --easing-exit: cubic-bezier(0.4, 0, 1, 1);
+  
+  /* Additional semantic colors */
+  --color-info: #0ea5e9;
+  --color-info-subtle: #e0f2fe;
+  
+  /* Opacity levels */
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.8;
+  --opacity-subtle: 0.6;
+  --opacity-overlay: 0.1;
+  --opacity-backdrop: 0.5;
+  --opacity-strong: 0.7;
+  
+  /* Icon Sizes */
+  --icon-xs: 12px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 28px;
+  --icon-2xl: 32px;
+  
+  /* Button Heights */
+  --button-height-sm: 32px;
+  --button-height-md: 44px;
+  --button-height-lg: 48px;
+  --button-height-xl: 56px;
+  
+  /* Header Height */
+  --header-height: 44px;
+  
+  /* Container Widths */
+  --container-sm: 320px;
+  --container-md: 480px;
+  --container-lg: 800px;
+  --container-xl: 900px;
+  --container-xxl: 1000px;
+  
+  /* Letter Spacing */
+  --letter-spacing-tight: 0.01em;
+  --letter-spacing-normal: 0.025em;
+  --letter-spacing-wide: 0.05em;
+  
+  /* Border Widths */
+  --border-width-thin: 1.5px;
+  --border-width-normal: 2px;
+  
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  
+  /* Scrollbar */
+  --scrollbar-width: 6px;
+  --scrollbar-track-radius: var(--radius-full);
   
   /* Border Radius */
   --radius-sm: 0.25rem;
@@ -53,12 +127,13 @@
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-full: 9999px;
+  --radius-chat-input: 18px;
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(30, 30, 30, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(30, 30, 30, 0.1), 0 2px 4px -1px rgba(30, 30, 30, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(30, 30, 30, 0.1), 0 4px 6px -2px rgba(30, 30, 30, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(30, 30, 30, 0.1), 0 10px 10px -5px rgba(30, 30, 30, 0.04);
 }
 
 * {
@@ -97,8 +172,8 @@ body {
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
 
 *::-webkit-scrollbar-track {
@@ -107,27 +182,45 @@ body {
 
 *::-webkit-scrollbar-thumb {
   background-color: var(--color-border);
-  border-radius: var(--radius-full);
-  transition: background-color 0.2s ease;
+  border-radius: var(--scrollbar-track-radius);
+  transition: background-color var(--duration-normal) var(--easing-standard);
 }
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-text-tertiary);
 }
 
-/* Focus styles - only show when navigating with keyboard */
+/* Focus styles - clean modern look with no outlines */
 *:focus {
   outline: none;
 }
 
 *:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: none;
 }
 
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  outline: none;
+}
+
+/* Shared Button Components */
+.icon-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.icon-button:hover {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
 }

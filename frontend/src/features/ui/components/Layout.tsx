@@ -1,3 +1,4 @@
+import ChatHeader from './ChatHeader'
 import './Layout.css'
 
 interface LayoutProps {
@@ -14,7 +15,10 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar, isSidebarCollapsed }
       </aside>
       
       <main className="main-content">
-        {children}
+        <ChatHeader />
+        <div className="main-content-body">
+          {children}
+        </div>
       </main>
     </div>
   )

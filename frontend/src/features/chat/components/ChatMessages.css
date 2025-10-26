@@ -1,42 +1,71 @@
-.chat-container {
+.chat-scroll-area {
   flex: 1;
-  overflow-y: auto;
-  padding: var(--space-6) var(--space-4);
-  background: var(--color-background);
+  height: 100%;
   position: relative;
+  overflow: hidden;
+}
+
+.chat-container {
+  padding: var(--space-6) 0;
+  background: var(--color-chat-background);
+  /* Fade out effect for scrolling */
+  mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black calc(100% - 14px), 
+    transparent 100%);
+  height: 100%;
+  width: 100%;
 }
 
 .messages {
   margin: 0 auto;
-  max-width: 900px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
   min-height: 100%;
   padding-bottom: var(--space-8);
+  width: 100%;
 }
 
-/* Custom scrollbar styling for chat container */
-.chat-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chat-container::-webkit-scrollbar-track {
+.chat-scrollbar {
+  padding: var(--space-4) 0;
+  user-select: none;
+  touch-action: none;
+  display: flex;
   background: transparent;
-  margin: var(--space-4) 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
 }
 
-.chat-container::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-full);
-  transition: background-color 0.2s ease;
+.chat-scrollbar[data-orientation='vertical'] {
+  width: var(--scrollbar-width);
 }
 
-.chat-container::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-tertiary);
+.chat-scrollbar-thumb {
+  flex: 1;
+  position: relative;
+  background-color: var(--color-border);
+  border-radius: var(--scrollbar-track-radius);
+  transition: background-color var(--duration-normal) var(--easing-standard);
 }
 
-/* Smooth scrolling */
+.chat-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary);
+}
+
+.chat-scrollbar-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  min-width: var(--scrollbar-min-size, 10px);
+  min-height: var(--scrollbar-min-size, 48px);
+}
+
+.chat-scrollbar-corner {
+  background: transparent;
+}
 
 /* Empty state for when there are no messages */
 .messages-empty {
@@ -51,39 +80,38 @@
 }
 
 .messages-empty h3 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   margin: 0;
 }
 
 .messages-empty p {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   margin: 0;
-  max-width: 400px;
+  max-width: var(--container-md);
   line-height: 1.5;
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: var(--breakpoint-md)) {
   .chat-container {
-    padding: var(--space-4) var(--space-3);
+    padding: var(--space-4) 0;
   }
-  
+
   .messages {
-    max-width: 100%;
-    gap: var(--space-3);
+    gap: var(--space-2);
     padding-bottom: var(--space-6);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: var(--breakpoint-sm)) {
   .chat-container {
-    padding: var(--space-3) var(--space-2);
+    padding: var(--space-3) 0;
   }
-  
+
   .messages {
-    gap: var(--space-2);
+    gap: var(--space-1);
     padding-bottom: var(--space-4);
   }
 }

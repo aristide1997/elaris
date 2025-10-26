@@ -28,6 +28,39 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+prune_node_runtime() {
+    local node_dist_path="$1"
+    
+    print_step "Aggressively pruning Node.js runtime to slim ${node_dist_path}…"
+    
+    # Remove NPM documentation and test files
+    rm -rf "${node_dist_path}/lib/node_modules/npm/{doc,html,man,test,changelogs,tap-snapshots}"
+    
+    # Remove nested test directories and documentation in npm dependencies
+    find "${node_dist_path}/lib/node_modules/npm/node_modules" -name "test" -type d -exec rm -rf {} + 2>/dev/null || true
+    find "${node_dist_path}/lib/node_modules/npm/node_modules" -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true
+    find "${node_dist_path}/lib/node_modules/npm/node_modules" -name "*.md" -type f -delete 2>/dev/null || true
+    find "${node_dist_path}/lib/node_modules/npm/node_modules" -name "README*" -type f -delete 2>/dev/null || true
+    
+    # Remove C++ headers (not needed for runtime)
+    rm -rf "${node_dist_path}/include/"
+    
+    # Remove docs, man pages, and other shared resources
+    rm -rf "${node_dist_path}/share/"
+    
+    # Remove systemtap/dtrace files (debugging)
+    rm -rf "${node_dist_path}/lib/dtrace/" 2>/dev/null || true
+    
+    # Clean npm cache and temporary files
+    rm -rf "${node_dist_path}/lib/node_modules/npm/.cache/" 2>/dev/null || true
+    rm -rf "${node_dist_path}/lib/node_modules/npm/tmp/" 2>/dev/null || true
+    
+    # Strip the node binary
+    strip "${node_dist_path}/bin/node"
+    
+    print_success "Aggressively pruned Node.js runtime and stripped node binary"
+}
+
 # Parse command line arguments
 SIGN_APP=false
 BUILD_ARCH=""
@@ -126,6 +159,9 @@ curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz" \
     | tar -xz --strip-components=1 -C node-dist
 print_success "Embedded Node.js ${NODE_VERSION} (${NODE_ARCH}) downloaded into node-dist/"
 
+# Prune the Node.js runtime to reduce size
+prune_node_runtime "node-dist"
+
 # Step 1: Install Python dependencies and build Python executable
 print_step "Building Python backend with PyInstaller..."
 cd server
@@ -146,6 +182,11 @@ pip install -r requirements.txt
 # Build with PyInstaller
 print_step "Creating Python executable..."
 pyinstaller main.spec --distpath ../build --workpath ../build/temp --clean
+
+# Clean up PyInstaller temp files to reduce bundle size
+print_step "Cleaning up PyInstaller temporary files..."
+rm -rf ../build/temp
+print_success "PyInstaller temp files cleaned up"
 
 cd ..
 print_success "Python backend built successfully"
